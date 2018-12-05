@@ -13,6 +13,7 @@ public class Day2 {
     public static void main(String[] args) {
         List<String> ids = getIds();
         part1(ids);
+        part2(ids);
     }
 
     private static void part1(List<String> ids) {
@@ -50,6 +51,36 @@ public class Day2 {
 
         int checksum = twoLettersCount * threeLettersCount;
         System.out.println(checksum);
+    }
+
+    private static void part2(List<String> ids) {
+        for (int i = 0; i < ids.size(); i++) {
+            for (int j = i + 1; j < ids.size(); j++) {
+                String commonLetters = diff(ids.get(i), ids.get(j));
+                if (commonLetters != null) {
+                    System.out.println(commonLetters);
+                }
+            }
+        }
+    }
+
+    private static String diff(String a, String b) {
+        int mismatchIdx = -1;
+        for (int i = 0; i < a.length(); i++) {
+            char ac = a.charAt(i);
+            char bc = b.charAt(i);
+            if (ac != bc && mismatchIdx == -1) {
+                mismatchIdx = i;
+            } else if (ac != bc) {
+                return null;
+            }
+        }
+
+        if (mismatchIdx != -1) {
+            return a.substring(0, mismatchIdx) + a.substring(mismatchIdx + 1);
+        } else {
+            return null;
+        }
     }
 
     private static List<String> getIds() {
