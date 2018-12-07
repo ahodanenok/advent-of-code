@@ -1,6 +1,8 @@
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Advent of Code - Day 3
@@ -11,6 +13,7 @@ public class Day3 {
     public static void main(String[] args) {
         List<Claim> claims = getClaims();
         part1(claims);
+        part2(claims);
     }
 
     private static void part1(List<Claim> claims) {
@@ -33,6 +36,32 @@ public class Day3 {
         }
 
         System.out.println(overlapCount);
+    }
+
+    private static void part2(List<Claim> claims) {
+        Map<Integer, Boolean> overlaps = new HashMap<Integer, Boolean>();
+
+        int[][] fabric = new int[1000][1000];
+        for (Claim claim : claims) {
+            overlaps.put(claim.id, false);
+
+            for (int row = 0; row < claim.height; row++) {
+                for (int col = 0; col < claim.width; col++) {
+                    if (fabric[row + claim.top][col + claim.left] != 0) {
+                        overlaps.put(fabric[row + claim.top][col + claim.left], true);
+                        overlaps.put(claim.id, true);
+                    }
+
+                    fabric[row + claim.top][col + claim.left] = claim.id;
+                }
+            }
+        }
+
+        for (Map.Entry<Integer, Boolean> entry : overlaps.entrySet()) {
+            if (!entry.getValue()) {
+                System.out.println(entry.getKey());
+            }
+        }
     }
 
     private static List<Claim> getClaims() {
