@@ -14,6 +14,7 @@ public class Day4 {
     public static void main(String[] args) {
         List<Guard> guards = getGuards();
         part1(guards);
+        part2(guards);
     }
 
     private static void part1(List<Guard> guards) {
@@ -24,7 +25,19 @@ public class Day4 {
             }
         }
 
-        System.out.println(maxAsleepGuard.id * maxAsleepGuard.mostAsleepMinute());
+        System.out.println(maxAsleepGuard.id * maxAsleepGuard.mostAsleepMinute().minute);
+    }
+
+    private static void part2(List<Guard> guards) {
+        Guard maxAsleepGuard = null;
+        for (Guard guard : guards) {
+            if (maxAsleepGuard == null 
+                    || guard.mostAsleepMinute().times > maxAsleepGuard.mostAsleepMinute().times) {
+                maxAsleepGuard = guard;
+            }
+        }
+
+        System.out.println(maxAsleepGuard.id * maxAsleepGuard.mostAsleepMinute().minute);
     }
 
     private static List<Guard> getGuards() {
@@ -94,7 +107,7 @@ public class Day4 {
             }
         }
 
-        int mostAsleepMinute() {
+        MinuteAsleep mostAsleepMinute() {
             int minute = Integer.MIN_VALUE;
             int times = 0;
             for (Map.Entry<Integer, Integer> entry : asleepByMinute.entrySet()) {
@@ -104,7 +117,7 @@ public class Day4 {
                 }
             }
 
-            return minute;
+            return new MinuteAsleep(minute, times);
         }
 
         public int hashCode() {
@@ -114,6 +127,17 @@ public class Day4 {
         public boolean equals(Object obj) {
             Guard other = (Guard) obj;
             return other.id == id;
+        }
+    }
+
+    private static class MinuteAsleep {
+
+        private final int minute;
+        private final int times;
+
+        MinuteAsleep(int minute, int times) {
+            this.minute = minute;
+            this.times = times;
         }
     }
 }
