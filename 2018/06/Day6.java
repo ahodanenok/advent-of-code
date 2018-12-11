@@ -15,6 +15,7 @@ public class Day6 {
     public static void main(String[] args) {
         List<Location> locations = getLocations();
         part1(locations);
+        part2(locations);
     }
 
     private static void part1(List<Location> locations) {
@@ -92,6 +93,39 @@ public class Day6 {
         }
 
         System.out.println(maxArea);
+    }
+
+    private static void part2(List<Location> locations) {
+        int rowStart = Integer.MAX_VALUE;
+        int rowEnd = Integer.MIN_VALUE;
+        int colStart = Integer.MAX_VALUE;
+        int colEnd = Integer.MIN_VALUE;
+
+        // determine grid size
+        for (Location loc : locations) {
+            rowStart = Math.min(loc.row, rowStart);
+            rowEnd = Math.max(loc.row, rowEnd);
+            colStart = Math.min(loc.col, colStart);
+            colEnd = Math.max(loc.col, colEnd);
+        }
+
+        int regionSize = 0;
+        for (int row = rowStart; row <= rowEnd; row++) {
+            for (int col = colStart; col <= colEnd; col++) {
+                Location gridLocation = new Location(row, col);
+
+                int distanceSum = 0;
+                for (Location destLocation : locations) {
+                    distanceSum += gridLocation.distanceTo(destLocation);
+                }
+
+                if (distanceSum < 10000) {
+                    regionSize++;
+                }
+            }
+        }
+
+        System.out.println(regionSize);
     }
 
     private static List<Location> getLocations() {
