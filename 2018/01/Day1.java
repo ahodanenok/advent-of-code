@@ -28,18 +28,11 @@ public class Day1 {
     private static void part2(List<Integer> changes) {
         int frequency = 0;
         Set<Integer> seenFrequencies = new HashSet<Integer>();
-        seenFrequencies.add(frequency);
 
-        seachingFrequency:
-        while (true) {
-            for (int change : changes) {
-                frequency += change;
-                if (seenFrequencies.contains(frequency)) {
-                    break seachingFrequency;
-                }
-
-                seenFrequencies.add(frequency);
-            }
+        int i = 0;
+        while (seenFrequencies.add(frequency)) {
+            frequency += changes.get(i);
+            i = (i + 1) % changes.size();
         }
 
         System.out.println(frequency);
