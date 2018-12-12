@@ -1,5 +1,7 @@
 import java.util.Scanner;
-import java.util.LinkedList;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Set;
 import java.util.HashSet;
 
 /**
@@ -9,12 +11,12 @@ import java.util.HashSet;
 public class Day1 {
 
     public static void main(String[] args) {
-        LinkedList<Integer> changes = getChanges();
+        List<Integer> changes = getChanges();
         part1(changes);
         part2(changes);
     }
 
-    private static void part1(LinkedList<Integer> changes) {
+    private static void part1(List<Integer> changes) {
         int frequency = 0;
         for (int change : changes) {
             frequency += change;
@@ -23,9 +25,9 @@ public class Day1 {
         System.out.println(frequency);
     }
 
-    private static void part2(LinkedList<Integer> changes) {
+    private static void part2(List<Integer> changes) {
         int frequency = 0;
-        HashSet<Integer> seenFrequencies = new HashSet<Integer>();
+        Set<Integer> seenFrequencies = new HashSet<Integer>();
         seenFrequencies.add(frequency);
 
         seachingFrequency:
@@ -43,9 +45,9 @@ public class Day1 {
         System.out.println(frequency);
     }
 
-    private static LinkedList<Integer> getChanges() {
+    private static List<Integer> getChanges() {
         Scanner scanner = new Scanner(System.in);
-        LinkedList<Integer> changes = new LinkedList<Integer>();
+        List<Integer> changes = new ArrayList<Integer>();
         while (scanner.hasNextLine()) {
             int change = Integer.parseInt(scanner.nextLine().trim());
             changes.add(change);
