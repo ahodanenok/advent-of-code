@@ -17,12 +17,7 @@ public class Day1 {
     }
 
     private static void part1(List<Integer> changes) {
-        int frequency = 0;
-        for (int change : changes) {
-            frequency += change;
-        }
-
-        System.out.println(frequency);
+        System.out.println(changes.stream().mapToInt(n -> n).sum());
     }
 
     private static void part2(List<Integer> changes) {
