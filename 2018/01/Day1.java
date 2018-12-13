@@ -34,11 +34,11 @@ public class Day1 {
     }
 
     private static List<Integer> getChanges() {
-        Scanner scanner = new Scanner(System.in);
         List<Integer> changes = new ArrayList<Integer>();
+
+        Scanner scanner = new Scanner(System.in);
         while (scanner.hasNextLine()) {
-            int change = Integer.parseInt(scanner.nextLine().trim());
-            changes.add(change);
+            changes.add(Integer.parseInt(scanner.nextLine().trim()));
         }
 
         return changes;
