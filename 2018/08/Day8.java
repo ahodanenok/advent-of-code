@@ -10,31 +10,51 @@ import java.util.Collections;
 public class Day8 {
 
     public static void main(String[] args) {
-        List<Integer> tree = getTree();
+        Tree tree = buildTree(getTreeDefinition());
         part1(tree);
+        part2(tree);
     }
 
-    private static void part1(List<Integer> tree) {
-        System.out.println(metadataSum(new TreeTraversal(tree)));
+    private static void part1(Tree tree) {
+        System.out.println(metadataSum(tree));
     }
 
-    private static int metadataSum(TreeTraversal tree) {
-        int childNodes = tree.read();
-        int metadataEntries = tree.read();
+    private static void part2(Tree tree) {
+        System.out.println(nodeValue(tree));
+    }
 
-        int sum = 0;
-        for (int i = 0; i < childNodes; i++) {
-            sum += metadataSum(tree);
+    private static int nodeValue(Tree tree) {
+        int value = 0;
+        if (tree.children.length == 0) {
+            for (int i = 0; i < tree.metadata.length; i++) {
+                value += tree.metadata[i];
+            }
+        } else {
+            for (int i = 0; i < tree.metadata.length; i++) {
+                int childIndex = tree.metadata[i] - 1;
+                if (childIndex < tree.children.length) {
+                    value += nodeValue(tree.children[childIndex]);
+                }
+            }
         }
 
-        for (int i = 0; i < metadataEntries; i++) {
-            sum += tree.read();
+        return value;
+    }
+
+    private static int metadataSum(Tree tree) {
+        int sum = 0;
+        for (int i =0; i < tree.children.length; i++) {
+            sum += metadataSum(tree.children[i]);
+        }
+
+        for (int i = 0; i < tree.metadata.length; i++) {
+            sum += tree.metadata[i];
         }
 
         return sum;
     }
 
-    private static List<Integer> getTree() {
+    private static TreeDefinition getTreeDefinition() {
         List<Integer> tree;
 
         Scanner scanner = new Scanner(System.in);
@@ -48,15 +68,39 @@ public class Day8 {
             tree = Collections.emptyList();
         }
 
+        return new TreeDefinition(tree);
+    }
+
+    private static Tree buildTree(TreeDefinition def) {
+        int childNodes = def.read();
+        int metadataEntries = def.read();
+
+        Tree tree = new Tree();
+        tree.children = new Tree[childNodes];
+        for (int i = 0; i < childNodes; i++) {
+            tree.children[i] = buildTree(def);
+        }
+
+        tree.metadata = new int[metadataEntries];
+        for (int i = 0; i < metadataEntries; i++) {
+            tree.metadata[i] = def.read();
+        }
+
         return tree;
     }
 
-    private static class TreeTraversal {
+    private static class Tree {
+
+        private int[] metadata;
+        private Tree[] children;
+    }
+
+    private static class TreeDefinition {
 
         private List<Integer> tree;
         private int pos;
 
-        TreeTraversal(List<Integer> tree) {
+        TreeDefinition(List<Integer> tree) {
             this.tree = tree;
         }
 
