@@ -1,6 +1,7 @@
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
@@ -14,6 +15,7 @@ public class Day7 {
     public static void main(String[] args) {
         List<Step> steps = getSteps();
         part1(steps);
+        part2(steps);
     }
 
     private static void part1(List<Step> steps) {
@@ -49,6 +51,52 @@ public class Day7 {
         System.out.println(stepsOrder);
     }
 
+    private static void part2(List<Step> steps) {
+        Map<Step, Integer> edgesCount = new HashMap<Step, Integer>(steps.size());
+        for (int i = 0; i < steps.size(); i++) {
+            edgesCount.put(steps.get(i), steps.get(i).dependsOn.size());
+        }
+
+        LinkedList<Step> queue = new LinkedList<Step>();
+        Construction construction = new Construction(5, 60);
+        while (true) {
+            List<Step> finishedSteps = construction.getFinishedSteps();
+            if (!finishedSteps.isEmpty()) {
+                for (Step step : steps) {
+                    for (Step finishedStep : finishedSteps) {
+                        if (step.dependsOn.contains(finishedStep)) {
+                            edgesCount.put(step, edgesCount.get(step) - 1);
+                        }
+                    }
+                }
+            }
+
+            List<Step> availableSteps = new ArrayList<Step>();
+            for (Map.Entry<Step, Integer> entry : edgesCount.entrySet()) {
+                if (entry.getValue() == 0) {
+                    availableSteps.add(entry.getKey());
+                }
+            }
+
+            for (Step step : availableSteps) {
+                edgesCount.remove(step);
+            }
+
+            queue.addAll(availableSteps);
+            while (!queue.isEmpty() && construction.hasAvailableWorker()) {
+                construction.assign(queue.removeFirst());
+            }
+
+            if (!construction.done()) {
+                construction.tick();
+            } else {
+                break;
+            }
+        }
+
+        System.out.println(construction.time());
+    }
+
     private static List<Step> getSteps() {
         List<Step> steps = new ArrayList<Step>();
         Map<Character, Step> stepsByName = new HashMap<Character, Step>();
@@ -62,7 +110,7 @@ public class Day7 {
             if (!stepsByName.containsKey(stepName)) {
                 stepsByName.put(stepName, new Step(stepName));
             }
-            
+
             if (!stepsByName.containsKey(dependsOnStepName)) {
                 stepsByName.put(dependsOnStepName, new Step(dependsOnStepName));
             }
@@ -108,6 +156,80 @@ public class Day7 {
         @Override
         public int compareTo(Step step) {
             return Character.compare(name, step.name);
+        }
+    }
+
+    private static class Construction {
+
+        int stepTime;
+        int[] workersTime;
+        Step[] workersSteps;
+        int time = 0;
+
+        Construction(int workers, int stepTime) {
+            this.workersTime = new int[workers];
+            this.workersSteps = new Step[workers];
+            this.stepTime = stepTime;
+        }
+
+        List<Step> getFinishedSteps() {
+            List<Step> steps = new ArrayList<Step>();
+
+            for (int i = 0; i < workersSteps.length; i++) {
+                if (workersSteps[i] != null && workersTime[i] == stepDuration(workersSteps[i])) {
+                    steps.add(workersSteps[i]);
+                    workersTime[i] = 0;
+                    workersSteps[i] = null;
+                }
+            }
+
+            return steps;
+        }
+
+        private int stepDuration(Step step) {
+            return stepTime + (step.name - 'A') + 1;
+        }
+
+        boolean done() {
+            for (int i = 0; i < workersSteps.length; i++) {
+                if (workersSteps[i] != null) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        int time() {
+            return time;
+        }
+
+        boolean hasAvailableWorker() {
+            for (int i = 0; i < workersSteps.length; i++) {
+                if (workersSteps[i] == null) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        void assign(Step step) {
+            for (int i = 0; i < workersSteps.length; i++) {
+                if (workersSteps[i] == null) {
+                    workersSteps[i] = step;
+                    break;
+                }
+            }
+        }
+
+        void tick() {
+            time++;
+            for (int i = 0; i < workersSteps.length; i++) {
+                if (workersSteps[i] != null) {
+                    workersTime[i]++;
+                }
+            }
         }
     }
 }
