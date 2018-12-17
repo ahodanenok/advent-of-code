@@ -1,5 +1,3 @@
-import java.util.PriorityQueue;
-
 /**
  * Advent of Code - Day 9
  * https://adventofcode.com/2018/day/9
@@ -7,16 +5,11 @@ import java.util.PriorityQueue;
 public class Day9 {
 
     public static void main(String[] args) {
-        part1(9, 25);
-        part1(10, 1618);
-        part1(13, 7999);
-        part1(17, 1104);
-        part1(21, 6111);
-        part1(30, 5807);
-        part1(459, 71790);
+        maxScore(459, 71790);
+        maxScore(459, 7179000);
     }
 
-    private static void part1(int playersCount, int marblesCount) {
+    private static void maxScore(int playersCount, int marblesCount) {
         Game g = new Game(playersCount, marblesCount);
         while (!g.isOver()) {
             g.nextTurn();
@@ -27,7 +20,7 @@ public class Day9 {
 
     private static class Game {
 
-        int[] playersScore;
+        long[] playersScore;
         int currentPlayer;
 
         Marble currentMarble;
@@ -35,7 +28,7 @@ public class Day9 {
         int marblesCount;
 
         Game(int playersCount, int marblesCount) {
-            this.playersScore = new int[playersCount];
+            this.playersScore = new long[playersCount];
             this.currentPlayer = 0;
             this.nextMarbleNum = 1;
             this.marblesCount = marblesCount;
@@ -49,8 +42,8 @@ public class Day9 {
             return nextMarbleNum > marblesCount;
         }
 
-        int maxScore() {
-            int max = Integer.MIN_VALUE;
+        long maxScore() {
+            long max = Integer.MIN_VALUE;
             for (int i = 0; i < playersScore.length; i++) {
                 max = Math.max(playersScore[i], max);
             }
