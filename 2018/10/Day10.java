@@ -9,11 +9,11 @@ import java.util.ArrayList;
 public class Day10 {
 
     public static void main(String[] args) {
-        List<Point> points = getPoints();
-        part1(points);
+        movePoints(getPoints());
     }
 
-    private static void part1(List<Point> points) {
+    private static void movePoints(List<Point> points) {
+        int seconds = 0;
         while (true) {
             int rowStart = Integer.MAX_VALUE;
             int rowEnd = Integer.MIN_VALUE;
@@ -35,6 +35,7 @@ public class Day10 {
                 }
 
                 System.out.println();
+                System.out.println(seconds);
                 for (int row = 0; row < height; row++) {
                     for (int col = 0; col < width; col++) {
                         if (grid[row][col]) {
@@ -52,6 +53,8 @@ public class Day10 {
             for (Point p : points) {
                 p.move();
             }
+            
+            seconds++;
         }
     }
 
@@ -80,7 +83,7 @@ public class Day10 {
         return points;
     }
 
-    private static class Point implements Comparable<Point> {
+    private static class Point {
 
         private int x;
         private int y;
@@ -98,15 +101,6 @@ public class Day10 {
         private void move() {
             x = x + ax;
             y = y + ay;
-        }
-
-        public int compareTo(Point p) {
-            int cmpY = Integer.compare(y, p.y);
-            if (cmpY == 0) {
-                return Integer.compare(x, p.x);
-            } else {
-                return cmpY;
-            }
         }
 
         @Override
