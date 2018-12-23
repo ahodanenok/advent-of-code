@@ -1,6 +1,8 @@
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.TreeSet;
+import java.util.Iterator;
 
 /**
  * Advent of Code - Day 12
@@ -10,22 +12,14 @@ public class Day12 {
 
     public static void main(String[] args) {
         Pots pots = getPots();
-        part1(pots);
-    }
 
-    private static void part1(Pots pots) {
-        for (int i = 0; i < 20; i++) {
-            pots.nextGeneration();
-        }
-
-        int sum = 0;
-        for (int pot = pots.firstPot(); pot <= pots.lastPot(); pot++) {
-            if (pots.hasPlant(pot)) {
-                sum += pot;
-            }
-        }
-
-        System.out.println(sum);
+        // part 1
+        pots.nextGenerations(20);
+        System.out.println(pots.sum());
+ 
+        // part 2
+        pots.nextGenerations(50000000000L - 20);
+        System.out.println(pots.sum());
     }
 
     private static Pots getPots() {
@@ -34,7 +28,9 @@ public class Day12 {
         Scanner scanner = new Scanner(System.in);
         String potsDef = scanner.nextLine().trim().substring(15).trim();
         for (int i = 0; i < potsDef.length(); i++) {
-            pots.addPot(potsDef.charAt(i) == '#');
+            if (potsDef.charAt(i) == '#') {
+                pots.addPotWithPlant(i);
+            }
         }
 
         scanner.nextLine();
@@ -56,59 +52,92 @@ public class Day12 {
 
     private static class Pots {
 
-        private List<Boolean> pots;
-        private int zeroPotIdx = 0;
+        private TreeSet<Long> pots;
         private List<Rule> spreadRules;
 
         Pots() {
-            this.pots = new ArrayList<Boolean>();
-            spreadRules = new ArrayList<Rule>();
+            this.pots = new TreeSet<Long>();
+            this.spreadRules = new ArrayList<Rule>();
         }
 
-        void addPot(boolean withPlant) {
-            pots.add(withPlant);
+        void addPotWithPlant(long pot) {
+            pots.add(pot);
         }
 
         void addRule(Rule rule) {
             spreadRules.add(rule);
         }
 
-        int firstPot() {
-            return -zeroPotIdx;
+        long firstPot() {
+            return pots.first() - Rule.PATTERN_LENGTH;
         }
 
-        int lastPot() {
-            return pots.size() - zeroPotIdx - 1;
+        long lastPot() {
+            return pots.last() + Rule.PATTERN_LENGTH;
         }
 
-        boolean hasPlant(int pot) {
-            int potIdx = pot + zeroPotIdx;
-            while (potIdx < 0 || potIdx >= pots.size()) {
-                return false;
-            }
-
-            return pots.get(potIdx);
+        boolean hasPlant(long pot) {
+            return pots.contains(pot);
         }
 
-        void nextGeneration() {
-            zeroPotIdx += Rule.PATTERN_LENGTH;
-            for (int i = 0; i < Rule.PATTERN_LENGTH; i++) pots.add(0, false);
-            for (int i = 0; i < Rule.PATTERN_LENGTH; i++) pots.add(false);
+        void nextGenerations(long count) {
+            for (int g = 0; g < count; g++) {
+                TreeSet<Long> newPots = new TreeSet<Long>();
+                for (long pot = firstPot(); pot <= lastPot(); pot++) {
+                    boolean hasPlant = false;
+                    for (Rule rule : spreadRules) {
+                        if (rule.match(this, pot)) {
+                            hasPlant = rule.result;
+                            break;
+                        }
+                    }
 
-            List<Boolean> newPots = new ArrayList<Boolean>(pots.size());
-            for (int pot = firstPot(); pot <= lastPot(); pot++) {
-                boolean hasPlant = false;
-                for (Rule rule : spreadRules) {
-                    if (rule.match(this, pot)) {
-                        hasPlant = rule.result;
+                    if (hasPlant) {
+                        newPots.add(pot);
+                    }
+                }
+
+                // checking for sliding:
+                // the same pot configuration as in the last generation,
+                // but starting from different pot
+                if (newPots.size() == pots.size()) {
+                    long offset = newPots.first() - pots.first();
+                    Iterator<Long> potsIterator = pots.iterator();
+                    Iterator<Long> newPotsIterator = newPots.iterator();
+
+                    boolean equal = true;
+                    while (potsIterator.hasNext()) {
+                        if (potsIterator.next() + offset != newPotsIterator.next()) {
+                            equal = false;
+                            break;
+                        }
+                    }
+
+                    if (equal) {
+                        // fast-forward to the last generation
+                        long generationsLeft = count - g;
+                        long resultOffset = generationsLeft * offset;
+                        newPots = new TreeSet<Long>();
+                        for (long pot : pots) {
+                            newPots.add(pot + resultOffset);
+                        }
+
+                        pots = newPots;
                         break;
                     }
                 }
 
-                newPots.add(hasPlant);
+                pots = newPots;
+            }
+        }
+
+        long sum() {
+            long sum = 0;
+            for (long pot : pots) {
+                sum += pot;
             }
 
-            pots = newPots;
+            return sum;
         }
     }
 
@@ -124,8 +153,8 @@ public class Day12 {
             this.result = result;
         }
 
-        boolean match(Pots pots, int pot) {
-            int fromPot = pot - PATTERN_LENGTH / 2;
+        boolean match(Pots pots, long pot) {
+            long fromPot = pot - PATTERN_LENGTH / 2;
             for (int i = 0; i < PATTERN_LENGTH; i++) {
                 if (pattern[i] != pots.hasPlant(fromPot + i)) {
                     return false;
