@@ -9,6 +9,7 @@ public class Day14 {
 
     public static void main(String[] args) {
         part1(190221);
+        part2(190221);
     }
 
     private static void part1(int n) {
@@ -18,6 +19,28 @@ public class Day14 {
             System.out.print(sb.next());
         }
         System.out.println();
+    }
+
+    private static void part2(int n) {
+        ScoreBoard sb = new ScoreBoard();
+        List<Integer> targetDigits = new ArrayList<Integer>();
+        for (char ch : Integer.toString(n).toCharArray()) {
+            targetDigits.add(Integer.parseInt(ch + ""));
+        }
+
+        List<Integer> currentDigits = new ArrayList<Integer>();
+
+        int count = 0;
+        while (!targetDigits.equals(currentDigits)) {
+            currentDigits.add(sb.next());
+            if (currentDigits.size() > targetDigits.size()) {
+                currentDigits.remove(0);
+            }
+
+            count++;
+        }
+
+        System.out.println(count - targetDigits.size());
     }
 
     private static class ScoreBoard {
