@@ -1,7 +1,12 @@
-import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * Advent of Code - Day 16
@@ -12,6 +17,7 @@ public class Day16 {
     public static void main(String[] args) {
         List<Sample> samples = getSamples();
         part1(samples);
+        part2(samples);
     }
 
     private static void part1(List<Sample> samples) {
@@ -34,14 +40,51 @@ public class Day16 {
         System.out.println(threeOrMoreCount);
     }
 
-    private static List<Sample> getSamples() {
-        List<Sample> samples = new ArrayList<Sample>();
+    private static void part2(List<Sample> samples) {
+        Map<Instruction, Integer> instructionOpcodes = new HashMap<Instruction, Integer>();
+        while (instructionOpcodes.size() < Instruction.values().length) {
+            for (int i = 0; i < samples.size(); i++) {
+                Sample sample = samples.get(i);
+                List<Instruction> matches = new ArrayList<Instruction>();
+                for (Instruction inst : Instruction.values()) {
+                    Context before = sample.before.copy();
+                    inst.execute(sample.arg1, sample.arg2, sample.arg3, before);
+                    if (before.equals(sample.after) && !instructionOpcodes.containsKey(inst)) {
+                        matches.add(inst);
+                    }
+                }
 
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
-            String beforeDef = scanner.nextLine().trim();
-            String instDef = scanner.nextLine().trim();
-            String afterDef = scanner.nextLine().trim();
+                if (matches.size() == 1) {
+                    instructionOpcodes.put(matches.get(0), sample.command);
+                }
+            }
+        }
+
+        Context context = new Context(0, 0, 0, 0);
+        for (Statement stmt : getProgram()) {
+            for (Map.Entry<Instruction, Integer> entry : instructionOpcodes.entrySet()) {
+                if (entry.getValue() == stmt.command) {
+                    entry.getKey().execute(stmt.arg1, stmt.arg2, stmt.arg3, context);
+                }
+            }
+        }
+
+        System.out.println(context.get(0));
+    }
+
+    private static List<Sample> getSamples() {
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(Paths.get("samples.txt"), Charset.forName("utf-8"));
+        } catch (Exception e) {
+            lines = Collections.emptyList();
+        }
+
+        List<Sample> samples = new ArrayList<Sample>();
+        for (int i = 0; i < lines.size(); i += 4) {
+            String beforeDef = lines.get(i).trim();
+            String instDef = lines.get(i + 1).trim();
+            String afterDef = lines.get(i + 2).trim();
             String[] parts;
 
             Sample sample = new Sample();
@@ -67,10 +110,6 @@ public class Day16 {
                 Integer.parseInt(parts[3].trim()));
 
             samples.add(sample);
-
-            if (scanner.hasNextLine()) {
-                scanner.nextLine();
-            }
         }
 
         return samples;
@@ -84,6 +123,42 @@ public class Day16 {
         private int arg1;
         private int arg2;
         private int arg3;
+    }
+
+    private static List<Statement> getProgram() {
+        List<String> lines;
+        try {
+            lines = Files.readAllLines(Paths.get("prg.txt"), Charset.forName("utf-8"));
+        } catch (Exception e) {
+            lines = Collections.emptyList();
+        }
+
+        List<Statement> statements = new ArrayList<Statement>();
+        for (String line : lines) {
+            String[] parts = line.split("\\s+");
+            statements.add(new Statement(
+                Integer.parseInt(parts[0].trim()),
+                Integer.parseInt(parts[1].trim()),
+                Integer.parseInt(parts[2].trim()),
+                Integer.parseInt(parts[3].trim())));
+        }
+
+        return statements;
+    }
+
+    private static class Statement {
+
+        private final int command;
+        private final int arg1;
+        private final int arg2;
+        private final int arg3;
+
+        Statement(int command, int arg1, int arg2, int arg3) {
+            this.command = command;
+            this.arg1 = arg1;
+            this.arg2 = arg2;
+            this.arg3 = arg3;
+        }
     }
 
     private enum Instruction {
