@@ -11,12 +11,13 @@ public class Day17 {
 
     public static void main(String[] args) {
         Scan scan = new Scan(getClayCoordinates());
+        hydrate(scan);
+
         part1(scan);
+        part2(scan);
     }
 
     private static void part1(Scan scan) {
-        hydrate(scan);
-
         int reached = 0;
         for (int row = scan.rowStart; row <= scan.rowEnd; row++) {
             for (int col = scan.colStart; col <= scan.colEnd; col++) {
@@ -28,6 +29,19 @@ public class Day17 {
         }
 
         System.out.println(reached);
+    }
+
+    private static void part2(Scan scan) {
+        int left = 0;
+        for (int row = scan.rowStart; row <= scan.rowEnd; row++) {
+            for (int col = scan.colStart; col <= scan.colEnd; col++) {
+                if (scan.get(new Location(row, col)) == Scan.STILL_WATER) {
+                    left++;
+                }
+            }
+        }
+
+        System.out.println(left);
     }
 
     private static void hydrate(Scan scan) {
