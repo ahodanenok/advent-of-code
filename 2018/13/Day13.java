@@ -1,228 +1,82 @@
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Comparator;
 import java.util.Collections;
-import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Advent of Code - Day 13
- * https://adventofcode.com/2018/day/13
+ * https://adventofcode.com/2018
  */
 public class Day13 {
 
     public static void main(String[] args) {
-        TracksMap map = getMap();
-        part1(map);
-    }
+        Map map = getMap();
 
-    private static void part1(TracksMap map) {
-        Location collisionLocation = null;
-        while (collisionLocation == null) {
-            Set<Location> cartLocations = new HashSet<Location>();
-            for (Cart cart : map.carts) {
-                cart.move(map);
-                if (!cartLocations.add(cart.location)) {
-                    collisionLocation = cart.location;
-                    break;
+        Location firstCollisionLocation = null;
+        while (map.carts.size() > 1) {
+            List<Cart> carts = new ArrayList<Cart>(map.carts);
+            Collections.sort(carts);
+
+            for (Cart cart : carts) {
+                cart.move();
+
+                for (Cart other : carts) {
+                    if (cart != other && cart.location.equals(other.location)) {
+                        map.carts.remove(cart);
+                        map.carts.remove(other);
+
+                        if (firstCollisionLocation == null) {
+                            firstCollisionLocation = cart.location;
+                        }
+
+                        break;
+                    }
                 }
             }
         }
 
-        System.out.println(collisionLocation);
+        System.out.println(firstCollisionLocation);
+        System.out.println(map.carts.get(0).location);
     }
 
-    private static TracksMap getMap() {
-        TracksMap map = new TracksMap();
-
+    private static Map getMap() {
+        List<String> lines = new ArrayList<String>();
         Scanner scanner = new Scanner(System.in);
-        for (int row = 0; scanner.hasNextLine(); row++) {
-            String line = scanner.nextLine();
+        while (scanner.hasNextLine()) {
+            lines.add(scanner.nextLine());
+        }
 
-            boolean horizontalLine = false;
-            for (int col = 0; col < line.length(); col++) {
-                char ch = line.charAt(col);
+        Map map = new Map(lines.get(0).length(), lines.size());
+        for (int row = 0; row < lines.size(); row++) {
+            for (int col = 0; col < lines.get(0).length(); col++) {
+                char ch = lines.get(row).charAt(col);
                 Location location = new Location(row, col);
 
-                if (ch == '-') {
-                    horizontalLine = true;
-                } else if (ch == '|') {
-                    horizontalLine = false;
+                if (ch == ' ') {
+                    map.set(location, Map.EMPTY);
+                } else if (ch == '|' || ch == '-') {
+                    map.set(location, Map.PATH);
                 } else if (ch == '/') {
-                    if (horizontalLine) {
-                        map.turns.put(location, new Turn(Direction.EAST, Direction.SOUTH));
-                    } else {
-                        map.turns.put(location, new Turn(Direction.WEST, Direction.NORTH));
-                    }
-
-                    horizontalLine = false;
-                } else if (ch == '\\') {                    
-                    if (horizontalLine) {
-                        map.turns.put(location, new Turn(Direction.NORTH, Direction.EAST));
-                    } else {
-                        map.turns.put(location, new Turn(Direction.SOUTH, Direction.WEST));
-                    }
-
-                    horizontalLine = false;
+                    map.set(location, Map.A_TURN);
+                } else if (ch == '\\') {
+                    map.set(location, Map.B_TURN);
                 } else if (ch == '+') {
-                    map.intersections.add(location);
-                    horizontalLine = true;
-                } else if (ch == 'v') {
-                    map.carts.add(new Cart(location, Direction.SOUTH));
-                    horizontalLine = false;
+                    map.set(location, Map.INTERSECTION);
                 } else if (ch == '^') {
-                    map.carts.add(new Cart(location, Direction.NORTH));
-                    horizontalLine = false;
-                } else if (ch == '<') {
-                    map.carts.add(new Cart(location, Direction.WEST));
-                    horizontalLine = true;
+                    map.carts.add(new Cart(location, Direction.NORTH, map));
                 } else if (ch == '>') {
-                    map.carts.add(new Cart(location, Direction.EAST));
-                    horizontalLine = true;
-                } else if (ch == ' ') {
-                    horizontalLine = false;
+                    map.carts.add(new Cart(location, Direction.EAST, map));
+                } else if (ch == 'v') {
+                    map.carts.add(new Cart(location, Direction.SOUTH, map));
+                } else if (ch == '<') {
+                    map.carts.add(new Cart(location, Direction.WEST, map));
                 } else {
-                    throw new IllegalStateException("Unknown map char: " + ch);
+                    throw new IllegalStateException("Unknown char: " + ch);
                 }
             }
         }
 
-        Collections.sort(map.carts, new Comparator<Cart>() {
-            @Override
-            public int compare(Cart a, Cart b) {
-                int cmp = Integer.compare(a.location.row, b.location.row);
-                if (cmp == 0) {
-                    return Integer.compare(a.location.col, b.location.col);
-                } else {
-                    return cmp;
-                }
-            }
-        });
         return map;
-    }
-
-    private static class TracksMap {
-
-        Set<Location> intersections = new HashSet<Location>();
-        Map<Location, Turn> turns = new HashMap<Location, Turn>();
-        List<Cart> carts = new ArrayList<Cart>();
-    }
-
-    private static class Turn {
-
-        private final Direction turnLeft;
-        private final Direction turnRight;
-
-        Turn(Direction turnLeft, Direction turnRight) {
-            this.turnLeft = turnLeft;
-            this.turnRight = turnRight;
-        }
-
-        Direction turn(Direction dir) {
-            if (dir == turnLeft) {
-                return dir.left();
-            } else if (dir == turnRight) {
-                return dir.right();
-            } else {
-                throw new IllegalStateException("Can't turn");
-            }
-        }
-    }
-
-    private static class Cart {
-
-        private Location location;
-        private Direction dir;
-        private int turns;
-
-        Cart(Location location, Direction dir) {
-            this.location = location;
-            this.dir = dir;
-        }
-
-        void move(TracksMap map) {
-            location = dir.next(location);
-
-            if (map.turns.containsKey(location)) {
-                dir = map.turns.get(location).turn(dir);
-            } else if (map.intersections.contains(location)) {
-                if (turns % 3 == 0) {
-                    dir = dir.left();
-                } else if (turns % 3 == 1) {
-                    // straight
-                } else if (turns % 3 == 2) {
-                    dir = dir.right();
-                }
-
-                turns++;
-            }
-        }
-    }
-
-    private enum Direction {
-        NORTH(-1, 0) {
-            @Override
-            public Direction left() {
-                return WEST;
-            }
-
-            @Override
-            public Direction right() {
-                return EAST;
-            }
-        },
-        EAST(0, 1) {
-            @Override
-            public Direction left() {
-                return NORTH;
-            }
-
-            @Override
-            public Direction right() {
-                return SOUTH;
-            }
-        },
-        SOUTH(1, 0) {
-            @Override
-            public Direction left() {
-                return EAST;
-            }
-
-            @Override
-            public Direction right() {
-                return WEST;
-            }
-        },
-        WEST(0, -1) {
-            @Override
-            public Direction left() {
-                return SOUTH;
-            }
-
-            @Override
-            public Direction right() {
-                return NORTH;
-            }
-        };
-
-        private final int offsetRow;
-        private final int offsetCol;
-
-        Direction(int offsetRow, int offsetCol) {
-            this.offsetRow = offsetRow;
-            this.offsetCol = offsetCol;
-        }
-
-        Location next(Location location) {
-            return new Location(location.row + offsetRow, location.col + offsetCol);
-        }
-
-        abstract Direction left();
-        abstract Direction right();
     }
 
     private static class Location {
@@ -235,20 +89,143 @@ public class Day13 {
             this.col = col;
         }
 
-        @Override
-        public int hashCode() {
-            return 31 * row + col;
-        }
-
-        @Override
         public boolean equals(Object obj) {
             Location other = (Location) obj;
-            return other.row == row && other.col == col;
+            return row == other.row && col == other.col;
         }
 
         @Override
         public String toString() {
             return col + "," + row;
         }
+    }
+
+    private static class Map {
+
+        private static int EMPTY = 0;
+        private static int PATH = 1;         // |-
+        private static int A_TURN = 2;       // / 
+        private static int B_TURN = 3;       // \ 
+        private static int INTERSECTION = 4; // +
+
+        private int width;
+        private int height;
+        private int[][] grid;
+        private List<Cart> carts;
+
+        Map(int width, int height) {
+            this.width = width;
+            this.height = height;
+            this.grid = new int[height][width];
+            this.carts = new ArrayList<Cart>();
+        }
+
+        void set(Location location, int type) {
+            this.grid[location.row][location.col] = type;
+        }
+
+        int get(Location location) {
+            return grid[location.row][location.col];
+        }
+    }
+
+    private static class Cart implements Comparable<Cart> {
+
+        private Map map;
+        private Location location;
+        private Direction direction;
+        private int turns;
+
+        Cart(Location location, Direction direction, Map map) {
+            this.location = location;
+            this.direction = direction;
+            this.map = map;
+        }
+
+        void move() {
+            if (direction == Direction.NORTH) {
+                location = new Location(location.row - 1, location.col);
+            } else if (direction == Direction.EAST) {
+                location = new Location(location.row, location.col + 1);
+            } else if (direction == Direction.SOUTH) {
+                location = new Location(location.row + 1, location.col);
+            } else if (direction == Direction.WEST) {
+                location = new Location(location.row, location.col - 1);
+            }
+
+            if (map.get(location) == Map.A_TURN) {
+                if (direction == Direction.NORTH) {
+                    turnRight();
+                } else if (direction == Direction.WEST) {
+                    turnLeft();
+                } else if (direction == Direction.SOUTH) {
+                    turnRight();
+                } else if (direction == Direction.EAST) {
+                    turnLeft();
+                }
+            } else if (map.get(location) == Map.B_TURN) {
+                if (direction == Direction.NORTH) {
+                    turnLeft();
+                } else if (direction == Direction.WEST) {
+                    turnRight();
+                } else if (direction == Direction.SOUTH) {
+                    turnLeft();
+                } else if (direction == Direction.EAST) {
+                    turnRight();
+                }
+            } else if (map.get(location) == Map.INTERSECTION) {
+                if (turns % 3 == 0) {
+                    turnLeft();
+                } else if (turns % 3 == 1) {
+                    // no-op
+                } else if (turns % 3 == 2) {
+                    turnRight();
+                }
+
+                turns++;
+            }
+        }
+
+        private void turnLeft() {
+            if (direction == Direction.NORTH) {
+                direction = Direction.WEST;
+            } else if (direction == Direction.EAST) {
+                direction = Direction.NORTH;
+            } else if (direction == Direction.SOUTH) {
+                direction = Direction.EAST;
+            } else if (direction == Direction.WEST) {
+                direction = Direction.SOUTH;
+            } else {
+                throw new IllegalStateException("Unknown direction: " + direction);
+            }
+        }
+
+        private void turnRight() {
+            if (direction == Direction.NORTH) {
+                direction = Direction.EAST;
+            } else if (direction == Direction.EAST) {
+                direction = Direction.SOUTH;
+            } else if (direction == Direction.SOUTH) {
+                direction = Direction.WEST;
+            } else if (direction == Direction.WEST) {
+                direction = Direction.NORTH;
+            } else {
+                throw new IllegalStateException("Unknown direction: " + direction);
+            }
+        }
+
+        @Override
+        public int compareTo(Cart other) {
+            int rowCmp = Integer.compare(location.row, other.location.row);
+            if (rowCmp == 0) {
+                return Integer.compare(location.col, other.location.col);
+            } else {
+                return rowCmp;
+            }
+        }
+    }
+
+    private enum Direction {
+        NORTH, EAST, SOUTH, WEST;
     }
 }
