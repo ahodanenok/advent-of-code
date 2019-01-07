@@ -9,11 +9,16 @@ import java.util.ArrayList;
 public class Day18 {
 
     public static void main(String[] args) {
-        CollectionArea area = collect(getArea(), 10);
-        part1(area);
+        CollectionArea area = getArea();
+
+        area = collect(area, 10);
+        resourceValue(area);
+
+        area = collect(area, 1000000000 - 10);
+        resourceValue(area);
     }
 
-    private static void part1(CollectionArea area) {
+    private static void resourceValue(CollectionArea area) {
         int treesCount = 0;
         int lumberCount = 0;
         for (int row = 0; row < area.height; row++) {
@@ -30,8 +35,11 @@ public class Day18 {
     }
 
     private static CollectionArea collect(CollectionArea initialArea, int minutes) {
+        List<CollectionArea> seen = new ArrayList<CollectionArea>();
+
         CollectionArea area = initialArea;
-        for (int i = 0; i < minutes; i++) {
+        int m = 0;
+        while (m < minutes) {
             CollectionArea newArea = new CollectionArea(area.width, area.height);
             for (int row = 0; row < area.height; row++) {
                 for (int col = 0; col < area.width; col++) {
@@ -52,7 +60,17 @@ public class Day18 {
                 }
             }
 
+            // fast-forward
+            if (seen.contains(newArea)) {
+                int seenMinute = seen.indexOf(newArea);
+                int repeatInterval = m - seenMinute;
+                int minutesLeft = minutes - m;
+                m = minutes - minutesLeft % repeatInterval;
+            }
+
             area = newArea;
+            seen.add(area);
+            m++;
         }
 
         return area;
@@ -150,6 +168,44 @@ public class Day18 {
 
         private boolean inArea(int row, int col) {
             return row >= 0 && row < height && col >= 0 && col < width;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            CollectionArea other = (CollectionArea) obj;
+
+            if (other.width != width || other.height != height) {
+                return false;
+            }
+
+            for (int row = 0; row < height; row++) {
+                for (int col = 0; col < width; col++) {
+                    if (other.get(row, col) != get(row, col)) {
+                        return false;
+                    }
+                }
+            }
+
+            return true;
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            for (int row = 0; row < height; row++) {
+                for (int col = 0; col < width; col++) {
+                    if (get(row, col) == EMPTY) {
+                        sb.append('.');
+                    } else if (get(row, col) == TREES) {
+                        sb.append('|');
+                    } else if (get(row, col) == LUMBER) {
+                        sb.append('#');
+                    }
+                }
+                sb.append('\n');
+            }
+
+            return sb.toString();
         }
     }
 }
