@@ -14,12 +14,12 @@ public class Day19 {
     public static void main(String[] args) {
         Program prg = getProgram();
         part1(prg);
+        part2();
     }
 
     private static void part1(Program prg) {
-        Context ctx = new Context(0, 0, 0, 0, 0, 0);
+        Context ctx = new Context();
         int pcReg = prg.pcReg;
-
         while (ctx.get(pcReg) < prg.statements.size()) {
             Statement stmt = prg.statements.get(ctx.get(pcReg));
             stmt.instruction.execute(stmt.arg1, stmt.arg2, stmt.arg3, ctx);
@@ -27,6 +27,22 @@ public class Day19 {
         }
 
         System.out.println(ctx.get(0));
+    }
+
+    private static void part2() {
+        // sum of all factors of r1
+
+        int r0 = 0;
+        int r1 = 10551260;
+
+        for (int r3 = 1; r3 * r3 <= r1; r3++) {
+            if (r1 % r3 == 0) {
+                r0 += r3;
+                r0 += r1 / r3;
+            }
+        }
+
+        System.out.println(r0);
     }
 
     private static class Program {
@@ -216,16 +232,16 @@ public class Day19 {
 
         private int[] registers;
 
-        Context(int a, int b, int c, int d, int e, int f) {
-            this.registers = new int[] { a, b, c, d, e, f };
+        Context() {
+            this.registers = new int[6];
         }
 
         void set(int register, int value) {
-            registers[register] = value;
+            registers[(int) register] = value;
         }
 
         int get(int register) {
-            return registers[register];
+            return registers[(int) register];
         }
 
         boolean isValid(int register) {
