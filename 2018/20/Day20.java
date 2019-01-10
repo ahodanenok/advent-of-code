@@ -15,10 +15,7 @@ public class Day20 {
 
     public static void main(String[] args) {
         RoomsMap map = buildMap(getRegex());
-        part1(map);
-    }
 
-    private static void part1(RoomsMap map) {
         Map<Location, Integer> distances = new HashMap<Location, Integer>();
         distances.put(new Location(0, 0), 0);
 
@@ -35,11 +32,25 @@ public class Day20 {
             }
         }
 
+        // part 1
         int maxDistance = Integer.MIN_VALUE;
         for (Map.Entry<Location, Integer> entry : distances.entrySet()) {
             maxDistance = Math.max(entry.getValue(), maxDistance);
         }
         System.out.println(maxDistance);
+
+        // part 2
+        int atleast1000StepsCount = 0;
+        for (Map.Entry<Location, Integer> entry : distances.entrySet()) {
+            if (entry.getValue() >= 1000) {
+                atleast1000StepsCount++;
+            }
+        }
+        System.out.println(atleast1000StepsCount);
+    }
+
+    private static void part1(RoomsMap map) {
+       
     }
 
     private static String getRegex() {
