@@ -19,7 +19,9 @@ public class Day21 {
         long counter = 0;
 
         int pcReg = prg.pcReg;
+        // int range wasn't enough, tried range of unsigned int and it worked :)
         while (ctx.get(pcReg) < prg.statements.size() && counter >= 0 && counter < (2L * Integer.MAX_VALUE)) {
+            // program halts when value in register 0 equals value in register 3 at line 28
             if (ctx.get(pcReg) == 28) {
                 if (!r0Values.containsKey(ctx.get(3))) {
                     r0Values.put(ctx.get(3), counter);
