@@ -16,10 +16,65 @@ import java.util.regex.Matcher;
 public class Day24 {
 
     private static final boolean DEBUG = false;
+    private static final Pattern UNITS_GROUP_PATTERN = Pattern.compile("^(\\d+) units each with (\\d+) hit points (\\(([a-z]+ to ([ ,a-z]+))?(; )?([a-z]+ to ([ ,a-z]+))\\) )?with an attack that does (\\d+) ([a-z]+) damage at initiative (\\d+)$");
 
     public static void main(String[] args) {
         Condition condition = getCondition();
-        while (!condition.immuneSystem.isEmpty() && !condition.infection.isEmpty()) {
+        part1(condition.copy());
+        part2(condition.copy());
+    }
+
+    private static void part1(Condition condition) {
+        fight(condition);
+
+        List<UnitsGroup> winningArmy;
+        if (!condition.infection.isEmpty()) {
+            winningArmy = condition.infection;
+        } else if (!condition.immuneSystem.isEmpty()) {
+            winningArmy = condition.immuneSystem;
+        } else {
+            throw new IllegalStateException("No winner");
+        }
+
+        int unitsCount = 0;
+        for (UnitsGroup group : winningArmy) {
+            unitsCount += group.unitsCount;
+        }
+
+        System.out.println(unitsCount);
+    }
+
+    private static void part2(Condition condition) {
+        int boost = 1;
+
+        boostSearch:
+        while (true) {
+            for (int i = 0; i < condition.immuneSystem.size(); i++) {
+                Condition boostedCondition = condition.copy();
+                for (UnitsGroup group : boostedCondition.immuneSystem) {
+                    group.unitAttackDamage += boost;
+                }
+
+                fight(boostedCondition);
+                if (!boostedCondition.immuneSystem.isEmpty() && boostedCondition.infection.isEmpty()) {
+                    int unitsCount = 0;
+                    for (UnitsGroup group : boostedCondition.immuneSystem) {
+                        unitsCount += group.unitsCount;
+                    }
+
+                    System.out.println(unitsCount);
+                    break boostSearch;
+                }
+            }
+
+            boost++;
+        }
+    }
+
+    private static void fight(Condition condition) {
+        boolean anyUnitsKilled;
+
+        do {
             if (DEBUG) {
                 System.out.println("-- Groups alive --");
                 for (UnitsGroup group : condition.immuneSystem) {
@@ -36,10 +91,13 @@ public class Day24 {
             selectTargets(condition.immuneSystem, condition.infection, selectedTargets);
 
             if (DEBUG) System.out.println("-- Attacking phase --");
-            //List<UnitsGroup> attackers = new ArrayList<UnitsGroup>(selectedTargets);
+            anyUnitsKilled = false;
             for (UnitsGroup attacker : selectedTargets.keySet()) {
                 if (attacker.isAlive()) {
-                    attacker.attack(selectedTargets.get(attacker));
+                    boolean killedAny = attacker.attack(selectedTargets.get(attacker));
+                    if (killedAny) {
+                        anyUnitsKilled = true;
+                    }
                 }
             }
 
@@ -56,23 +114,7 @@ public class Day24 {
                     condition.infection.remove(i);
                 }
             }
-        }
-
-        List<UnitsGroup> winningArmy;
-        if (!condition.infection.isEmpty()) {
-            winningArmy = condition.infection;
-        } else if (!condition.immuneSystem.isEmpty()) {
-            winningArmy = condition.immuneSystem;
-        } else {
-            throw new IllegalStateException("Both armies are dead");
-        }
-
-        int unitsCount = 0;
-        for (UnitsGroup group : winningArmy) {
-            unitsCount += group.unitsCount;
-        }
-
-        System.out.println(unitsCount);
+        } while (!condition.immuneSystem.isEmpty() && !condition.infection.isEmpty() && anyUnitsKilled);
     }
 
     private static void selectTargets(List<UnitsGroup> attackers, List<UnitsGroup> targets, Map<UnitsGroup, UnitsGroup> selectedTargets) {
@@ -133,9 +175,14 @@ public class Day24 {
     private static Condition getCondition() {
         Condition condition = new Condition();
 
-        Pattern p = Pattern.compile("^(\\d+) units each with (\\d+) hit points (\\(([a-z]+ to ([ ,a-z]+))?(; )?([a-z]+ to ([ ,a-z]+))\\) )?with an attack that does (\\d+) ([a-z]+) damage at initiative (\\d+)$");
-
         Scanner scanner = new Scanner(System.in);
+        readGroups(scanner, condition.immuneSystem, "Immune System Group ");
+        readGroups(scanner, condition.infection, "Infection Group ");
+
+        return condition;
+    }
+
+    private static void readGroups(Scanner scanner, List<UnitsGroup> groups, String idPrefix) {
         scanner.nextLine();
         while (scanner.hasNextLine()) {
             String line = scanner.nextLine().trim();
@@ -143,7 +190,7 @@ public class Day24 {
                 break;
             }
 
-            Matcher m = p.matcher(line);
+            Matcher m = UNITS_GROUP_PATTERN.matcher(line);
             m.find();
 
             String immunitiesGroup = null;
@@ -175,8 +222,8 @@ public class Day24 {
                 }
             }
 
-            condition.immuneSystem.add(new UnitsGroup(
-                "Immune System Group " + (condition.immuneSystem.size() + 1),
+            groups.add(new UnitsGroup(
+                idPrefix + (groups.size() + 1),
                 Integer.parseInt(m.group(1)),
                 Integer.parseInt(m.group(2)),
                 Integer.parseInt(m.group(9)),
@@ -185,61 +232,24 @@ public class Day24 {
                 immunities,
                 Integer.parseInt(m.group(11))));
         }
-
-        scanner.nextLine();
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine().trim();
-
-            Matcher m = p.matcher(line);
-            m.find();
-
-            String immunitiesGroup = null;
-            String weaknessesGroup = null;
-
-            if (m.group(4) != null && m.group(4).startsWith("immune")) {
-                immunitiesGroup = m.group(5);
-            } else if (m.group(7) != null && m.group(7).startsWith("immune")) {
-                immunitiesGroup = m.group(8);
-            }
-
-            if (m.group(4) != null && m.group(4).startsWith("weak")) {
-                weaknessesGroup = m.group(5);
-            } else if (m.group(7) != null && m.group(7).startsWith("weak")) {
-                weaknessesGroup = m.group(8);
-            }
-
-            List<String> weaknesses = new ArrayList<String>();
-            if (weaknessesGroup != null) {
-                for (String weakness : weaknessesGroup.split(", ")) {
-                    weaknesses.add(weakness.trim());
-                }
-            }
-
-            List<String> immunities = new ArrayList<String>();
-            if (immunitiesGroup != null) {
-                for (String immune : immunitiesGroup.split(", ")) {
-                    immunities.add(immune.trim());
-                }
-            }
-
-            condition.infection.add(new UnitsGroup(
-                "Infection Group " + (condition.infection.size() + 1),
-                Integer.parseInt(m.group(1)),
-                Integer.parseInt(m.group(2)),
-                Integer.parseInt(m.group(9)),
-                m.group(10),
-                weaknesses,
-                immunities,
-                Integer.parseInt(m.group(11))));
-        }
-
-        return condition;
     }
 
     private static class Condition {
 
         final List<UnitsGroup> immuneSystem = new ArrayList<UnitsGroup>();
         final List<UnitsGroup> infection = new ArrayList<UnitsGroup>();
+
+        Condition copy() {
+            Condition copy = new Condition();
+            for (UnitsGroup group : immuneSystem) {
+                copy.immuneSystem.add(group.copy());
+            }
+            for (UnitsGroup group : infection) {
+                copy.infection.add(group.copy());
+            }
+
+            return copy;
+        }
     }
 
     private static class UnitsGroup {
@@ -267,7 +277,7 @@ public class Day24 {
         private int unitsCount;
 
         private final int unitHp;
-        private final int unitAttackDamage;
+        private int unitAttackDamage;
 
         private final String attackType;
         private final List<String> weaknesses = new ArrayList<String>();
@@ -301,11 +311,12 @@ public class Day24 {
             return unitsCount * unitAttackDamage;
         }
 
-        void attack(UnitsGroup target) {
+        boolean attack(UnitsGroup target) {
             int damage = getPossibleDamage(target);
             int unitsKilled = damage / target.unitHp;
             target.unitsCount -= unitsKilled;
             if (DEBUG) System.out.println("  " + id + " (initiative " + initiative + ") attacks " + target.id + " and kills " + unitsKilled + ", units remained " + target.unitsCount);
+            return unitsKilled > 0;
         }
 
         int getPossibleDamage(UnitsGroup target) {
@@ -319,6 +330,18 @@ public class Day24 {
             }
 
             return damage;
+        }
+
+        UnitsGroup copy() {
+            return new UnitsGroup(
+                id,
+                unitsCount,
+                unitHp,
+                unitAttackDamage,
+                attackType,
+                weaknesses,
+                immunities,
+                initiative);
         }
 
         @Override
