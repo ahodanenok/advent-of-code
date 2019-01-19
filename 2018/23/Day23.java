@@ -1,6 +1,8 @@
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Advent of Code - Day 23
@@ -11,6 +13,7 @@ public class Day23 {
     public static void main(String[] args) {
         List<NanoBot> bots = getBots();
         part1(bots);
+        part2(bots);
     }
 
     private static void part1(List<NanoBot> bots) {
@@ -29,6 +32,31 @@ public class Day23 {
         }
 
         System.out.println(botsInRange);
+    }
+
+    private static void part2(List<NanoBot> bots) {
+        // with the help of this awesome solution
+        // https://www.reddit.com/r/adventofcode/comments/a8s17l/2018_day_23_solutions/ecdqzdg
+
+        Map<Long, Integer> intervals = new TreeMap<Long, Integer>();
+        for (NanoBot bot : bots) {
+            long d = Math.abs(bot.x) + Math.abs(bot.y) + Math.abs(bot.z);
+            intervals.put(d - bot.radius, 1);
+            intervals.put(d + bot.radius + 1, -1);
+        }
+
+        int overlapCount = 0;
+        int maxOverlapCount = Integer.MIN_VALUE;
+        long distanceToOrigin = Integer.MAX_VALUE;
+        for (java.util.Map.Entry<Long, Integer> entry : intervals.entrySet()) {
+            overlapCount += entry.getValue();
+            if (overlapCount > maxOverlapCount) {
+                maxOverlapCount = overlapCount;
+                distanceToOrigin = entry.getKey();
+            }
+        }
+
+        System.out.println(distanceToOrigin);
     }
 
     private static List<NanoBot> getBots() {
