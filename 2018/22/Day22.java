@@ -1,9 +1,12 @@
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.PriorityQueue;
 
 /**
  * Advent of Code - Day 22
- * https://adventofcode.com/2018/day/21
+ * https://adventofcode.com/2018/day/22
  */
 public class Day22 {
 
@@ -11,16 +14,17 @@ public class Day22 {
         Cave cave = new Cave(7863, new Region(14, 760));
         //Cave cave = new Cave(510, new Region(10, 10));
         part1(cave);
+        part2(cave);
     }
 
     private static void part1(Cave cave) {
         int riskLevel = 0;
         for (int y = 0; y <= cave.target.y; y++) {
             for (int x = 0; x <= cave.target.x; x++) {
-                int type = cave.getRegionType(new Region(x, y));
-                if (type == Cave.WET) {
+                RegionType type = cave.getRegionType(new Region(x, y));
+                if (type == RegionType.WET) {
                     riskLevel += 1;
-                } else if (type == Cave.NARROW) {
+                } else if (type == RegionType.NARROW) {
                     riskLevel += 2;
                 }
             }
@@ -29,11 +33,98 @@ public class Day22 {
         System.out.println(riskLevel);
     }
 
-    private static class Cave {
+    private enum Equipment {
+        TORCH(RegionType.ROCKY, RegionType.NARROW),
+        GEAR(RegionType.ROCKY, RegionType.WET),
+        NOTHINHG(RegionType.WET, RegionType.NARROW);
 
-        static final int ROCKY = 1;
-        static final int WET = 2;
-        static final int NARROW = 3;
+        List<RegionType> regionTypes = new ArrayList<RegionType>();
+
+        Equipment(RegionType... regionTypes) {
+            for (RegionType type : regionTypes) {
+                this.regionTypes.add(type);
+            }
+        }
+    }
+
+    private static class Step {
+
+        private final Region region;
+        private final Equipment equipment;
+        private int minutes;
+
+        Step(Region region, Equipment equipment, int minutes) {
+            this.region = region;
+            this.equipment = equipment;
+            this.minutes = minutes;
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * region.hashCode() + equipment.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            Step other = (Step) obj;
+            return other.region.equals(region) && other.equipment == equipment;
+        }
+    }
+
+    private static void part2(Cave cave) {
+        Step initial = new Step(new Region(0, 0), Equipment.TORCH, 0);
+        Step target = new Step(cave.target, Equipment.TORCH, 0);
+
+        Map<Step, Integer> minutes = new HashMap<Step, Integer>();
+
+        PriorityQueue<Step> queue = new PriorityQueue<Step>(new java.util.Comparator<Step>() {
+            @Override
+            public int compare(Step a, Step b) {
+                return Integer.compare(a.minutes, b.minutes);
+            }
+        });
+        queue.add(initial);
+
+        while (!queue.isEmpty()) {
+            Step current = queue.poll();
+            if (minutes.containsKey(current) && minutes.get(current) <= current.minutes) {
+                continue;
+            }
+            minutes.put(current, current.minutes);
+
+            if (current.equals(target)) {
+                break;
+            }
+
+            RegionType type = cave.getRegionType(current.region);
+            for (Equipment equipment : Equipment.values()) {
+                if (equipment.regionTypes.contains(type) && current.equipment != equipment) {
+                    queue.add(new Step(current.region, equipment, current.minutes + 7));
+                }
+            }
+
+            for (Region adjacent : cave.getAdjacentRegions(current.region)) {
+                if (adjacent.x > cave.target.x + 100 || adjacent.y > cave.target.y + 100) {
+                    continue;
+                }
+
+                type = cave.getRegionType(adjacent);
+                for (Equipment equipment : Equipment.values()) {
+                    if (equipment.regionTypes.contains(type) && current.equipment == equipment) {
+                        queue.add(new Step(adjacent, current.equipment, current.minutes + 1));
+                    }
+                }
+            }
+        }
+
+        System.out.println(minutes.get(target));
+    }
+
+    private enum RegionType {
+        ROCKY, WET, NARROW;
+    }
+
+    private static class Cave {
 
         private int depth;
         private Region target;
@@ -46,17 +137,33 @@ public class Day22 {
             this.erosionLevels = new HashMap<Region, Integer>();
         }
 
-        int getRegionType(Region region) {
+        RegionType getRegionType(Region region) {
             int el = getErosionLevel(region);
             if (el % 3 == 0) {
-                return ROCKY;
+                return RegionType.ROCKY;
             } else if (el % 3 == 1) {
-                return WET;
+                return RegionType.WET;
             } else if (el % 3 == 2) {
-                return NARROW;
+                return RegionType.NARROW;
             } else {
                 throw new IllegalStateException("Unknown type for " + (el % 3));
             }
+        }
+
+        List<Region> getAdjacentRegions(Region region) {
+            List<Region> result = new ArrayList<Region>();
+
+            if (region.x - 1 >= 0) {
+                result.add(new Region(region.x - 1, region.y));
+            }
+            result.add(new Region(region.x + 1, region.y));
+
+            if (region.y - 1 >= 0) {
+                result.add(new Region(region.x, region.y - 1));
+            }
+            result.add(new Region(region.x, region.y + 1));
+
+            return result;
         }
 
         @Override
@@ -68,12 +175,12 @@ public class Day22 {
             StringBuilder sb = new StringBuilder();
             for (int y = from.y; y <= to.y; y++) {
                 for (int x = from.x; x <= to.x; x++) {
-                    int type = getRegionType(new Region(x, y));
-                    if (type == ROCKY) {
+                    RegionType type = getRegionType(new Region(x, y));
+                    if (type == RegionType.ROCKY) {
                         sb.append('.');
-                    } else if (type == WET) {
+                    } else if (type == RegionType.WET) {
                         sb.append('=');
-                    } else if (type == NARROW) {
+                    } else if (type == RegionType.NARROW) {
                         sb.append('|');
                     } else {
                         throw new IllegalStateException("Unknown type: " + type);
@@ -118,6 +225,11 @@ public class Day22 {
         Region(int x, int y) {
             this.x = x;
             this.y = y;
+        }
+
+        @Override
+        public String toString() {
+            return x + "," + y;
         }
 
         @Override
