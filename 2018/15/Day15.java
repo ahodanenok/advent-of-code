@@ -15,46 +15,59 @@ import java.util.PriorityQueue;
  */
 public class Day15 {
 
+    // thanks to https://lamperi.name/aoc/, used as an aid in debugging
+
     private static final boolean DEBUG = false;
 
     public static void main(String[] args) {
         Cave cave = getCave();
-        fight(cave);
+        part1(cave.copy());
+        part2(cave.copy());
     }
 
-    private static Cave getCave() {
-        List<String> lines = new ArrayList<String>();
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
-            lines.add(scanner.nextLine().trim());
-        }
+    private static void part1(Cave cave) {
+        int rounds = fight(cave);
+        System.out.println(calculateOutcome(cave, rounds));
+    }
 
-        Cave cave = new Cave(lines.get(0).length(), lines.size());
-        for (int row = 0; row < lines.size(); row++) {
-            String line = lines.get(row);
-            for (int col = 0; col < line.length(); col++) {
-                char ch = line.charAt(col);
-                if (ch == '#') {
-                    cave.walls.add(new Location(row, col));
-                } else if (ch == 'G') {
-                    cave.units.add(new Unit(UnitType.GOBLIN, UnitType.ELF, new Location(row, col), cave));
-                } else if (ch == 'E') {
-                    cave.units.add(new Unit(UnitType.ELF, UnitType.GOBLIN, new Location(row, col), cave));
-                } else if (ch == '.') {
-                    // no-op
-                } else {
-                    throw new IllegalStateException("Unknown cave character: " + ch);
-                }
+    private static void part2(Cave cave) {
+        int attack = 4;
+        int elfCount = cave.getUnits(UnitType.ELF).size();
+        while (true) {
+            Cave boosted = cave.copy();
+            for (Unit elf : boosted.getUnits(UnitType.ELF)) {
+                elf.attack = attack;
             }
-        }
 
-        return cave;
+            int rounds = fight(boosted);
+            if (boosted.getUnits(UnitType.ELF).size() == elfCount) {
+                System.out.println(calculateOutcome(boosted, rounds));
+                break;
+            }
+
+            attack++;
+        }
     }
 
-    private static void fight(Cave cave) {
+    private static int calculateOutcome(Cave cave, int rounds) {
+        int hpSum = 0;
+        for (Unit unit : cave.units) {
+            hpSum += unit.hp;
+        }
+
+        if (DEBUG) {
+            System.out.println("-- Calculate outcome --");
+            System.out.println("rounds=" + rounds);
+            System.out.println("hpSum=" + hpSum);
+        }
+
+        return hpSum * rounds;
+    }
+
+    private static int fight(Cave cave) {
         int rounds = 0;
 
-        game:
+        fight:
         while (true) {
             List<Unit> units = new ArrayList<Unit>(cave.units);
             Collections.sort(units, Unit.TURN_ORDER);
@@ -85,7 +98,7 @@ public class Day15 {
                         System.out.println("    No targets, combat is over");
                         System.out.println();
                     }
-                    break game;
+                    break fight;
                 }
 
                 if (!unit.attack()) {
@@ -135,22 +148,44 @@ public class Day15 {
             }
         }
 
-        int hpSum = 0;
-        for (Unit unit : cave.units) {
-            hpSum += unit.hp;
-        }
-
         if (DEBUG) {
-            System.out.println("-- Units after game --");
+            System.out.println("-- Units after fight --");
             for (Unit unit : cave.units) {
                 System.out.println(unit);
             }
             System.out.println();
-            System.out.println("rounds=" + rounds);
-            System.out.println("hpSum=" + hpSum);
         }
 
-        System.out.println(hpSum * rounds);
+        return rounds;
+    }
+
+    private static Cave getCave() {
+        List<String> lines = new ArrayList<String>();
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNextLine()) {
+            lines.add(scanner.nextLine().trim());
+        }
+
+        Cave cave = new Cave(lines.get(0).length(), lines.size());
+        for (int row = 0; row < lines.size(); row++) {
+            String line = lines.get(row);
+            for (int col = 0; col < line.length(); col++) {
+                char ch = line.charAt(col);
+                if (ch == '#') {
+                    cave.walls.add(new Location(row, col));
+                } else if (ch == 'G') {
+                    cave.units.add(new Unit(UnitType.GOBLIN, UnitType.ELF, new Location(row, col), cave));
+                } else if (ch == 'E') {
+                    cave.units.add(new Unit(UnitType.ELF, UnitType.GOBLIN, new Location(row, col), cave));
+                } else if (ch == '.') {
+                    // no-op
+                } else {
+                    throw new IllegalStateException("Unknown cave character: " + ch);
+                }
+            }
+        }
+
+        return cave;
     }
 
     private static class Cave {
@@ -163,6 +198,18 @@ public class Day15 {
         Cave(int width, int height) {
             this.width = width;
             this.height = height;
+        }
+
+        Cave copy() {
+            Cave copy = new Cave(width, height);
+            copy.walls.addAll(walls);
+            for (Unit unit : units) {
+                Unit unitCopy = unit.copy();
+                unitCopy.cave = copy;
+                copy.units.add(unitCopy);
+            }
+
+            return copy;
         }
 
         private static class Step {
@@ -360,6 +407,7 @@ public class Day15 {
         };
 
         private int hp;
+        private int attack = 3;
         private Location location;
         private UnitType type;
         private UnitType enemyType;
@@ -371,6 +419,13 @@ public class Day15 {
             this.enemyType = enemyType;
             this.location = location;
             this.cave = cave;
+        }
+
+        Unit copy() {
+            Unit copy = new Unit(type, enemyType, location, cave);
+            copy.hp = hp;
+            copy.attack = attack;
+            return copy;
         }
 
         boolean attack() {
@@ -404,7 +459,7 @@ public class Day15 {
             }
 
             Unit attackTarget = possibleTargets.get(0);
-            attackTarget.hp -= 3;
+            attackTarget.hp -= attack;
             if (DEBUG) System.out.println("    Attacking target: " + attackTarget);
             if (attackTarget.hp <= 0) {
                 cave.units.remove(attackTarget);
@@ -528,6 +583,10 @@ public class Day15 {
             return steps.get(1);
         }
 
+        Location to() {
+            return steps.get(steps.size() - 1);
+        }
+
         int size() {
             return steps.size();
         }
@@ -536,7 +595,12 @@ public class Day15 {
         public int compareTo(Path other) {
             int sizeCmp = Integer.compare(size(), other.size());
             if (sizeCmp == 0) {
-                return next().compareTo(other.next());
+                int destCmp = to().compareTo(other.to());
+                if (destCmp == 0) {
+                    return next().compareTo(other.next());
+                } else {
+                    return destCmp;
+                }
             } else {
                 return sizeCmp;
             }
@@ -545,7 +609,7 @@ public class Day15 {
         @Override
         public String toString() {
             return String.format("%s -> %s, %s (%d)", 
-                steps.get(0), steps.get(steps.size() - 1), steps.get(1), steps.size());
+                steps.get(0), to(), next(), steps.size());
         }
     }
 }
