@@ -8,7 +8,7 @@ import java.util.ArrayList;
  */
 public class Day2 {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         List<Box> boxes = getBoxes();
         part1(boxes);
         part2(boxes);
