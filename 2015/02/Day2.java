@@ -11,6 +11,7 @@ public class Day2 {
     public static void main(String[] args) throws Exception {
         List<Box> boxes = getBoxes();
         part1(boxes);
+        part2(boxes);
     }
 
     private static void part1(List<Box> boxes) {
@@ -23,6 +24,18 @@ public class Day2 {
         }
 
         System.out.println(paperNeeded);
+    }
+
+    private static void part2(List<Box> boxes) {
+        int ribbonNeeded = 0;
+        for (Box box : boxes) {
+            ribbonNeeded += Math.min(
+                    Math.min(box.getTopPerimeter(), box.getSidePerimeter()),
+                    box.getFrontPerimeter());
+            ribbonNeeded += box.getVolume();
+        }
+
+        System.out.println(ribbonNeeded);
     }
 
     private static List<Box> getBoxes() {
