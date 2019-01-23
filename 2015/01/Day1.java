@@ -1,5 +1,9 @@
 import java.util.Scanner;
 
+/**
+ * Advent of Code - Day 1
+ * https://adventofcode.com/2015/day/1
+ */
 public class Day1 {
 
     private static final char UP = '(';
