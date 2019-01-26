@@ -12,7 +12,15 @@ public class Day7 {
 
     public static void main(String[] args) {
         Map<String, Gate> gates = getGates();
-        System.out.println(gates.get("a").propagate(gates, new HashMap<String, Integer>())); // part 1
+
+        // part 1
+        Map<String, Integer> env1 = new HashMap<String, Integer>();
+        System.out.println(gates.get("a").propagate(gates, env1));
+
+        // part 2
+        Map<String, Integer> env2 = new HashMap<String, Integer>();
+        env2.put("b", env1.get("a"));
+        System.out.println(gates.get("a").propagate(gates, env2));
     }
 
     private static Map<String, Gate> getGates() {
