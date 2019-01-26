@@ -8,9 +8,10 @@ import java.util.ArrayList;
  */
 public class Day6 {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         List<Instruction> instructions = getInstructions();
         part1(instructions);
+        part2(instructions);
     }
 
     private static void part1(List<Instruction> instructions) {
@@ -39,6 +40,35 @@ public class Day6 {
         }
 
         System.out.println(onCount);
+    }
+
+    private static void part2(List<Instruction> instructions) {
+        int[][] grid = new int[1000][1000];
+        for (Instruction instruction : instructions) {
+            for (int row = instruction.startRow; row <= instruction.endRow; row++) {
+                for (int col = instruction.startCol; col <= instruction.endCol; col++) {
+                    int brightness = grid[row][col];
+                    if (instruction.action == Instruction.ON) {
+                        brightness++;
+                    } else if (instruction.action == Instruction.OFF) {
+                        brightness--;
+                    } else if (instruction.action == Instruction.TOGGLE) {
+                        brightness += 2;
+                    }
+
+                    grid[row][col] = Math.max(0, brightness);
+                }
+            }
+        }
+
+        int totalBrightness = 0;
+        for (int row = 0; row < grid.length; row++) {
+            for (int col = 0; col < grid.length; col++) {
+                totalBrightness += grid[row][col];
+            }
+        }
+
+        System.out.println(totalBrightness);
     }
 
     private static List<Instruction> getInstructions() {
