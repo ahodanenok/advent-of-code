@@ -11,6 +11,7 @@ public class Day8 {
     public static void main(String[] args) {
         List<String> strings = getStrings();
         part1(strings);
+        part2(strings);
     }
 
     private static void part1(List<String> strings) {
@@ -43,6 +44,27 @@ public class Day8 {
         }
 
         System.out.println(literalCharactersCount - memoryCharactersCount);
+    }
+
+    private static void part2(List<String> strings) {
+        int literalCharactersCount = 0;
+        int encodedCharactersCount = 0;
+
+        for (String str : strings) {
+            for (int pos = 0; pos < str.length(); pos++) {
+                char ch = str.charAt(pos);
+                if (ch == '"' || ch == '\\') {
+                    encodedCharactersCount += 2;
+                } else {
+                    encodedCharactersCount++;
+                }
+            }
+
+            encodedCharactersCount += 2;
+            literalCharactersCount += str.length();
+        }
+
+        System.out.println(encodedCharactersCount - literalCharactersCount);
     }
 
     private static List<String> getStrings() {
