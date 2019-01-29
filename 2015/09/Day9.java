@@ -13,10 +13,7 @@ public class Day9 {
 
     public static void main(String[] args) {
         List<Path> paths = getPaths();
-        part1(paths);
-    }
 
-    private static void part1(List<Path> paths) {
         Set<String> places = new HashSet<String>();
         for (Path path : paths) {
             places.add(path.from);
@@ -28,11 +25,13 @@ public class Day9 {
             queue.offer(new Route(place, 0, 1, null));
         }
 
-        int min = Integer.MAX_VALUE;
+        int minDistance = Integer.MAX_VALUE;
+        int maxDistance = Integer.MIN_VALUE;
         while (!queue.isEmpty()) {
             Route current = queue.poll();
             if (current.length == places.size()) {
-                min = Math.min(current.distance, min);
+                minDistance = Math.min(current.distance, minDistance);
+                maxDistance = Math.max(current.distance, maxDistance);
                 continue;
             }
 
@@ -47,7 +46,8 @@ public class Day9 {
             }
         }
 
-        System.out.println(min);
+        System.out.println(minDistance); // part 1
+        System.out.println(maxDistance); // part 2
     }
 
     private static List<Path> getPaths() {
