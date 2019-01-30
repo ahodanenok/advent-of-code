@@ -1,4 +1,5 @@
 import java.util.Scanner;
+import java.util.LinkedList;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -11,6 +12,7 @@ public class Day12 {
     public static void main(String[] args) {
         String json = new Scanner(System.in).nextLine();
         part1(json);
+        part2(json);
     }
 
     private static void part1(String json) {
@@ -23,5 +25,30 @@ public class Day12 {
         }
 
         System.out.println(sum);
+    }
+
+    private static void part2(String json) {
+        Pattern p = Pattern.compile(":\"red\"");
+
+        int i = 0;
+        LinkedList<Integer> stack = new LinkedList<Integer>();
+        while (i < json.length()) {
+            char ch = json.charAt(i);
+            if (ch == '{') {
+                stack.push(i);
+            } else if (ch == '}') {
+                int start = stack.pop();
+                Matcher m = p.matcher(json);
+                m.region(start, i);
+                if (m.find()) {
+                    json = json.substring(0, start) + json.substring(i + 1);
+                    i = start - 1;
+                }
+            }
+
+            i++;
+        }
+
+        part1(json);
     }
 }
