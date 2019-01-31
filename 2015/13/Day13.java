@@ -14,6 +14,7 @@ public class Day13 {
     public static void main(String[] args) throws Exception {
         List<Happiness> happiness = getHappiness();
         part1(happiness);
+        part2(happiness);
     }
 
     private static void part1(List<Happiness> happiness) {
@@ -23,6 +24,17 @@ public class Day13 {
         }
 
         System.out.println(maxHappinessChange(new LinkedList<String>(), persons, happiness));
+    }
+
+    private static void part2(List<Happiness> happiness) {
+        List<Happiness> me = new ArrayList<Happiness>();
+        for (Happiness h : happiness) {
+            me.add(new Happiness("me", h.person, 0));
+            me.add(new Happiness(h.person, "me", 0));
+        }
+        happiness.addAll(me);
+
+        part1(happiness);
     }
 
     private static int maxHappinessChange(LinkedList<String> arrangement,
