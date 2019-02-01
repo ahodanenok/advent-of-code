@@ -26,6 +26,7 @@ public class Day16 {
         targetSue.perfumes = 1;
 
         part1(aunts, targetSue);
+        part2(aunts, targetSue);
     }
 
     private static List<Sue> getAunts() {
@@ -100,8 +101,36 @@ public class Day16 {
         throw new IllegalStateException("Not found");
     }
 
+    private static void part2(List<Sue> aunts, Sue target) {
+        for (Sue aunt : aunts) {
+            if (valueMatches(aunt.children, target.children)
+                    && valueGt(aunt.cats, target.cats)
+                    && valueMatches(aunt.samoyeds, target.samoyeds)
+                    && valueLt(aunt.pomeranians, target.pomeranians)
+                    && valueMatches(aunt.akitas, target.akitas)
+                    && valueMatches(aunt.vizslas, target.vizslas)
+                    && valueLt(aunt.goldfish, target.goldfish)
+                    && valueGt(aunt.trees, target.trees)
+                    && valueMatches(aunt.cars, target.cars)
+                    && valueMatches(aunt.perfumes, target.perfumes)) {
+                System.out.println(aunt);
+                return;
+            }
+        }
+
+        throw new IllegalStateException("Not found");
+    }
+
     private static boolean valueMatches(Integer value, Integer target) {
         return value == null || value == target || (value != null && value.equals(target));
+    }
+
+    private static boolean valueGt(Integer value, Integer target) {
+        return value == null || value > target;
+    }
+
+    private static boolean valueLt(Integer value, Integer target) {
+        return value == null || value < target;
     }
 
     private static class Sue {
