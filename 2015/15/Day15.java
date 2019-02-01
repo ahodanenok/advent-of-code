@@ -11,6 +11,7 @@ public class Day15 {
     public static void main(String[] args) {
         List<Ingridient> ingridients = getIngridients();
         System.out.println(part1(new int[ingridients.size()], 100, 0, ingridients));
+        System.out.println(part2(new int[ingridients.size()], 100, 0, ingridients));
     }
 
     private static int part1(int[] recipe, int spoonsLeft, int ingridient, List<Ingridient> ingridients) {
@@ -21,6 +22,23 @@ public class Day15 {
             for (int s = 1; s <= spoonsLeft; s++) {
                 recipe[ingridient] = s;
                 max = Math.max(part1(recipe, spoonsLeft - s, ingridient + 1, ingridients), max);
+            }
+
+            recipe[ingridient] = 0;
+            return max;
+        }
+    }
+
+    private static int part2(int[] recipe, int spoonsLeft, int ingridient, List<Ingridient> ingridients) {
+        if (ingridient == ingridients.size()) {
+            return caloriesCount(recipe, ingridients) == 500 
+                ? calculateScore(recipe, ingridients) 
+                : Integer.MIN_VALUE;
+        } else {
+            int max = Integer.MIN_VALUE;
+            for (int s = 1; s <= spoonsLeft; s++) {
+                recipe[ingridient] = s;
+                max = Math.max(part2(recipe, spoonsLeft - s, ingridient + 1, ingridients), max);
             }
 
             recipe[ingridient] = 0;
