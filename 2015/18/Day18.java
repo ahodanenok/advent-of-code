@@ -1,4 +1,7 @@
 import java.util.Scanner;
+import java.util.List;
+import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Advent of Code - Day 18
@@ -9,12 +12,28 @@ public class Day18 {
     public static void main(String[] args) {
         Grid grid = getGrid();
         part1(grid);
+        part2(grid);
     }
 
     private static void part1(Grid grid) {
         Grid nextGrid = grid;
         for (int i = 0; i < 100; i++) {
-            nextGrid = step(nextGrid);
+            nextGrid = step(nextGrid, Collections.<Location>emptyList());
+        }
+
+        System.out.println(nextGrid.countOn());
+    }
+
+    private static void part2(Grid grid) {
+        Grid nextGrid = grid;
+        for (int i = 0; i < 100; i++) {
+            nextGrid = step(
+                nextGrid,
+                Arrays.<Location>asList(
+                    new Location(0, 0),
+                    new Location(0, 99),
+                    new Location(99, 0),
+                    new Location(99, 99)));
         }
 
         System.out.println(nextGrid.countOn());
@@ -43,15 +62,19 @@ public class Day18 {
         return grid;
     }
 
-    private static Grid step(Grid grid) {
+    private static Grid step(Grid grid, List<Location> alwaysOn) {
         Grid newGrid = new Grid(grid.size());
         for (int row = 0; row < grid.size(); row++) {
             for (int col = 0; col < grid.size(); col++) {
-                int neighboursOn = grid.countNeighboursOn(row, col);
-                if (grid.isOn(row, col) && neighboursOn == 2 || neighboursOn == 3) {
+                if (alwaysOn.contains(new Location(row, col))) {
                     newGrid.on(row, col);
-                } else if (!grid.isOn(row, col) && neighboursOn == 3) {
-                    newGrid.on(row, col);
+                } else {
+                    int neighboursOn = grid.countNeighboursOn(row, col);
+                    if (grid.isOn(row, col) && neighboursOn == 2 || neighboursOn == 3) {
+                        newGrid.on(row, col);
+                    } else if (!grid.isOn(row, col) && neighboursOn == 3) {
+                        newGrid.on(row, col);
+                    }
                 }
             }
         }
@@ -136,6 +159,23 @@ public class Day18 {
 
         int size() {
             return lights.length;
+        }
+    }
+
+    private static class Location {
+
+        private final int row;
+        private final int col;
+
+        Location(int row, int col) {
+            this.row = row;
+            this.col = col;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            Location other = (Location) obj;
+            return other.row == row && other.col == col;
         }
     }
 }
