@@ -13,6 +13,7 @@ public class Day19 {
     public static void main(String[] args) throws Exception {
         Input input = getInput();
         part1(input.molecule, input.replacements);
+        part2(input.molecule);
     }
 
     private static void part1(String molecule, List<Replacement> replacements) {
@@ -32,6 +33,49 @@ public class Day19 {
         }
 
         System.out.println(count);
+    }
+
+    private static void part2(String molecule) {
+        List<String> elements = toElements(molecule);
+        int wrapperCount = 0;
+        int separatorCount = 0;
+
+        for (String element : elements) {
+            if (element.equals("Rn") || element.equals("Ar")) {
+                wrapperCount++;
+            } else if (element.equals("Y")) {
+                separatorCount++;
+            }
+        }
+
+        //System.out.println(elements.size());
+        //System.out.println(wrapperCount);
+        //System.out.println(separatorCount);
+
+        System.out.println(elements.size() - wrapperCount - 2 * separatorCount - 1);
+    }
+
+    private static List<String> toElements(String molecule) {
+        List<String> elements = new ArrayList<String>();
+        String currentElement = "";
+        for (int i = 0; i < molecule.length(); i++) {
+            char ch = molecule.charAt(i);
+            if (Character.isUpperCase(ch)) {
+                if (currentElement.length() > 0) {
+                    elements.add(currentElement);
+                }
+
+                currentElement = "" + ch;
+            } else {
+                currentElement += ch;
+            }
+        }
+
+        if (currentElement.length() > 0) {
+            elements.add(currentElement);
+        }
+
+        return elements;
     }
 
     private static Input getInput() {
