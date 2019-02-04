@@ -10,6 +10,7 @@ public class Day20 {
     public static void main(String[] args) {
         int presentsCount = 29_000_000;
         part1(presentsCount);
+        part2(presentsCount);
 
         //System.out.println(visitedByElves(1));
         //System.out.println(visitedByElves(2));
@@ -24,7 +25,16 @@ public class Day20 {
 
     private static void part1(int presentsCount) {
         int houseNum = 1;
-        while (presentsByHouse(houseNum) < presentsCount) {
+        while (presentsByHouse(houseNum, 10, Integer.MAX_VALUE) < presentsCount) {
+            houseNum++;
+        }
+
+        System.out.println(houseNum);
+    }
+
+    private static void part2(int presentsCount) {
+        int houseNum = 1;
+        while (presentsByHouse(houseNum, 11, 50) < presentsCount) {
             houseNum++;
         }
 
@@ -49,11 +59,15 @@ public class Day20 {
         return elves;
     }
 
-    private static int presentsByHouse(int houseNum) {
+    private static int presentsByHouse(int houseNum, int presentsPerElf, int limit) {
         List<Integer> elves = visitedByElves(houseNum);
         int presents = 0;
         for (Integer elf : elves) {
-            presents += elf * 10;
+            if (houseNum / elf > limit) {
+                continue;
+            }
+
+            presents += elf * presentsPerElf;
         }
 
         return presents;
