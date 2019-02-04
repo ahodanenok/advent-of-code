@@ -36,6 +36,7 @@ public class Day21 {
     public static void main(String[] args) {
         List<Equipment> equipments = getEquipments(WEAPONS, ARMORS, RINGS);
         part1(equipments);
+        part2(equipments);
     }
 
     private static void part1(List<Equipment> equipments) {
@@ -51,6 +52,21 @@ public class Day21 {
         }
 
         System.out.println(minCost);
+    }
+
+    private static void part2(List<Equipment> equipments) {
+        int maxCost = Integer.MIN_VALUE;
+        for (Equipment equipment : equipments) {
+            Player player = new Player("player", 100, equipment.attack(), equipment.defence());
+            Player boss = new Player("boss", 104, 8, 1);
+
+            Player winner = fight(player, boss);
+            if (winner == boss) {
+                maxCost = Math.max(equipment.cost(), maxCost);
+            }
+        }
+
+        System.out.println(maxCost);
     }
 
     private static Player fight(Player player, Player boss) {
