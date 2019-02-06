@@ -10,7 +10,8 @@ public class Day24 {
 
     public static void main(String[] args) {
         List<Integer> weights = getWeights();
-        part1(weights);
+        System.out.println(qe(balance(weights, 3))); // part 1
+        System.out.println(qe(balance(weights, 4))); // part 2
     }
 
     private static List<Integer> getWeights() {
@@ -24,13 +25,13 @@ public class Day24 {
         return weights;
     }
 
-    private static void part1(List<Integer> weights) {
+    private static List<Integer> balance(List<Integer> weights, int groupCount) {
         int weightSum = 0;
         for (Integer w : weights) {
             weightSum += w;
         }
 
-        System.out.println(qe(balanceGroup(weights, new ArrayList<Integer>(), 0, weightSum / 3)));
+        return balanceGroup(weights, new ArrayList<Integer>(), 0, weightSum / groupCount);
     }
 
     private static List<Integer> balanceGroup(List<Integer> weights, List<Integer> group, int start, int groupWeight) {
