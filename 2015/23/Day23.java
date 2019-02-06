@@ -11,12 +11,20 @@ public class Day23 {
     public static void main(String[] args) {
         List<Command> commands = getCommands();
         part1(commands);
+        part2(commands);
     }
 
     private static void part1(List<Command> commands) {
-        Env env1 = new Env();
-        execute(commands, env1);
-        System.out.println(env1.b);
+        Env env = new Env();
+        execute(commands, env);
+        System.out.println(env.b);
+    }
+
+    private static void part2(List<Command> commands) {
+        Env env = new Env();
+        env.a = 1;
+        execute(commands, env);
+        System.out.println(env.b);
     }
 
     private static List<Command> getCommands() {
