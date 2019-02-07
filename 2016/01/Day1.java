@@ -10,25 +10,52 @@ import java.util.HashSet;
  */
 public class Day1 {
 
+    private static final String TURN_LEFT = "L";
+    private static final String TURN_RIGHT = "R";
+
     public static void main(String[] args) {
         List<Instruction> instructions = getInstructions();
         Location startingLocation = new Location(0, 0);
         part1(startingLocation, instructions);
+        part2(startingLocation, instructions);
     }
 
     private static void part1(Location startingLocation, List<Instruction> instructions) {
         Destination dest = Destination.NORTH;
-        Location location = new Location(0, 0);
+        Location location = new Location(startingLocation.row, startingLocation.col);
         for (Instruction inst : instructions) {
-            if ("L".equals(inst.turn)) {
+            if (TURN_LEFT.equals(inst.turn)) {
                 dest = dest.turnLeft();
-            } else if ("R".equals(inst.turn)) {
+            } else if (TURN_RIGHT.equals(inst.turn)) {
                 dest = dest.turnRight();
             } else {
                 throw new IllegalArgumentException("Unknown turn: " + inst.turn);
             }
 
             location = dest.move(location, inst.steps);
+        }
+
+        System.out.println(startingLocation.distanceTo(location));
+    }
+
+    private static void part2(Location startingLocation, List<Instruction> instructions) {
+        Destination dest = Destination.NORTH;
+        Location location = new Location(startingLocation.row, startingLocation.col);
+        Set<Location> visited = new HashSet<Location>();
+
+        for (int i = 0; i < instructions.size() && !visited.contains(location); i++) {
+            Instruction inst = instructions.get(i);
+            if (TURN_LEFT.equals(inst.turn)) {
+                dest = dest.turnLeft();
+            } else if (TURN_RIGHT.equals(inst.turn)) {
+                dest = dest.turnRight();
+            } else {
+                throw new IllegalArgumentException("Unknown turn: " + inst.turn);
+            }
+
+            for (int j = 0; j < inst.steps && visited.add(location); j++) {
+                location = dest.move(location, 1);
+            }
         }
 
         System.out.println(startingLocation.distanceTo(location));
