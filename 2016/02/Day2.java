@@ -11,6 +11,7 @@ public class Day2 {
     public static void main(String[] args) {
         List<String> instructions = getInstructions();
         part1(instructions);
+        part2(instructions);
     }
 
     private static void part1(List<String> instructions) {
@@ -23,6 +24,20 @@ public class Day2 {
         };
 
         System.out.println(getCode(grid, 2, 2, instructions));
+    }
+
+    private static void part2(List<String> instructions) {
+        char[][] grid = new char[][] {
+            { '\0', '\0', '\0', '\0', '\0', '\0', '\0' },
+            { '\0', '\0', '\0',  '1', '\0', '\0', '\0' },
+            { '\0', '\0',  '2',  '3',  '4', '\0', '\0' },
+            { '\0',  '5',  '6',  '7',  '8',  '9', '\0' },
+            { '\0', '\0',  'A',  'B',  'C', '\0', '\0' },
+            { '\0', '\0', '\0',  'D', '\0', '\0', '\0' },
+            { '\0', '\0', '\0', '\0', '\0', '\0', '\0' }
+        };
+
+        System.out.println(getCode(grid, 3, 1, instructions));
     }
 
     private static String getCode(char[][] grid, int row, int col, List<String> instructions) {
