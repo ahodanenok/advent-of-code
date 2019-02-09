@@ -15,6 +15,7 @@ public class Day4 {
     public static void main(String[] args) {
         List<Room> rooms = getRooms();
         part1(rooms);
+        part2(rooms);
     }
 
     private static void part1(List<Room> rooms) {
@@ -26,6 +27,15 @@ public class Day4 {
         }
 
         System.out.println(sectorIdSum);
+    }
+
+    private static void part2(List<Room> rooms) {
+        for (Room r : rooms) {
+            if (r.isValid() && r.getDecryptedName().equals("northpole object storage")) {
+                System.out.println(r.sectorId);
+                break;
+            }
+        }
     }
 
     private static List<Room> getRooms() {
@@ -53,6 +63,21 @@ public class Day4 {
             int sectorSeparatorPos = name.lastIndexOf('-');
             this.encryptedName = name.substring(0, sectorSeparatorPos);
             this.sectorId = Integer.parseInt(name.substring(sectorSeparatorPos + 1, checksumStart));
+        }
+
+        String getDecryptedName() {
+            String decryptedName = "";
+            for (int i = 0; i < encryptedName.length(); i++) {
+                char ch = encryptedName.charAt(i);
+                if (!Character.isAlphabetic(ch)) {
+                    decryptedName += " ";
+                } else {
+                    int num = 97 + ((ch - 97 + sectorId) % 26);
+                    decryptedName += (char) num;
+                }
+            }
+            //System.out.println(decryptedName);
+            return decryptedName;
         }
 
         boolean isValid() {
