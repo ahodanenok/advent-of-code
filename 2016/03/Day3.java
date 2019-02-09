@@ -9,28 +9,15 @@ import java.util.Scanner;
 public class Day3 {
 
     public static void main(String[] args) {
-        List<Triangle> triangles = getTriangles();
-        part1(triangles);
+        List<String> specs = getSpecs();
+        System.out.println(countValid(getTrianglesFromRows(specs))); // part 1
+        System.out.println(countValid(getTrianglesFromColumns(specs))); // part 2
     }
 
-    private static void part1(List<Triangle> triangles) {
-        int count = 0;
-        for (Triangle t : triangles) {
-            if (t.isValid()) {
-                count++;
-            }
-        }
-
-        System.out.println(count);
-    }
-
-    private static List<Triangle> getTriangles() {
+    private static List<Triangle> getTrianglesFromRows(List<String> specs) {
         List<Triangle> triangles = new ArrayList<Triangle>();
-
-        Scanner scanner = new Scanner(System.in);
-        while (scanner.hasNextLine()) {
-            String line = scanner.nextLine().trim();
-            String[] parts = line.split("\\s+");
+        for (String spec : specs) {
+            String[] parts = spec.trim().split("\\s+");
             triangles.add(new Triangle(
                 Integer.parseInt(parts[0].trim()),
                 Integer.parseInt(parts[1].trim()),
@@ -38,6 +25,52 @@ public class Day3 {
         }
 
         return triangles;
+    }
+
+    private static List<Triangle> getTrianglesFromColumns(List<String> specs) {
+        List<Triangle> triangles = new ArrayList<Triangle>();
+        for (int i = 0; i < specs.size(); i += 3) {
+            String[] a = specs.get(i).trim().split("\\s+");
+            String[] b = specs.get(i + 1).trim().split("\\s+");
+            String[] c = specs.get(i + 2).trim().split("\\s+");
+
+            triangles.add(new Triangle(
+                Integer.parseInt(a[0].trim()),
+                Integer.parseInt(b[0].trim()),
+                Integer.parseInt(c[0].trim())));
+            triangles.add(new Triangle(
+                Integer.parseInt(a[1].trim()),
+                Integer.parseInt(b[1].trim()),
+                Integer.parseInt(c[1].trim())));
+            triangles.add(new Triangle(
+                Integer.parseInt(a[2].trim()),
+                Integer.parseInt(b[2].trim()),
+                Integer.parseInt(c[2].trim())));
+        }
+
+        return triangles;
+    }
+
+    private static int countValid(List<Triangle> triangles) {
+        int count = 0;
+        for (Triangle t : triangles) {
+            if (t.isValid()) {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private static List<String> getSpecs() {
+        List<String> specs = new ArrayList<String>();
+
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNextLine()) {
+            specs.add(scanner.nextLine().trim());
+        }
+
+        return specs;
     }
 
     private static class Triangle {
