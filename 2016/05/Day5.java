@@ -19,6 +19,7 @@ public class Day5 {
 
     public static void main(String[] args) {
         part1("uqwqemis", 8);
+        part2("uqwqemis", 8);
     }
 
     private static void part1(String doorId, int digits) {
@@ -39,6 +40,30 @@ public class Day5 {
         }
 
         System.out.println(password);
+    }
+
+    private static void part2(String doorId, int digits) {
+        char[] password = new char[digits];
+        int idx = 0;
+        for (int i = 0; i < digits; i++) {
+            String hash;
+            int pos;
+            while (true) {
+                hash = getMD5(doorId + idx);
+                idx++;
+                if (hash.substring(0, 5).equals("00000")) {
+                    pos = Integer.parseInt(hash.charAt(5) + "", 16);
+                    if (pos < password.length && password[pos] == '\0') {
+                        break;
+                    }
+                }
+            }
+
+            //System.out.println("hash=" + hash + ", idx=" + idx);
+            password[pos] += hash.charAt(6);
+        }
+
+        System.out.println(String.valueOf(password));
     }
 
     private static String getMD5(String str) {
