@@ -13,6 +13,7 @@ public class Day6 {
     public static void main(String[] args) throws Exception {
         List<String> messages = getMessages();
         part1(messages);
+        part2(messages);
     }
 
     private static List<String> getMessages() {
@@ -41,6 +42,26 @@ public class Day6 {
             }
 
             msg += maxFreqChar;
+        }
+
+        System.out.println(msg);
+    }
+
+    private static void part2(List<String> messages) {
+        List<Map<Character, Integer>> freq = getCharFrequences(messages);
+
+        String msg = "";
+        for (int i = 0; i < freq.size(); i++) {
+            int minFreq = Integer.MAX_VALUE;
+            char minFreqChar = '\0';
+            for (Map.Entry<Character, Integer> entry : freq.get(i).entrySet()) {
+                if (entry.getValue() < minFreq) {
+                    minFreq = entry.getValue();
+                    minFreqChar = entry.getKey();
+                }
+            }
+
+            msg += minFreqChar;
         }
 
         System.out.println(msg);
