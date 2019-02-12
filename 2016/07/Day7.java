@@ -8,15 +8,27 @@ import java.util.ArrayList;
  */
 public class Day7 {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         List<IP7> addresses = getAddresses();
         part1(addresses);
+        part2(addresses);
     }
 
     private static void part1(List<IP7> addresses) {
         int count = 0;
         for (IP7 ip7 : addresses) {
             if (ip7.hasABBA()) {
+                count++;
+            }
+        }
+
+        System.out.println(count);
+    }
+
+    private static void part2(List<IP7> addresses) {
+        int count = 0;
+        for (IP7 ip7 : addresses) {
+            if (ip7.hasSSL()) {
                 count++;
             }
         }
@@ -91,6 +103,45 @@ public class Day7 {
 
         private boolean isABBA(char a, char b, char c, char d) {
             return a != b && a == d && b == c;
+        }
+
+        private boolean hasSSL() {
+            return hasBAB(getABA());
+        }
+
+        private List<String> getABA() {
+            List<String> aba = new ArrayList<String>();
+            for (String part : parts) {
+                for (int i = 2; i < part.length(); i++) {
+                    char a = part.charAt(i - 2);
+                    char b = part.charAt(i - 1);
+                    char c = part.charAt(i);
+                    if (a == c && a != b) {
+                        aba.add("" + a + b + c);
+                    }
+                }
+            }
+
+            return aba;
+        }
+
+        private boolean hasBAB(List<String> aba) {
+            if (aba.size() == 0) {
+                return false;
+            }
+
+            for (String seq : sequences) {
+                for (int i = 2; i < seq.length(); i++) {
+                    char a = seq.charAt(i - 2);
+                    char b = seq.charAt(i - 1);
+                    char c = seq.charAt(i);
+                    if (a == c && a != b && aba.contains("" + b + a + b)) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }
