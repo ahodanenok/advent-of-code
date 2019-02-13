@@ -8,9 +8,10 @@ import java.util.ArrayList;
  */
 public class Day8 {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         List<Instruction> instructions = getInstructions();
         part1(instructions);
+        part2(instructions);
     }
 
     private static void part1(List<Instruction> instructions) {
@@ -29,6 +30,15 @@ public class Day8 {
         }
 
         System.out.println(litCount);
+    }
+
+    private static void part2(List<Instruction> instructions) {
+        Grid grid = new Grid(50, 6);
+        for (Instruction inst : instructions) {
+            inst.execute(grid);
+        }
+
+        grid.print();
     }
 
     private static List<Instruction> getInstructions() {
@@ -87,6 +97,19 @@ public class Day8 {
 
         void turnOff(int row, int col) {
             this.cells[row][col] = false;
+        }
+
+        void print() {
+            for (int row = 0; row < getHeight(); row++) {
+                for (int col = 0; col < getWidth(); col++) {
+                    if (isOn(row, col)) {
+                        System.out.print("#");
+                    } else {
+                        System.out.print(".");
+                    }
+                }
+                System.out.println();
+            }
         }
     }
 
