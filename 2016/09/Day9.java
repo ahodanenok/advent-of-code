@@ -9,6 +9,7 @@ public class Day9 {
     public static void main(String[] args) throws Exception {
         String compressed = new Scanner(System.in).nextLine();
         part1(compressed);
+        part2(compressed);
     }
 
     private static void part1(String compressed) {
@@ -27,6 +28,30 @@ public class Day9 {
         }
 
         System.out.println(length);
+    }
+
+    private static void part2(String compressed) {
+        System.out.println(decompressedLengthPart2(compressed));
+    }
+
+    private static long decompressedLengthPart2(String compressed) {
+        long length = 0;
+        int pos = 0;
+        while (pos < compressed.length()) {
+            Marker marker = findMarker(compressed, pos);
+            if (marker != null) {
+                long innerLength = decompressedLengthPart2(
+                        compressed.substring(marker.endPos + 1, marker.endPos + marker.sequenceLength + 1));
+                length += (marker.startPos - pos);
+                length += (innerLength * marker.repeat);
+                pos = marker.endPos + marker.sequenceLength + 1;
+            } else {
+                length += (compressed.length() - pos);
+                pos = compressed.length();
+            }
+        }
+
+        return length;
     }
 
     private static Marker findMarker(String compressed, int startFrom) {
