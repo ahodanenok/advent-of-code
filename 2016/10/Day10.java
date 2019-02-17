@@ -13,6 +13,7 @@ public class Day10 {
     public static void main(String[] args) {
         Factory factory = getFactory();
         part1(factory);
+        part2(factory.reset());
     }
 
     private static void part1(Factory factory) {
@@ -26,6 +27,27 @@ public class Day10 {
                 }
             });
         }
+    }
+
+    private static void part2(Factory factory) {
+        final List<Integer> outputValues = new ArrayList<Integer>();
+        for (Map.Entry<Integer, Integer> entry : factory.values.entrySet()) {
+            factory.getBot(entry.getValue()).addChip(entry.getKey(), new BigBrother() {
+                @Override
+                public void auditOutput(int output, int chip) {
+                    if (output == 0 || output == 1 || output == 2) {
+                        outputValues.add(chip);
+                    }
+                }
+            });
+        }
+
+        int product = 1;
+        for (Integer chip : outputValues) {
+            product *= chip;
+        }
+
+        System.out.println(product);
     }
 
     private static Factory getFactory() {
@@ -79,6 +101,14 @@ public class Day10 {
 
             throw new IllegalStateException("Bot " + num + " wasn't found");
         }
+
+        Factory reset() {
+            for (Bot bot : bots) {
+                bot.reset();
+            }
+
+            return this;
+        }
     }
 
     private interface Destination {
@@ -93,7 +123,9 @@ public class Day10 {
             this.num = num;
         }
 
-        public void give(int chip, BigBrother obs) { }
+        public void give(int chip, BigBrother obs) {
+            obs.auditOutput(num, chip);
+        }
     }
 
     private static class BotDestination implements Destination {
@@ -113,6 +145,7 @@ public class Day10 {
 
     private static abstract class BigBrother {
         void auditGive(Bot owner) { }
+        void auditOutput(int output, int chip) { }
     }
 
     private static class Bot {
@@ -152,6 +185,11 @@ public class Day10 {
             chipB = -1;
             loDest.give(lo, obs);
             hiDest.give(hi, obs);
+        }
+
+        private void reset() {
+            chipA = -1;
+            chipB = -1;
         }
     }
 }
