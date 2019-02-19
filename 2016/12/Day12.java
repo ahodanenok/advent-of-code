@@ -11,12 +11,20 @@ public class Day12 {
     public static void main(String[] args) {
         List<Instruction> instructions = getInstructions();
         part1(instructions);
+        part2(instructions);
     }
 
     private static void part1(List<Instruction> instructions) {
         Env env1 = new Env();
         execute(instructions, env1);
         System.out.println(env1.a);
+    }
+
+    private static void part2(List<Instruction> instructions) {
+        Env env2 = new Env();
+        env2.c = 1;
+        execute(instructions, env2);
+        System.out.println(env2.a);
     }
 
     private static List<Instruction> getInstructions() {
