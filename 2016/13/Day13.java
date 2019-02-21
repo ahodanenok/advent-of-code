@@ -11,6 +11,7 @@ public class Day13 {
     public static void main(String[] args) {
         State state = new State(1, 1);
         part1(state, 31, 39);
+        part2(state, 50);
     }
 
     public static void part1(State initialState, int x, int y) {
@@ -36,6 +37,30 @@ public class Day13 {
         }
 
         System.out.println(moves);
+    }
+
+    public static void part2(State initialState, int moves) {
+        Set<State> seen = new HashSet<State>();
+        seen.add(initialState);
+
+        LinkedList<State> queue = new LinkedList<State>();
+        queue.add(initialState);
+
+        while (queue.size() > 0) {
+            State currentState = queue.poll();
+            if (currentState.moves >= moves) {
+                continue;
+            }
+
+            for (State nextState : getAdjacentCells(currentState)) {
+                if (isOpen(nextState.x, nextState.y) && !seen.contains(nextState)) {
+                    queue.offer(nextState);
+                    seen.add(nextState);
+                }
+            }
+        }
+
+        System.out.println(seen.size());
     }
 
     public static boolean isOpen(int x, int y) {
