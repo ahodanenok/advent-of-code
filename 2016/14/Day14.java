@@ -21,10 +21,11 @@ public class Day14 {
     }
 
     public static void main(String[] args) {
-        part1(64, "ihaygndm");
+        System.out.println(generateKeys(64, "ihaygndm", false));
+        System.out.println(generateKeys(64, "ihaygndm", true));
     }
 
-    private static void part1(int count, String salt) {
+    private static int generateKeys(int count, String salt, boolean useStretching) {
         int idx = -1;
         int generatedCount = 0;
         List<String> cache = new ArrayList<String>();
@@ -35,19 +36,36 @@ public class Day14 {
                 hash = cache.get(idx);
             } else {
                 hash = getMD5(salt + idx);
+                if (useStretching) {
+                    hash = stretch(hash);
+                }
+
                 cache.add(hash);
             }
 
-            if (isKey(hash, idx, salt, cache)) {
+            if (isKey(hash, idx, salt, useStretching, cache)) {
                 generatedCount++;
                 //System.out.println("Generated=" + generatedCount + ", idx=" + idx + ", hash=" + hash);
             }
         }
 
-        System.out.println(idx);
+        return idx;
     }
 
-    private static boolean isKey(String hash, int idx, String salt, List<String> cache) {
+    private static String stretch(String hash) {
+        String stretched = hash;
+        for (int i = 0; i < 2016; i++) {
+            stretched = getMD5(stretched);
+        }
+
+        if (stretched.equals(hash)) {
+            return getMD5(hash);
+        } else {
+            return stretched;
+        }
+    }
+
+    private static boolean isKey(String hash, int idx, String salt, boolean useStretching, List<String> cache) {
         char lookupChar = '\0';
         for (int i = 2; i < hash.length(); i++) {
             char a = hash.charAt(i - 2);
@@ -69,6 +87,10 @@ public class Day14 {
                 nextHash = cache.get(idx + i);
             } else {
                 nextHash = getMD5(salt + (idx + i));
+                if (useStretching) {
+                    nextHash = stretch(nextHash);
+                }
+
                 cache.add(nextHash);
             }
 
