@@ -6,6 +6,7 @@ public class Day15 {
 
     public static void main(String[] args) {
         part1();
+        part2();
     }
 
     private static void part1() {
@@ -18,6 +19,24 @@ public class Day15 {
             new Disc(5, 13)
         };
 
+        System.out.println(findTime(discs));
+    }
+
+    private static void part2() {
+        Disc[] discs = new Disc[] {
+            new Disc(1, 17),
+            new Disc(0, 7),
+            new Disc(2, 19),
+            new Disc(0, 5),
+            new Disc(0, 3),
+            new Disc(5, 13),
+            new Disc(0, 11)
+        };
+
+        System.out.println(findTime(discs));
+    }
+
+    public static int findTime(Disc[] discs) {
         int time = 0;
         boolean passed = false;
         while (!passed) {
@@ -29,7 +48,7 @@ public class Day15 {
             passed = simulate(time, discs);
         }
 
-        System.out.println(time);
+        return time;
     }
 
     public static boolean simulate(int time,Disc[] discs) {
