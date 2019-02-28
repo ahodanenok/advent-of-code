@@ -25,6 +25,7 @@ public class Day17 {
 
     public static void main(String[] args) {
         part1("yjjvjgan");
+        part2("yjjvjgan");
     }
 
     private static void part1(String hash) {
@@ -62,6 +63,41 @@ public class Day17 {
         }
 
         System.out.println(path);
+    }
+
+    private static void part2(String hash) {
+        System.out.println(findLongestPath(new State(0, 0, ""), hash));
+    }
+
+    private static int findLongestPath(State state, String hash) {
+        if (state.row == 3 && state.col == 3) {
+            return state.path.length();
+        }
+
+        int maxSteps = Integer.MIN_VALUE;
+        String pathHash = getMD5(hash + state.path);
+
+        // up
+        if (state.row > 0 && isOpen(pathHash.charAt(0))) {
+            maxSteps = Math.max(maxSteps, findLongestPath(new State(state.row - 1, state.col, state.path + UP), hash));
+        }
+
+        // down
+        if (state.row < 3 && isOpen(pathHash.charAt(1))) {
+            maxSteps = Math.max(maxSteps, findLongestPath(new State(state.row + 1, state.col, state.path + DOWN), hash));
+        }
+
+        // left
+        if (state.col > 0 && isOpen(pathHash.charAt(2))) {
+            maxSteps = Math.max(maxSteps, findLongestPath(new State(state.row, state.col - 1, state.path + LEFT), hash));
+        }
+
+        // right
+        if (state.col < 3 && isOpen(pathHash.charAt(3))) {
+            maxSteps = Math.max(maxSteps, findLongestPath(new State(state.row, state.col + 1, state.path + RIGHT), hash));
+        }
+
+        return maxSteps;
     }
 
     private static boolean isOpen(char doorState) {
