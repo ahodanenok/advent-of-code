@@ -8,10 +8,11 @@ public class Day18 {
     private static final char TRAP_CELL = '^';
 
     public static void main(String[] args) {
-        part1(".^^..^...^..^^.^^^.^^^.^^^^^^.^.^^^^.^^.^^^^^^.^...^......^...^^^..^^^.....^^^^^^^^^....^^...^^^^..^", 40);
+        System.out.println(countSafe(".^^..^...^..^^.^^^.^^^.^^^^^^.^.^^^^.^^.^^^^^^.^...^......^...^^^..^^^.....^^^^^^^^^....^^...^^^^..^", 40));
+        System.out.println(countSafe(".^^..^...^..^^.^^^.^^^.^^^^^^.^.^^^^.^^.^^^^^^.^...^......^...^^^..^^^.....^^^^^^^^^....^^...^^^^..^", 400000));
     }
 
-    private static void part1(String initialRow, int rows) {    
+    private static int countSafe(String initialRow, int rows) {    
         int safeCount = countSafe(initialRow);
         String row = initialRow;
         for (int i = 1; i < rows; i++) {
@@ -19,7 +20,7 @@ public class Day18 {
             safeCount += countSafe(row);
         }
 
-        System.out.println(safeCount);
+        return safeCount;
     }
 
     private static int countSafe(String row) {
