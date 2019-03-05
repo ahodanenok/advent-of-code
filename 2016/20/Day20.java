@@ -11,15 +11,27 @@ public class Day20 {
 
     private static final long MAX_IP_VALUE = ((long) 1 << 32) - 1;
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         List<IpRange> blacklist = normalize(getBlacklist());
         part1(blacklist);
+        part2(blacklist);
     }
 
     private static void part1(List<IpRange> blacklist) {
         long ip = 0;
         while (!isAllowed(ip, blacklist) && ip <= MAX_IP_VALUE) ip++;
         System.out.println(ip);
+    }
+
+    private static void part2(List<IpRange> blacklist) {
+        int count = 0;
+        for (int i = 1; i < blacklist.size(); i++) {
+            IpRange a = blacklist.get(i - 1);
+            IpRange b = blacklist.get(i);
+            count += b.from - a.to - 1;
+        }
+
+        System.out.println(count);
     }
 
     private static boolean isAllowed(long ip, List<IpRange> blacklist) {
