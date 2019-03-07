@@ -11,12 +11,23 @@ public class Day21 {
     public static void main(String[] args) {
         List<Operation> operations = getOperations();
         part1("abcdefgh", operations);
+        part2("fbgdceah", operations);
     }
 
     private static void part1(String msg, List<Operation> operations) {
         StringBuilder result = new StringBuilder(msg);
         for (Operation op : operations) {
             op.scramble(result);
+        }
+
+        System.out.println(result.toString());
+    }
+
+     private static void part2(String msg, List<Operation> operations) {
+        StringBuilder result = new StringBuilder(msg);
+        for (int i = operations.size() - 1; i >= 0; i--) {
+            Operation op = operations.get(i);
+            op.unscramble(result);
         }
 
         System.out.println(result.toString());
@@ -61,6 +72,7 @@ public class Day21 {
 
     private interface Operation {
         void scramble(StringBuilder str);
+        void unscramble(StringBuilder str);
     }
 
     private static class SwapPositionOperation implements Operation {
@@ -79,6 +91,11 @@ public class Day21 {
             str.setCharAt(x, str.charAt(y));
             str.setCharAt(y, tmp);
         }
+
+        @Override
+        public void unscramble(StringBuilder str) {
+            scramble(str);
+        }
     }
 
     private static class SwapLetterOperation implements Operation {
@@ -96,6 +113,11 @@ public class Day21 {
             int xPos = str.indexOf(x);
             int yPos = str.indexOf(y);
             new SwapPositionOperation(xPos, yPos).scramble(str);
+        }
+
+        @Override
+        public void unscramble(StringBuilder str) {
+            scramble(str);
         }
     }
 
@@ -118,6 +140,11 @@ public class Day21 {
             str.delete(0, offset);
             str.append(moved);
         }
+
+        @Override
+        public void unscramble(StringBuilder str) {
+            new RotateRightOperation(x).scramble(str);
+        }
     }
 
     private static class RotateRightOperation implements Operation {
@@ -139,6 +166,11 @@ public class Day21 {
             str.delete(str.length() - offset, str.length());
             str.insert(0, moved);
         }
+
+        @Override
+        public void unscramble(StringBuilder str) {
+            new RotateLeftOperation(x).scramble(str);
+        }
     }
 
     private static class RotatePositionalOperation implements Operation {
@@ -152,6 +184,28 @@ public class Day21 {
         @Override
         public void scramble(StringBuilder str) {
             new RotateRightOperation(getOffset(str)).scramble(str);
+        }
+
+        @Override
+        public void unscramble(StringBuilder str) {
+            //System.out.println(str);
+            //System.out.println("--------");
+        
+            int offset = 1;
+            while (true) {
+                StringBuilder copy = new StringBuilder(str);
+                new RotateLeftOperation(offset).scramble(copy);
+                //System.out.print("offset=" + offset + " " + copy + " -> ");
+                scramble(copy);
+                //System.out.println(copy);
+                if (copy.toString().equals(str.toString())) {
+                    break;
+                }
+
+                offset++;
+            }
+
+            new RotateLeftOperation(offset).scramble(str);
         }
 
         private int getOffset(StringBuilder str) {
@@ -181,6 +235,11 @@ public class Day21 {
             str.delete(x, y + 1);
             str.insert(x, substr);
         }
+
+        @Override
+        public void unscramble(StringBuilder str) {
+            scramble(str);
+        }
     }
 
     private static class MoveOperation implements Operation {
@@ -198,6 +257,13 @@ public class Day21 {
             char ch = str.charAt(x);
             str.deleteCharAt(x);
             str.insert(y, ch);
+        }
+
+        @Override
+        public void unscramble(StringBuilder str) {
+            char ch = str.charAt(y);
+            str.deleteCharAt(y);
+            str.insert(x, ch);
         }
     }
 }
