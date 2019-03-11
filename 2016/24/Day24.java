@@ -14,10 +14,11 @@ public class Day24 {
 
     public static void main(String[] args) {
         Grid grid = getGrid();
-        part1(grid);
+        System.out.println(shortestPath(grid, false));
+        System.out.println(shortestPath(grid, true));
     }
 
-    private static void part1(Grid grid) {
+    private static int shortestPath(Grid grid, boolean returnToStart) {
         State initialState = new State(grid, 0);
 
         Set<State> seen = new HashSet<State>();
@@ -29,10 +30,14 @@ public class Day24 {
         while (queue.size() > 0) {
             State currentState = queue.poll();
             //System.out.println(currentState);
-            if (currentState.numbers.size() == grid.numbersCount) {
+            if (!returnToStart && currentState.numbers.size() == grid.numbersCount) {
                 //System.out.println(currentState);
-                System.out.println(currentState.steps);
-                return;
+                return currentState.steps;
+            }
+
+            if (returnToStart && currentState.numbers.size() == grid.numbersCount
+                    && grid.isNumber(currentState.location) && grid.numberAt(currentState.location) == 0) {
+                return currentState.steps;
             }
 
             for (Location location : Arrays.asList(
