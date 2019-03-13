@@ -28,6 +28,13 @@ public class Day23 {
         System.out.println(env.a);
     }
 
+    private static void part2(List<Instruction> instructions) {
+        Env env = new Env();
+        env.a = 12;
+        execute(instructions, env);
+        System.out.println(env.a);
+    }
+
     private static List<Instruction> getInstructions() {
         List<Instruction> instructions = new ArrayList<Instruction>();
 
@@ -52,6 +59,7 @@ public class Day23 {
     }
 
     private static void execute(List<Instruction> instructions, Env env) {
+        instructions = new ArrayList<Instruction>(instructions);
         while (env.pc < instructions.size()) {
             Instruction instruction = instructions.get(env.pc);
             if (CPY_CMD.equals(instruction.cmd)) {
