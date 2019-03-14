@@ -8,17 +8,18 @@ public class Day1 {
 
     public static void main(String[] args) {
         String seq = new Scanner(System.in).nextLine();
-        part1(seq);
+        System.out.println(sum(seq, 1));
+        System.out.println(sum(seq, seq.length() / 2));
     }
 
-    private static void part1(String seq) {
+    private static long sum(String seq, int offset) {
         int result = 0;
         for (int i = 0; i < seq.length(); i++) {
-            if (seq.charAt(i) == seq.charAt((i + 1) % seq.length())) {
+            if (seq.charAt(i) == seq.charAt((i + offset) % seq.length())) {
                 result += Integer.parseInt(Character.toString(seq.charAt(i)));
             }
         }
 
-        System.out.println(result);
+        return result;
     }
 }
