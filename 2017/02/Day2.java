@@ -11,6 +11,7 @@ public class Day2 {
     public static void main(String[] args) {
         List<List<Integer>> data = getData();
         part1(data);
+        part2(data);
     }
 
     private static void part1(List<List<Integer>> data) {
@@ -24,6 +25,28 @@ public class Day2 {
             }
 
             sum += max - min;
+        }
+
+        System.out.println(sum);
+    }
+
+    private static void part2(List<List<Integer>> data) {
+        int sum = 0;
+        for (List<Integer> row : data) {
+            int div = 0;
+
+            divisableSearch: 
+            for (int i = 0; i < row.size(); i++) {
+                for (int j = 0; j < row.size(); j++) {
+                    if (i == j) continue;
+                    if (row.get(i) % row.get(j) == 0) {
+                        div = row.get(i) / row.get(j);
+                        break divisableSearch;
+                    }
+                }
+            }
+
+            sum += div;
         }
 
         System.out.println(sum);
