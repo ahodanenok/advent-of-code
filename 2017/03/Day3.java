@@ -6,16 +6,55 @@ public class Day3 {
 
     public static void main(String[] args) {
         part1(277678);
+        part2(277678);
     }
 
     private static void part1(int toCell) {
+        System.out.println(distance(toCell));
+    }
+
+    private static void part2(int num) {
+        int d = distance(num);
+        int[][] cells = new int[d][d];
+        int baseRow = cells.length / 2;
+        int baseCol = cells.length / 2;
+        cells[baseRow][baseCol] = 1;
+
+        Memory m = new Memory();
+        Cell cell;
+        int currentRow = baseRow;
+        int currentCol = baseCol;
+        do {
+            cell = m.nextCell();
+            currentRow = baseRow + cell.row;
+            currentCol = baseCol + cell.col;
+            cells[currentRow][currentCol] = sum(cells, currentRow, currentCol);
+        } while (cells[currentRow][currentCol] <= num);
+
+        System.out.println(cells[currentRow][currentCol]);
+    }
+
+    private static int distance(int toCell) {
         Memory m = new Memory();
         Cell cell = null;
         do {
             cell = m.nextCell();
         } while (cell.num != toCell);
 
-        System.out.println(Math.abs(cell.row) + Math.abs(cell.col));
+        return Math.abs(cell.row) + Math.abs(cell.col);
+    }
+
+    private static int sum(int[][] cells, int row, int col) {
+        int s = 0;
+        s += cells[row][col + 1];
+        s += cells[row - 1][col + 1];
+        s += cells[row - 1][col];
+        s += cells[row - 1][col - 1];
+        s += cells[row][col - 1];
+        s += cells[row + 1][col - 1];
+        s += cells[row + 1][col];
+        s += cells[row + 1][col + 1];
+        return s;
     }
 
     private static class Memory {
