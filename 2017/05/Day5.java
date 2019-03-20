@@ -11,14 +11,29 @@ public class Day5 {
     public static void main(String[] args)  {
         List<Integer> offsets = getOffsets();
         part1(offsets);
+        part2(offsets);
     }
 
     private static void part1(List<Integer> offsets) {
+        offsets = new ArrayList<Integer>(offsets);
         int steps = 0;
         int idx = 0;
         while (idx >= 0 && idx < offsets.size()) {
             int offset = offsets.get(idx);
             offsets.set(idx, offset + 1);
+            idx += offset;
+            steps++;
+        }
+
+        System.out.println(steps);
+    }
+
+    private static void part2(List<Integer> offsets) {
+        int steps = 0;
+        int idx = 0;
+        while (idx >= 0 && idx < offsets.size()) {
+            int offset = offsets.get(idx);
+            offsets.set(idx, offset >= 3 ? offset - 1 : offset + 1);
             idx += offset;
             steps++;
         }
