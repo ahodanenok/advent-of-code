@@ -1,6 +1,7 @@
 import java.util.Scanner;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Advent of Code - Day 4
@@ -10,7 +11,8 @@ public class Day4 {
 
     public static void main(String[] args) {
         List<String> passwords = getPasswords();
-        part1(passwords);
+        System.out.println(passphrasesCount(passwords, false));
+        System.out.println(passphrasesCount(passwords, true));
     }
 
     private static List<String> getPasswords() {
@@ -25,27 +27,37 @@ public class Day4 {
         return phrases;
     }
 
-    private static void part1(List<String> passwords) {
+    private static int passphrasesCount(List<String> passwords, boolean withAnagrams) {
         int count = 0;
         for (int i = 0; i < passwords.size(); i++) {
-            if (isPassphrase(passwords.get(i))) {
+            if (isPassphrase(passwords.get(i), withAnagrams)) {
                 count++;
             }
         }
 
-        System.out.println(count);
+        return count;
     }
 
-    private static boolean isPassphrase(String password) {
+    private static boolean isPassphrase(String password, boolean withAnagrams) {
         String[] parts = password.split("\\s+");
         for (int i = 0; i < parts.length; i++) {
             for (int j = i + 1; j < parts.length; j++) {
-                if (parts[i].equals(parts[j])) {
+                if (parts[i].equals(parts[j]) || withAnagrams && isAnagramEquals(parts[i], parts[j])) {
                     return false;
                 }
             }
         }
 
         return true;
+    }
+
+    private static boolean isAnagramEquals(String a, String b) {
+        char[] aa = a.toCharArray();
+        char[] bb = b.toCharArray();
+
+        Arrays.sort(aa);
+        Arrays.sort(bb);
+
+        return Arrays.equals(aa, bb);
     }
 }
