@@ -14,12 +14,19 @@ public class Day8 {
     public static void main(String[] args) {
         List<Command> commands = getCommands();
         part1(commands);
+        part2(commands);
     }
 
     private static void part1(List<Command> commands) {
         Env env = new Env();
         execute(commands, env);
         System.out.println(env.maxCurrentRegisterValue());
+    }
+
+    private static void part2(List<Command> commands) {
+        Env env = new Env();
+        execute(commands, env);
+        System.out.println(env.maxSeenRegisterValue());
     }
 
     private static List<Command> getCommands()  {
@@ -79,6 +86,7 @@ public class Day8 {
 
     private static class Env {
 
+        private long max = Long.MIN_VALUE;
         private Map<String, Long> registers = new HashMap<String, Long>();
 
         long getRegisterValue(String name) {
@@ -91,10 +99,15 @@ public class Day8 {
 
         void setRegisterValue(String name, long value) {
             registers.put(name, value);
+            max = Math.max(value, max);
         }
 
         long maxCurrentRegisterValue() {
             return Collections.max(registers.values());
+        }
+
+        long maxSeenRegisterValue() {
+            return max;
         }
     }
 
