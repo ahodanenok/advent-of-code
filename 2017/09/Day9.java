@@ -12,6 +12,7 @@ public class Day9 {
         State state = getState();
         traverseGroups(state, 0);
         System.out.println(state.totalScore);
+        System.out.println(state.garbageCount);
     }
 
     private static State getState() {
@@ -42,6 +43,9 @@ public class Day9 {
                 break;
             } else {
                 state.pos++;
+                if (garbage) {
+                    state.garbageCount++;
+                }
             }
         }
     }
@@ -52,6 +56,7 @@ public class Day9 {
         private int pos;
 
         private int totalScore;
+        private int garbageCount;
 
         State(String data) {
             this.data = data;
