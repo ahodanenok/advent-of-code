@@ -11,12 +11,19 @@ public class Day11 {
     public static void main(String[] args) {
         List<String> path = getPath();
         part1(path);
+        part2(path);
     }
 
     private static void part1(List<String> path) {
         State state = new State(0, 0);
         move(path, state);
         System.out.println(state.distance());
+    }  
+
+    private static void part2(List<String> path) {
+        State state = new State(0, 0);
+        move(path, state);
+        System.out.println(state.maxDistance);
     }
 
     private static List<String> getPath() {
@@ -59,6 +66,8 @@ public class Day11 {
             } else {
                 throw new IllegalStateException("unknown move: " + move);
             }
+
+            state.maxDistance = Math.max(state.distance(), state.maxDistance);
         }
     }
 
@@ -66,6 +75,8 @@ public class Day11 {
 
         private int col;
         private int row;
+
+        private int maxDistance = Integer.MIN_VALUE;
 
         State(int col, int row) {
             this.col = col;
