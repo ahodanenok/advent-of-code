@@ -14,6 +14,7 @@ public class Day12 {
     public static void main(String[] args) {
         List<Program> programs = getPrograms();
         part1(programs);
+        part2(programs);
     }
 
     private static void part1(List<Program> programs) {
@@ -36,6 +37,32 @@ public class Day12 {
         }
 
         System.out.println(seen.size());
+    }
+
+    private static void part2(List<Program> programs) {
+        int[] programGroups = new int[programs.size()];
+        for (int i = 0; i < programGroups.length; i++) {
+            programGroups[i] = i;
+        }
+
+        int groupsCount = programGroups.length;
+        for (Program p : programs) {
+            for (Integer pipeTo : p.pipesTo) {
+                int g1 = programGroups[p.id];
+                int g2 = programGroups[pipeTo];
+                if (g1 != g2) {
+                    for (int i = 0; i < programGroups.length; i++) {
+                        if (programGroups[i] == g2) {
+                            programGroups[i] = g1;
+                        }
+                    }
+
+                    groupsCount--;
+                }
+            }
+        }
+
+        System.out.println(groupsCount);
     }
 
     private static List<Program> getPrograms() {
