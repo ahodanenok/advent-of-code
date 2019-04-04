@@ -13,6 +13,7 @@ public class Day13 {
     public static void main(String[] args) {
         List<Layer> layers = getLayers();
         part1(layers);
+        part2(layers);
     }
 
     private static List<Layer> getLayers() {
@@ -41,6 +42,22 @@ public class Day13 {
         System.out.println(severity);
     }
 
+    private static void part2(List<Layer> layers) {
+        Firewall fw = new Firewall(layers);
+
+        int delay = 0;
+        while (true) {
+            if (sendPacket(fw.copy()).size() == 0) {
+                break;
+            }
+
+            fw.scan();
+            delay++;
+        }
+
+        System.out.println(delay);
+    }
+
     private static List<Layer> sendPacket(Firewall fw) {
         List<Layer> caught = new ArrayList<Layer>();
         for (int layerIdx = 0; layerIdx < fw.length(); layerIdx++) {
@@ -58,6 +75,8 @@ public class Day13 {
 
         private int length;
         private Map<Integer, LayerState> layers;
+
+        private Firewall() { }
 
         Firewall(List<Layer> layers) {
             this.layers = new HashMap<Integer, LayerState>();
@@ -104,6 +123,21 @@ public class Day13 {
                     state.scannerPos++;
                 }
             }
+        }
+
+        Firewall copy() {
+            Firewall copy = new Firewall();
+            copy.length = length;
+            copy.layers = new HashMap<Integer, LayerState>();
+            for (LayerState state : layers.values()) {
+                LayerState stateCopy = new LayerState();
+                stateCopy.moveTop = state.moveTop;
+                stateCopy.scannerPos = state.scannerPos;
+                stateCopy.layer = state.layer;
+                copy.layers.put(state.layer.depth, stateCopy);
+            }
+
+            return copy;
         }
     }
 
