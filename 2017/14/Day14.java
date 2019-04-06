@@ -6,6 +6,7 @@ public class Day14 {
 
     public static void main(String[] args) {
         part1("jzgqcdpd");
+        part2("jzgqcdpd");
     }
 
     private static void part1(String key) {
@@ -20,6 +21,40 @@ public class Day14 {
         }
 
         System.out.println(used);
+    }
+
+    private static void part2(String key) {
+        int[][] regions = new int[128][128];
+        int[][] grid = new int[128][128];
+        for (int row = 0; row < 128; row++) {
+            String rowStr = hexToBinary(knotHash(key + "-" + row));
+            for (int col = 0; col < 128; col++) {
+                if (rowStr.charAt(col) == '1') {
+                    grid[row][col] = 1;
+                }
+            }
+        }
+
+        int lastRegion = 0;
+        for (int row = 0; row < 128; row++) {
+            for (int col = 0; col < 128; col++) {
+                if (grid[row][col] == 1 && regions[row][col] == 0) {
+                    assignRegion(row, col, regions, grid, ++lastRegion);
+                }
+            }
+        }
+
+        System.out.println(lastRegion);
+    }
+
+    private static void assignRegion(int row, int col, int[][] regions, int[][] grid, int region) {
+        if (grid[row][col] == 0 || regions[row][col] == region) return;
+
+        regions[row][col] = region;
+        if (row > 0) assignRegion(row - 1, col, regions, grid, region);
+        if (col > 0) assignRegion(row, col - 1, regions, grid, region);
+        if (row < regions.length - 1) assignRegion(row + 1, col, regions, grid, region);
+        if (col < regions[row].length - 1) assignRegion(row, col + 1, regions, grid, region);
     }
 
     private static String hexToBinary(String hex) {
