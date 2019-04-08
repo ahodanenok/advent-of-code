@@ -9,6 +9,7 @@ public class Day17 {
 
     public static void main(String[] args) {
         part1(386);
+        part2(386);
     }
 
     private static void part1(int step) {
@@ -22,5 +23,22 @@ public class Day17 {
         }
 
         System.out.println(buf.get((currPos + 1) % buf.size()));
+    }
+
+    private static void part2(int step) {
+        int size = 1;
+        int pos = 0;
+        int value = 0;
+
+        for (int n = 1; n <= 50_000_000; n++) {
+            pos = (pos + step) % size + 1;
+            if (pos == 1) {
+                value = n;
+            }
+
+            size++;
+        }
+
+        System.out.println(value);
     }
 }
