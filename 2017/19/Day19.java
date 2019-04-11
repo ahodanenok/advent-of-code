@@ -13,6 +13,7 @@ public class Day19 {
         Packet packet = new Packet();
         diagram.follow(packet);
         System.out.println(packet.letters);
+        System.out.println(packet.steps);
     }
 
     private static Diagram getDiagram() {
@@ -28,9 +29,11 @@ public class Day19 {
 
     private static class Packet {
 
+        private int steps;
         private String letters = "";
 
         void passing(char pathElement) {
+            steps++;
             if (Character.isLetter(pathElement)) {
                 letters += String.valueOf(pathElement);
             }
