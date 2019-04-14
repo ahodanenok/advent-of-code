@@ -11,8 +11,14 @@ import java.util.HashMap;
 public class Day20 {
 
     public static void main(String[] args) {
-        List<Particle> particles = getParticles();
-        part1(particles);
+        List<Particle> particles1 = getParticles();
+        List<Particle> particles2 = new ArrayList<Particle>(particles1.size());
+        for (Particle p : particles1) {
+            particles2.add(p.copy());
+        }
+
+        part1(particles1);
+        part2(particles2);
     }
 
     private static void part1(List<Particle> particles) {
@@ -43,6 +49,49 @@ public class Day20 {
         }
 
         System.out.println(closest.num);
+    }
+
+    private static void part2(List<Particle> particles) {
+        int particlesLeft = particles.size();
+        int count = 0;
+        while (true) {
+            for (Particle p : particles) {
+                p.step();
+            }
+
+            Map<Location, List<Particle>> collisions = new HashMap<Location, List<Particle>>();
+            for (Particle p : particles) {
+                Location loc = new Location(p.x, p.y, p.z);
+                if (!collisions.containsKey(loc)) {
+                    List<Particle> list = new ArrayList<Particle>();
+                    list.add(p);
+                    collisions.put(loc, list);
+                } else {
+                    collisions.get(loc).add(p);
+                }
+            }
+
+            for (List<Particle> particlesAtLocation : collisions.values()) {
+                if (particlesAtLocation.size() > 1) {
+                    for (Particle p : particlesAtLocation) {
+                        particles.remove(p);
+                    }
+                }
+            }
+
+            if (particlesLeft != particles.size()) {
+                count = 0;
+            }
+
+            particlesLeft = particles.size();
+            count++;
+            // wait till nothing changes for long enough
+            if (count == 1000) {
+                break;
+            }
+        }
+
+        System.out.println(particlesLeft);
     }
 
     private static List<Particle> getParticles() {
@@ -125,6 +174,21 @@ public class Day20 {
 
         long distance() {
             return Math.abs(x) + Math.abs(y) + Math.abs(z);
+        }
+
+        Particle copy() {
+            Particle copy = new Particle();
+            copy.x = x;
+            copy.y = y;
+            copy.z = z;
+            copy.vX = vX;
+            copy.vY = vY;
+            copy.vZ = vZ;
+            copy.aX = aX;
+            copy.aY = aY;
+            copy.aZ = aZ;
+
+            return copy;
         }
     }
 }
