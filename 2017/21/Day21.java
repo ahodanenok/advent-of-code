@@ -20,6 +20,12 @@ public class Day21 {
         System.out.println(grid.onCount());
     }
 
+    private static void part2(List<Rule> rules) {
+        Grid grid = new Grid(rules);
+        for (int i = 0; i < 18; i++) grid.transform();
+        System.out.println(grid.onCount());
+    }
+
     private static List<Rule> getRules() {
         List<Rule> rules = new ArrayList<Rule>();
 
