@@ -13,13 +13,22 @@ import java.util.HashSet;
 public class Day22 {
 
     public static void main(String[] args) throws Exception {
-        Grid grid = getGrid();
-        part1(grid);
+        Grid grid1 = getGrid();
+        Grid grid2 = grid1.copy();
+
+        part1(grid1);
+        part2(grid2);
     }
 
     private static void part1(Grid grid) {
         Carrier carrier = new Carrier(grid);
         for (int i = 0; i < 10000; i++) carrier.burst();
+        System.out.println(carrier.infectedCount);
+    }
+
+    private static void part2(Grid grid) {
+        Carrier carrier = new Carrier(grid);
+        for (int i = 0; i < 10000000; i++) carrier.burst2();
         System.out.println(carrier.infectedCount);
     }
 
@@ -79,6 +88,28 @@ public class Day22 {
             currentNode = new Node(dir.nextRow(currentNode.row), dir.nextCol(currentNode.col));
         }
 
+        void burst2() {
+            if (grid.isClean(currentNode)) {
+                dir = dir.left;
+                grid.weaken(currentNode);
+            } else if (grid.isWeakened(currentNode)) {
+                grid.infect(currentNode);
+                infectedCount++;
+            } else if (grid.isInfected(currentNode)) {
+                dir = dir.right;
+                grid.flag(currentNode);
+            } else if (grid.isFlagged(currentNode)) {
+                dir = dir.backwards;
+                grid.clean(currentNode);
+            } else {
+                throw new IllegalStateException("Illegal node state");
+            }
+
+            currentNode = new Node(dir.nextRow(currentNode.row), dir.nextCol(currentNode.col));
+            //currentNode.row = dir.nextRow(currentNode.row);
+            //currentNode.col = dir.nextCol(currentNode.col);
+        }
+
         void print() {
             grid.print(currentNode);
         }
@@ -119,6 +150,12 @@ public class Day22 {
 
         void weaken(Node node) {
             nodes.put(new Node(node.row, node.col), State.WEAKENED);
+        }
+
+        Grid copy() {
+            Grid grid = new Grid();
+            grid.nodes = new LinkedHashMap<Node, State>(nodes);
+            return grid;
         }
 
         void print(Node currentNode) {
