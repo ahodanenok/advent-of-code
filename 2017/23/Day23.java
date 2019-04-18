@@ -13,6 +13,7 @@ public class Day23 {
     public static void main(String[] args) throws Exception {
         List<Command> commands = getCommands();
         part1(commands);
+        part2();
     }
 
     private static void part1(List<Command> commands) {
@@ -42,6 +43,53 @@ public class Day23 {
         }
 
         System.out.println(mulInvokedCount);
+    }
+
+    private static void part2() {
+        long a = 0, b = 0, c = 0, d = 0, e = 0, f = 0, g = 0, h = 0;
+
+        a = 1;
+
+        b = 93;
+        c = b;
+        b = b * 100;
+        b = b + 100000;
+        c = b;
+        c = c + 17000;
+
+        g = b; // initialize g to the starting value
+               // because it also must be checked for primality by 'check' loop
+
+        // [b = 109300, c = 126300]
+        loop: while (true) {
+            f = 1;
+            d = 2;
+            // this loop checks if value of b is not prime
+            check: while (g != 0) {
+                e = b % d;
+                if (e == 0) {
+                    f = 0;
+                    break;
+                }
+
+                d = d + 1;
+                g = d;
+                g = g - b;
+            }
+
+            if (f == 0) {
+                h = h + 1;
+            }
+
+            g = b;
+            g = g - c;
+            if (g == 0) {
+                break loop;
+            }
+            b = b + 17;
+        }
+
+        System.out.println(h);
     }
 
     private static boolean isRegisterName(String str) {
