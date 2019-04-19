@@ -11,6 +11,7 @@ public class Day24 {
     public static void main(String[] args) {
         List<Component> components = getComponents();
         part1(components);
+        part2(components);
     }
 
     private static void part1(List<Component> components) {
@@ -18,6 +19,25 @@ public class Day24 {
         int strength = Integer.MIN_VALUE;
         for (Bridge b : bridges) {
             if (b.strength() > strength) {
+                strength = b.strength();
+            }
+        }
+
+        System.out.println(strength);
+    }
+
+    private static void part2(List<Component> components) {
+        List<Bridge> bridges = getBridges(components);
+        int maxLength = Integer.MIN_VALUE;
+        for (Bridge b : bridges) {
+            if (b.length() > maxLength) {
+                maxLength = b.length();
+            }
+        }
+
+        int strength = Integer.MIN_VALUE;
+        for (Bridge b : bridges) {
+            if (b.length() == maxLength && b.strength() > strength) {
                 strength = b.strength();
             }
         }
