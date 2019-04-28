@@ -4,9 +4,6 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Set;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.PriorityQueue;
 
 /**
  * Advent of Code - Infi
@@ -17,74 +14,156 @@ public class Infi {
     public static void main(String[] args) {
         Labyrinth lb = getLabyrinth();
         Location dest = new Location(lb.height - 1, lb.width - 1);
-
-        Map<Location, Integer> steps = new HashMap<>();
-        PriorityQueue<State> santaStates = new PriorityQueue<>(11, new java.util.Comparator<State>() {
-            public int compare(State a, State b) {
-                return Integer.compare(a.steps, b.steps);
-            }
-        });
-        santaStates.add(new State(new Location(0, 0), 0));
-        while (!santaStates.isEmpty()) {
-            State current = santaStates.poll();
-            if (steps.containsKey(current.loc) && steps.get(current.loc) <= current.steps) {
-                continue;
-            }
-            steps.put(current.loc, current.steps);
-
-            if (current.loc.equals(dest)) {
-                break;
-            }
-
-            if (lb.isTopConnected(current.loc)) {
-                santaStates.add(new State(current.loc.top(), current.steps + 1));
-            }
-
-            if (lb.isBottomConnected(current.loc)) {
-                santaStates.add(new State(current.loc.bottom(), current.steps + 1));
-            }
-
-            if (lb.isLeftConnected(current.loc)) {
-                santaStates.add(new State(current.loc.left(), current.steps + 1));
-            }
-
-            if (lb.isRightConnected(current.loc)) {
-                santaStates.add(new State(current.loc.right(), current.steps + 1));
-            }
-        }
-        
-        System.out.println(steps.get(dest));
+        part1(lb, dest);
+        part2(lb, dest);
     }
 
-    private static void print(Labyrinth lb) {
+    public static void part1(Labyrinth lb, Location dest) {
+        LinkedList<Location> next = new LinkedList<>();
+        next.add(new Location(0, 0));
+
+        Set<Location> visited = new HashSet<>();
+
+        int steps = 0;
+
+        search:
+        while (!next.isEmpty()) {
+            int processCount = next.size();
+            while (processCount > 0) {
+                Location current = next.poll();
+                if (current.equals(dest)) {
+                    break search;
+                }
+
+                if (visited.add(current)) {
+                    if (lb.isTopConnected(current)) {
+                        next.add(current.top());
+                    }
+
+                    if (lb.isBottomConnected(current)) {
+                        next.add(current.bottom());
+                    }
+
+                    if (lb.isLeftConnected(current)) {
+                        next.add(current.left());
+                    }
+
+                    if (lb.isRightConnected(current)) {
+                        next.add(current.right());
+                    }
+                }
+
+                processCount--;
+            }
+
+            steps++; 
+        }
+
+        System.out.println(steps);
+    }
+
+    public static void part2(Labyrinth lb, Location dest) {
+        Set<Location> next = new HashSet<>();
+        next.add(new Location(0, 0));
+
+        int steps = 0;
+
+        search:
+        while (!next.isEmpty()) {
+            Set<Location> prevNext = next;
+            next = new HashSet<>();
+
+            LinkedList<Location> availableNow = new LinkedList<>();
+            for (Location current : prevNext) {
+                if (current.equals(dest)) {
+                    break search;
+                }
+
+                if (lb.isTopConnected(current)) {
+                    availableNow.add(current.top());
+                }
+
+                if (lb.isBottomConnected(current)) {
+                    availableNow.add(current.bottom());
+                }
+
+                if (lb.isLeftConnected(current)) {
+                    availableNow.add(current.left());
+                }
+
+                if (lb.isRightConnected(current)) {
+                    availableNow.add(current.right());
+                }
+            }
+
+            int shiftCol = -1;
+            int shiftRow = -1;
+
+            if (steps % 2 != 0) {
+                shiftCol = steps % lb.width;
+                lb.shiftCol(shiftCol);
+            } else {
+                shiftRow = steps % lb.height;
+                lb.shiftRow(shiftRow);
+            }
+
+            while (!availableNow.isEmpty()) {
+                Location loc = availableNow.poll();
+                if (loc.col == shiftCol && !loc.equals(dest)) {
+                    loc = loc.bottom();
+                    if (loc.row >= lb.height) {
+                        loc = new Location(0, shiftCol);
+                    }
+                } else if (loc.row == shiftRow && !loc.equals(dest)) {
+                    loc = loc.right();
+                    if (loc.col >= lb.width) {
+                        loc = new Location(shiftRow, 0);
+                    }
+                }
+
+                next.add(loc);
+            }
+
+            steps++;
+        }
+
+        System.out.println(steps);
+    }
+
+    private static void print(Labyrinth lb, Location current) {
         for (int row = 0; row < lb.height; row++) {
             for (int col = 0; col < lb.width; col++) {
                 Location a = new Location(row, col);
-                if (lb.isTopConnected(a)) {
-                    System.out.print("T");
-                } else {
-                    System.out.print(" ");
+                boolean top = lb.hasOutput(a, Labyrinth.OUTPUT_TOP);
+                boolean bottom = lb.hasOutput(a, Labyrinth.OUTPUT_BOTTOM);
+                boolean left = lb.hasOutput(a, Labyrinth.OUTPUT_LEFT);
+                boolean right = lb.hasOutput(a, Labyrinth.OUTPUT_RIGHT);
+
+                System.out.print(a.equals(current) ? "[" : " ");
+                if (top && bottom && !left && !right) { // ║
+                    System.out.print("\u2551");
+                } else if (!top && bottom && !left && right) { // ╔
+                    System.out.print("\u2554");
+                } else if (!top && bottom && left && !right) { // ╗
+                    System.out.print("\u2557");
+                } else if (top && bottom && !left && right) { // ╠
+                    System.out.print("\u2560");
+                } else if (!top && bottom && left && right) { // ╦
+                    System.out.print("\u2566");
+                } else if (top && !bottom && !left && right) { // ╚
+                    System.out.print("\u255A");
+                } else if (top && !bottom && left && !right) { // ╝
+                    System.out.print("\u255D");
+                } else if (top && bottom && left && right) { // ╬
+                    System.out.print("\u256C");
+                } else if (top && !bottom && left && right) { // ╩
+                    System.out.print("\u2569");
+                } else if (!top && !bottom && left && right) { // ═
+                    System.out.print("\u2550");
+                } else if (top && bottom && left && !right) { // ╣
+                    System.out.print("\u2563");
                 }
-                
-                if (lb.isRightConnected(a)) {
-                    System.out.print("R");
-                } else {
-                    System.out.print(" ");
-                }
-                
-                if (lb.isLeftConnected(a)) {
-                    System.out.print("L");
-                } else {
-                    System.out.print(" ");
-                }
-                
-                if (lb.isBottomConnected(a)) {
-                    System.out.print("B");
-                } else {
-                    System.out.print(" ");
-                }
-                
-                System.out.print(" ");
+                System.out.print(a.equals(current) ? "]" : " ");
             }
             System.out.println();
         }
@@ -107,44 +186,44 @@ public class Infi {
                 char ch = rows.get(row).charAt(col);
                 Location a = new Location(row, col);
                 if (ch == '\u2551') { // ║
-                    lb.outputTop(a);
-                    lb.outputBottom(a);
+                    lb.output(a, Labyrinth.OUTPUT_TOP);
+                    lb.output(a, Labyrinth.OUTPUT_BOTTOM);
                 } else if (ch == '\u2554') { // ╔
-                    lb.outputRight(a);
-                    lb.outputBottom(a);
+                    lb.output(a, Labyrinth.OUTPUT_RIGHT);
+                    lb.output(a, Labyrinth.OUTPUT_BOTTOM);
                 } else if (ch == '\u2557') { // ╗
-                    lb.outputLeft(a);
-                    lb.outputBottom(a);
+                    lb.output(a, Labyrinth.OUTPUT_LEFT);
+                    lb.output(a, Labyrinth.OUTPUT_BOTTOM);
                 } else if (ch == '\u2560') { // ╠
-                    lb.outputTop(a);
-                    lb.outputRight(a);
-                    lb.outputBottom(a);
+                    lb.output(a, Labyrinth.OUTPUT_TOP);
+                    lb.output(a, Labyrinth.OUTPUT_RIGHT);
+                    lb.output(a, Labyrinth.OUTPUT_BOTTOM);
                 } else if (ch == '\u2566') { // ╦'
-                    lb.outputLeft(a);
-                    lb.outputRight(a);
-                    lb.outputBottom(a);
+                    lb.output(a, Labyrinth.OUTPUT_LEFT);
+                    lb.output(a, Labyrinth.OUTPUT_RIGHT);
+                    lb.output(a, Labyrinth.OUTPUT_BOTTOM);
                 } else if (ch == '\u255A') { // ╚
-                    lb.outputTop(a);
-                    lb.outputRight(a);
+                    lb.output(a, Labyrinth.OUTPUT_TOP);
+                    lb.output(a, Labyrinth.OUTPUT_RIGHT);
                 } else if (ch == '\u255D') { // ╝
-                    lb.outputTop(a);
-                    lb.outputLeft(a);
+                    lb.output(a, Labyrinth.OUTPUT_TOP);
+                    lb.output(a, Labyrinth.OUTPUT_LEFT);
                 } else if (ch == '\u256C') { // ╬
-                    lb.outputTop(a);
-                    lb.outputLeft(a);
-                    lb.outputRight(a);
-                    lb.outputBottom(a);
+                    lb.output(a, Labyrinth.OUTPUT_TOP);
+                    lb.output(a, Labyrinth.OUTPUT_LEFT);
+                    lb.output(a, Labyrinth.OUTPUT_RIGHT);
+                    lb.output(a, Labyrinth.OUTPUT_BOTTOM);
                 } else if (ch == '\u2569') { // ╩
-                    lb.outputTop(a);
-                    lb.outputLeft(a);
-                    lb.outputRight(a);
+                    lb.output(a, Labyrinth.OUTPUT_TOP);
+                    lb.output(a, Labyrinth.OUTPUT_LEFT);
+                    lb.output(a, Labyrinth.OUTPUT_RIGHT);
                 } else if (ch == '\u2550') { // ═
-                    lb.outputLeft(a);
-                    lb.outputRight(a);
+                    lb.output(a, Labyrinth.OUTPUT_LEFT);
+                    lb.output(a, Labyrinth.OUTPUT_RIGHT);
                 } else if (ch == '\u2563') { // ╣
-                    lb.outputTop(a);
-                    lb.outputLeft(a);
-                    lb.outputBottom(a);
+                    lb.output(a, Labyrinth.OUTPUT_TOP);
+                    lb.output(a, Labyrinth.OUTPUT_LEFT);
+                    lb.output(a, Labyrinth.OUTPUT_BOTTOM);
                 } else {
                     throw new IllegalArgumentException(ch + "");
                 }
@@ -171,36 +250,8 @@ public class Infi {
             this.cells = new byte[height][width];
         }
 
-        void outputTop(Location a) {
-            output(a, OUTPUT_TOP);
-        }
-
-        void outputBottom(Location a) {
-            output(a, OUTPUT_BOTTOM);
-        }
-
-        void outputLeft(Location a) {
-            output(a, OUTPUT_LEFT);
-        }
-
-        void outputRight(Location a) {
-            output(a, OUTPUT_RIGHT);
-        }
-
-        boolean isTopConnected(Location a) {
-            return isConnected(a, a.top(), OUTPUT_TOP, OUTPUT_BOTTOM);
-        }
-
-        boolean isBottomConnected(Location a) {
-            return isConnected(a, a.bottom(), OUTPUT_BOTTOM, OUTPUT_TOP);
-        }
-
-        boolean isLeftConnected(Location a) {
-            return isConnected(a, a.left(), OUTPUT_LEFT, OUTPUT_RIGHT);
-        }
-
-        boolean isRightConnected(Location a) {
-            return isConnected(a, a.right(), OUTPUT_RIGHT, OUTPUT_LEFT);
+        public boolean hasOutput(Location a, int dest) {
+            return (cells[a.row][a.col] & dest) != 0;
         }
 
         private void output(Location loc, byte output) {
@@ -209,25 +260,46 @@ public class Infi {
             }
         }
 
+        public boolean isTopConnected(Location a) {
+            return isConnected(a, a.top(), OUTPUT_TOP, OUTPUT_BOTTOM);
+        }
+
+        public boolean isBottomConnected(Location a) {
+            return isConnected(a, a.bottom(), OUTPUT_BOTTOM, OUTPUT_TOP);
+        }
+
+        public boolean isLeftConnected(Location a) {
+            return isConnected(a, a.left(), OUTPUT_LEFT, OUTPUT_RIGHT);
+        }
+
+        public boolean isRightConnected(Location a) {
+            return isConnected(a, a.right(), OUTPUT_RIGHT, OUTPUT_LEFT);
+        }
+
         private boolean isConnected(Location a, Location b, byte outputA, byte outputB) {
             return isValid(a) && isValid(b)
                 && (this.cells[a.row][a.col] & outputA) != 0
                 && (this.cells[b.row][b.col] & outputB) != 0;
         }
 
+        public void shiftCol(int col) {
+            byte lastCell = cells[height - 1][col];
+            for (int row = height - 1; row > 0; row--) {
+                cells[row][col] = cells[row - 1][col];
+            }
+            cells[0][col] = lastCell;
+        }
+
+        public void shiftRow(int row) {
+            byte lastCell = cells[row][width - 1];
+            for (int col = width - 1; col > 0; col--) {
+                cells[row][col] = cells[row][col - 1];
+            }
+            cells[row][0] = lastCell;
+        }
+
         private boolean isValid(Location a) {
             return a.row >= 0 && a.row < height && a.col >= 0 && a.col < width;
-        }
-    }
-
-    private static class State {
-
-        private final Location loc;
-        private final int steps;
-
-        State(Location loc, int steps) {
-            this.loc = loc;
-            this.steps = steps;
         }
     }
 
@@ -255,6 +327,11 @@ public class Infi {
 
         Location right() {
             return new Location(row, col + 1);
+        }
+
+        @Override
+        public String toString() {
+            return row + "," + col;
         }
 
         @Override
