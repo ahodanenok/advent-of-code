@@ -3,6 +3,10 @@ import java.io.BufferedReader;
 import java.util.List;
 import java.util.ArrayList;
 
+/**
+ * Advent of Code - Day 1
+ * https://adventofcode.com/2019/day/1
+ */
 public class Day1 {
          
     public static void main(String[] args) throws Exception {
