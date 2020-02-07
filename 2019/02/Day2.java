@@ -11,11 +11,26 @@ public class Day2 {
 
     public static void main(String[] args) throws Exception {
         List<Integer> input = getInput();
+
         Memory memory_1 = new Memory(input);
         memory_1.set(1, 12);
         memory_1.set(2, 2);
         run(input, memory_1);
         System.out.println("part 1: " + memory_1.get(0));
+
+        search:
+        for (int a = 0; a <= 99; a++) {
+            for (int b = 0; b <= 99; b++) {
+                Memory memory_2 = new Memory(input);
+                memory_2.set(1, a);
+                memory_2.set(2, b);
+                run(input, memory_2);
+                if (memory_2.get(0) == 19690720) {
+                    System.out.println("part 2: " + (100 * memory_2.get(1) + memory_2.get(2)));
+                    break search;
+                }
+            }
+        } 
     } 
 
     private static List<Integer> getInput() throws Exception {
