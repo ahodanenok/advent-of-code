@@ -10,25 +10,11 @@ public class Day4 {
         int from = 359282;
         int to = 820401;
 
-        part1(from, to);    
-    }
+        int count_1 = 0;
+        int count_2 = 0;
 
-    private static void part1(int from, int to) {
-        int count = 0;
-
-        next:
         for (int p = from; p < to; p++) {
             String s = p + "";
-
-            boolean hasAdjacentSame = false;
-            for (int i = 1; i < s.length(); i++) {
-                if (s.charAt(i - 1) == s.charAt(i)) {
-                    hasAdjacentSame = true;
-                    break;
-                } 
-            }
-
-            if (!hasAdjacentSame) continue;
 
             char[] chars = Arrays.copyOf(s.toCharArray(), s.length());
             Arrays.sort(chars); 
@@ -36,10 +22,26 @@ public class Day4 {
                 continue;
             } 
 
-            count++;
+            int groupSize = 1;
+            boolean hasTwoDigitsGroup = false; 
+            boolean hasAdjacentSame = false;
+            for (int i = 1; i <= chars.length; i++) {
+                if (i >= chars.length || chars[i - 1] != chars[i]) {
+                    if (groupSize > 1) hasAdjacentSame = true;
+                    if (groupSize == 2) hasTwoDigitsGroup = true;
+                    groupSize = 1;
+                } else {
+                    groupSize++;
+                }
+            }
+
+
+            if (hasAdjacentSame) count_1++;
+            if (hasTwoDigitsGroup) count_2++;
         }
 
-        System.out.println("Part 1: " + count);
+        System.out.println("Part 1: " + count_1);
+        System.out.println("Part 2: " + count_2);
     }
 }
 
