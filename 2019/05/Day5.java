@@ -13,7 +13,10 @@ public class Day5 {
         List<Integer> input = getInput();
 
         Memory memory_1 = new Memory(input);
-        run(input, memory_1);
+        run(input, memory_1, 1);
+
+        Memory memory_2 = new Memory(input);
+        run(input, memory_2, 5);
     } 
 
     private static List<Integer> getInput() throws Exception {
@@ -28,7 +31,7 @@ public class Day5 {
         return input;
     }
 
-    private static void run(List<Integer> input, Memory memory) {
+    private static void run(List<Integer> input, Memory memory, int id) {
         int pos = 0;
         while (pos < input.size() && memory.get(pos) != 99) {
             int cmd = memory.get(pos);
@@ -44,12 +47,44 @@ public class Day5 {
                 memory.set(memory.get(pos + 3), a * b);
                 pos += 4;
             } else if (opcode == 3) {
-                int in = 1;
+                int in = id;
                 memory.set(memory.get(pos + 1), in);
                 pos += 2;
             } else if (opcode == 4) {
                 System.out.println(value(memory, cmd, pos, 1));
                 pos += 2;
+            } else if (opcode == 5) {
+                int v = value(memory, cmd, pos, 1);
+                if (v != 0) {
+                    pos = value(memory, cmd, pos, 2);
+                } else {
+                    pos += 3;
+                }
+            } else if (opcode == 6) {
+                int v = value(memory, cmd, pos, 1);
+                if (v == 0) {
+                    pos = value(memory, cmd, pos, 2);
+                } else {
+                    pos += 3;
+                }
+            } else if (opcode == 7) {
+                int a = value(memory, cmd, pos, 1);
+                int b = value(memory, cmd, pos, 2);
+                if (a < b) {
+                    memory.set(memory.get(pos + 3), 1);
+                } else {
+                    memory.set(memory.get(pos + 3), 0);
+                }
+                pos += 4;
+            } else if (opcode == 8) {
+                int a = value(memory, cmd, pos, 1);
+                int b = value(memory, cmd, pos, 2);
+                if (a == b) {
+                    memory.set(memory.get(pos + 3), 1);
+                } else {
+                    memory.set(memory.get(pos + 3), 0);
+                }
+                pos += 4;
             } else {
                 throw new IllegalStateException("Unknown command: " + opcode); 
             } 
