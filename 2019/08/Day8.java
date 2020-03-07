@@ -13,6 +13,7 @@ public class Day8 {
         List<Integer> data = getInput();
         Image img = new Image(25, 6, data);
         part1(img); 
+        part2(img);
     }
 
     private static void part1(Image img) {
@@ -47,6 +48,28 @@ public class Day8 {
         }
 
         System.out.println("Part 1: " + (oneDigitsCount * twoDigitsCount));
+    }
+
+    private static void part2(Image img) {
+        for (int y = 0; y < img.height; y++) {
+            for (int x = 0; x < img.width; x++) {
+                char pixel;
+                int color = img.color(x, y);
+                if (color == 0) {
+                    pixel = ' ';
+                } else if (color == 1) {
+                    pixel = '#';
+                } else if (color == 2) {
+                    pixel = '_';
+                } else {
+                    throw new IllegalStateException();
+                }
+
+                System.out.print(pixel);
+            }
+
+            System.out.println();
+        }
     }
 
     private static List<Integer> getInput() throws Exception {
@@ -84,6 +107,15 @@ public class Day8 {
 
         int[] layer(int n) {
             return layers[n];
+        }
+
+        int color(int x, int y) {
+            int n = 0;
+            while (layers[n][y * width + x] == 2) {
+                n++;
+            }
+
+            return layers[n][y * width + x];
         }
     }
 }
