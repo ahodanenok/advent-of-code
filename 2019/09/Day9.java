@@ -11,9 +11,20 @@ public class Day9 {
 
     public static void main(String[] args) throws Exception {
         List<Integer> input = getInput();
+        part1(input);
+        part2(input);
+    }
+
+    private static void part1(List<Integer> input) {
         Context ctx = new Context();
         ctx.memory = new Memory(input);
         run(ctx, input, 1);
+    }
+
+    private static void part2(List<Integer> input) {
+        Context ctx = new Context();
+        ctx.memory = new Memory(input);
+        run(ctx, input, 2);
     }
 
     private static List<Integer> getInput() throws Exception {
