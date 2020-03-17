@@ -24,6 +24,7 @@ public class Day11 {
     public static void main(String[] args) throws Exception {
         List<Long> input = getInput();
         part1(input);
+        part2(input);
     }
 
     private static List<Long> getInput() throws Exception {
@@ -39,11 +40,46 @@ public class Day11 {
     }
 
     private static void part1(List<Long> program) {
-        Point currentPoint = new Point(0, 0);
+        Point startingPoint = new Point(0, 0);
+        Map<Point, Integer> painted = paint(program, startingPoint, COLOR_BLACK);
+        System.out.println("Part 1: " + painted.size());
+    }
+
+    private static void part2(List<Long> program) {
+        Point startingPoint = new Point(0, 0);
+        Map<Point, Integer> painted = paint(program, startingPoint, COLOR_WHITE);
+
+        int xMin = Integer.MAX_VALUE;
+        int xMax = Integer.MIN_VALUE;
+        int yMin = Integer.MAX_VALUE;
+        int yMax = Integer.MIN_VALUE;
+        for (Point p : painted.keySet()) {
+            xMin = Math.min(p.x, xMin);
+            xMax = Math.max(p.x, xMax);
+            yMin = Math.min(p.y, yMin);
+            yMax = Math.max(p.y, yMax);
+        }
+
+        for (int y = yMin; y <= yMax; y++) {
+            for (int x = xMin; x <= xMax; x++) {
+                Integer color = painted.get(new Point(x, y));
+                if (color != null && color == COLOR_WHITE) {
+                    System.out.print("#");
+                } else {
+                    System.out.print(".");
+                } 
+            } 
+
+            System.out.println();
+        }
+    }
+
+    private static Map<Point, Integer> paint(List<Long> program, Point startingPoint, int startingPointColor) {
         int currentDir = DIR_UP;
+        Point currentPoint = startingPoint;
 
         Map<Point, Integer> panels = new HashMap<>();
-        panels.put(currentPoint, COLOR_BLACK);
+        panels.put(currentPoint, startingPointColor);
 
         Context ctx = new Context();
         ctx.memory = new Memory(program);
@@ -116,7 +152,7 @@ public class Day11 {
             }
         }
 
-        System.out.println("Part 1: " + panels.size());
+        return panels;
     }
 
     private static class Point {
