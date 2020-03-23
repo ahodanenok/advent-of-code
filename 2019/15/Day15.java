@@ -6,6 +6,7 @@ import java.util.LinkedList;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Collections;
+import java.util.Arrays;
 
 /**
  * Advent of Code - Day 15
@@ -25,10 +26,7 @@ public class Day15 {
 
     public static void main(String[] args) throws Exception {
         List<Long> program = getInput();
-        part1(program);
-    } 
 
-    private static void part1(List<Long> program) {
         Context ctx = new Context();
         ctx.memory = new Memory(program);
 
@@ -36,6 +34,11 @@ public class Day15 {
         initialState.point = new Point(0, 0);
         initialState.visited = Collections.singleton(initialState.point);
         initialState.ctx = ctx;
+
+        Set<Point> emptyPoints = new HashSet<>();
+        emptyPoints.add(new Point(0, 0));
+
+        Point oxygenSystemPoint = null;
 
         LinkedList<State> queue = new LinkedList<>();
         queue.add(initialState);
@@ -45,37 +48,59 @@ public class Day15 {
             for (int dir : DIRS) {
                 Context nextCtx = current.ctx.copy();
                 int status = run(nextCtx, program, dir);
+                
+                State next = new State();
+                next.steps = current.steps + 1;
+
+                if (dir == DIR_NORTH) {
+                   next.point = current.point.up(); 
+                } else if (dir == DIR_SOUTH) {
+                   next.point = current.point.down(); 
+                } else if (dir == DIR_WEST) {
+                   next.point = current.point.left(); 
+                } else if (dir == DIR_EAST) {
+                   next.point = current.point.right(); 
+                } else {
+                   throw new IllegalStateException("dir: " + dir);
+                }
+
                 if (status == STATUS_WALL_AHEAD) {
                     continue;
                 } else if (status == STATUS_MOVED) {
-                    State next = new State();
-                    if (dir == DIR_NORTH) {
-                       next.point = current.point.up(); 
-                    } else if (dir == DIR_SOUTH) {
-                       next.point = current.point.down(); 
-                    } else if (dir == DIR_WEST) {
-                       next.point = current.point.left(); 
-                    } else if (dir == DIR_EAST) {
-                       next.point = current.point.right(); 
-                    } else {
-                        throw new IllegalStateException("dir: " + dir);
-                    }
-
                     if (!current.visited.contains(next.point)) {
+                        emptyPoints.add(next.point);
                         next.visited = new HashSet<>(current.visited);
                         next.visited.add(next.point);
-                        next.steps = current.steps + 1;
                         next.ctx = nextCtx;
                         queue.addLast(next);
                     }
                 } else if (status == STATUS_OXYGEN_SYSTEM_REACHED) {
-                    System.out.println("Part 1: " + (current.steps + 1)); 
-                    return;
+                    oxygenSystemPoint = next.point; 
+                    System.out.println("Part 1: " + next.steps); 
                 } else {
                     throw new IllegalStateException("status: " + status);
                 }
             }
         }
+
+
+        int minutesToFill = 0;
+
+        Set<Point> oxygenFilledPoints = new HashSet<>();
+        oxygenFilledPoints.add(oxygenSystemPoint);
+        while (oxygenFilledPoints.size() < emptyPoints.size()) {
+            for (Point p : new HashSet<>(oxygenFilledPoints)) {
+                for (Point n : Arrays.asList(p.up(), p.down(), p.left(), p.right())) {
+                    if (emptyPoints.contains(n)) {
+                        oxygenFilledPoints.add(n);
+                    }
+                }
+            }
+
+            minutesToFill++;
+        } 
+
+        System.out.println("Part 2: " + minutesToFill);
     }
 
     private static List<Long> getInput() throws Exception {
