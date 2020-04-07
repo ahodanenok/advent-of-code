@@ -3,6 +3,8 @@ import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Advent of Code - Day 19
@@ -13,12 +15,13 @@ public class Day19 {
     public static void main(String[] args) throws Exception {
         List<Long> program = getInput();
         part1(program);
+        part2(program);
     }
 
     private static void part1(List<Long> program) {
         int affectedCount = 0;
 
-       for (int x = 0; x < 50; x++) {
+        for (int x = 0; x < 50; x++) {
             for (int y = 0; y < 50; y++) {
                 Context ctx = new Context();
                 ctx.memory = new Memory(program);
@@ -29,10 +32,75 @@ public class Day19 {
                 if (state == 1) {
                     affectedCount++;
                 }
+
             }
         }
 
         System.out.println("Part 1: " + affectedCount);
+    }
+
+    private static void part2(List<Long> program) {
+        Set<Point> affected = new HashSet<>();
+
+        for (int y = 0; y < 10000; y++) {
+            Point rowStart = null;
+            for (int x = 0; x < 10000; x++) {
+                Context ctx = new Context();
+                ctx.memory = new Memory(program);
+                ctx.in = new LinkedList<>();
+                ctx.in.add(x);
+                ctx.in.add(y);
+
+                int state = run(ctx);
+                if (state == 1) {
+                    if (rowStart == null) rowStart = new Point(x, y);
+                    affected.add(new Point(x, y));
+                }
+
+                if (state == 0 && rowStart != null) {
+                    break;
+                }
+            }
+
+            if (rowStart == null) {
+                continue;
+            }
+
+            Point current = rowStart;
+
+            int height = 0;
+            while (true) {
+                height++;
+                if (height >= 100) { 
+                    break;
+                }
+
+                current = current.up();
+                if (!affected.contains(current) || current.y < 0) {
+                    break;
+                }
+            }
+
+            Point closest = current;
+
+            int width = 0;
+            while (true) {
+                width++; 
+                if (width >= 100) {
+                    break;
+                }
+
+                current = current.right();
+                if (!affected.contains(current) || current.x < 0) {
+                    break;
+                }
+            }
+
+            if (height == 100 && width == 100) {
+                System.out.println("Part 2: " + (closest.x * 10000 + closest.y));
+                break;
+            }
+        }
     }
 
     private static List<Long> getInput() throws Exception {
@@ -55,6 +123,14 @@ public class Day19 {
         Point(int x, int y) {
             this.x = x;
             this.y = y;
+        }
+
+        Point right() {
+            return new Point(x + 1, y);
+        }
+
+        Point up() {
+            return new Point(x, y - 1);
         }
 
         @Override
