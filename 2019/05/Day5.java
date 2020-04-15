@@ -1,7 +1,6 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.util.List;
-import java.util.ArrayList;
+import ahodanenok.aoc.intcode.IntcodeComputer;
+import ahodanenok.aoc.intcode.WIn;
+import ahodanenok.aoc.intcode.Out;
 
 /**
  * Advent of Code - Day 5
@@ -10,116 +9,28 @@ import java.util.ArrayList;
 public class Day5 {
 
     public static void main(String[] args) throws Exception {
-        List<Integer> input = getInput();
+        long[] program = IntcodeComputer.load("input.txt");
 
-        Memory memory_1 = new Memory(input);
-        run(input, memory_1, 1);
-
-        Memory memory_2 = new Memory(input);
-        run(input, memory_2, 5);
-    } 
-
-    private static List<Integer> getInput() throws Exception {
-        List<Integer> input = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
-            String line = reader.readLine();
-            for (String n : line.split(",")) {
-                input.add(Integer.parseInt(n.trim()));
+        IntcodeComputer pc_1 = new IntcodeComputer(program);
+        pc_1.setIn(new WIn(1));
+        pc_1.setOut(new Out() {
+            @Override
+            public void write(long n) {
+                if (n > 0) {
+                    System.out.println("Part 1: " + n);
+                }
             }
-        }
+        });
+        pc_1.run();
 
-        return input;
-    }
-
-    private static void run(List<Integer> input, Memory memory, int id) {
-        int pos = 0;
-        while (pos < input.size() && memory.get(pos) != 99) {
-            int cmd = memory.get(pos);
-            int opcode = opcode(cmd);
-            if (opcode == 1) {
-                int a = value(memory, cmd, pos, 1);
-                int b = value(memory, cmd, pos, 2);
-                memory.set(memory.get(pos + 3), a + b);
-                pos += 4;
-            } else if (opcode == 2) {
-                int a = value(memory, cmd, pos, 1);
-                int b = value(memory, cmd, pos, 2);
-                memory.set(memory.get(pos + 3), a * b);
-                pos += 4;
-            } else if (opcode == 3) {
-                int in = id;
-                memory.set(memory.get(pos + 1), in);
-                pos += 2;
-            } else if (opcode == 4) {
-                System.out.println(value(memory, cmd, pos, 1));
-                pos += 2;
-            } else if (opcode == 5) {
-                int v = value(memory, cmd, pos, 1);
-                if (v != 0) {
-                    pos = value(memory, cmd, pos, 2);
-                } else {
-                    pos += 3;
-                }
-            } else if (opcode == 6) {
-                int v = value(memory, cmd, pos, 1);
-                if (v == 0) {
-                    pos = value(memory, cmd, pos, 2);
-                } else {
-                    pos += 3;
-                }
-            } else if (opcode == 7) {
-                int a = value(memory, cmd, pos, 1);
-                int b = value(memory, cmd, pos, 2);
-                if (a < b) {
-                    memory.set(memory.get(pos + 3), 1);
-                } else {
-                    memory.set(memory.get(pos + 3), 0);
-                }
-                pos += 4;
-            } else if (opcode == 8) {
-                int a = value(memory, cmd, pos, 1);
-                int b = value(memory, cmd, pos, 2);
-                if (a == b) {
-                    memory.set(memory.get(pos + 3), 1);
-                } else {
-                    memory.set(memory.get(pos + 3), 0);
-                }
-                pos += 4;
-            } else {
-                throw new IllegalStateException("Unknown command: " + opcode); 
-            } 
-        }
-    }
-
-    private static int opcode(int instruction) {
-        return instruction % 100;
-    }
-
-    private static int value(Memory memory, int instruction, int pos, int idx) {
-        int mode = instruction / (int) Math.pow(10, idx + 1) % 10;
-        if (mode == 0) {
-            return memory.get(memory.get(pos + idx));
-        } else {
-            return memory.get(pos + idx);
-        } 
-    }
-
-    private static class Memory {
-
-
-        private List<Integer> data; 
-
-        Memory(List<Integer> initialData) {
-            this.data = new ArrayList<>(initialData);
-        }
-
-        void set(int idx, int value) {
-            data.set(idx, value);
-        }
-
-        int get(int idx) {
-            return data.get(idx);
-        }
-    }
+        IntcodeComputer pc_2 = new IntcodeComputer(program);
+        pc_2.setIn(new WIn(5));
+        pc_2.setOut(new Out() {
+            @Override
+            public void write(long n) {
+                System.out.println("Part 2: " + n);
+            }
+        });
+        pc_2.run();
+    } 
 }
-
