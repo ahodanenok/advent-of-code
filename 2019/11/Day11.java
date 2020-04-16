@@ -1,11 +1,11 @@
-import java.io.BufferedReader;
-import java.io.FileReader;
+import ahodanenok.aoc.intcode.IntcodeComputer;
+import ahodanenok.aoc.intcode.In;
+import ahodanenok.aoc.intcode.Out;
+
 import java.util.List;
-import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
-import java.util.Set;
-import java.util.HashSet;
 
 /**
  * Advent of Code - Day 11
@@ -22,30 +22,18 @@ public class Day11 {
     private static final int DIR_DOWN = 3;
 
     public static void main(String[] args) throws Exception {
-        List<Long> input = getInput();
-        part1(input);
-        part2(input);
+        long[] program = IntcodeComputer.load("input.txt");
+        part1(program);
+        part2(program);
     }
 
-    private static List<Long> getInput() throws Exception {
-        List<Long> input = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
-            String line = reader.readLine();
-            for (String n : line.split(",")) {
-                input.add(Long.parseLong(n.trim()));
-            }
-        }
-
-        return input;
-    }
-
-    private static void part1(List<Long> program) {
+    private static void part1(long[] program) {
         Point startingPoint = new Point(0, 0);
         Map<Point, Integer> painted = paint(program, startingPoint, COLOR_BLACK);
         System.out.println("Part 1: " + painted.size());
     }
 
-    private static void part2(List<Long> program) {
+    private static void part2(long[] program) {
         Point startingPoint = new Point(0, 0);
         Map<Point, Integer> painted = paint(program, startingPoint, COLOR_WHITE);
 
@@ -74,39 +62,60 @@ public class Day11 {
         }
     }
 
-    private static Map<Point, Integer> paint(List<Long> program, Point startingPoint, int startingPointColor) {
-        int currentDir = DIR_UP;
-        Point currentPoint = startingPoint;
-
+    private static Map<Point, Integer> paint(long[] program, Point startingPoint, int startingPointColor) {
         Map<Point, Integer> panels = new HashMap<>();
-        panels.put(currentPoint, startingPointColor);
+        panels.put(startingPoint, startingPointColor);
 
-        Context ctx = new Context();
-        ctx.memory = new Memory(program);
+        new PaintingRobot(program, startingPoint, panels).launch();
 
-        List<Integer> cmd;
-        while (true) {
+        return panels;
+    }
+
+    private static class PaintingRobot implements In, Out{
+
+        private IntcodeComputer pc;
+        private LinkedList<Integer> in = new LinkedList<>();
+
+        private Point currentPoint;
+        private int currentDir = DIR_UP;
+        private Map<Point, Integer> panels;
+
+        PaintingRobot(long[] program, Point startingPoint, Map<Point, Integer> panels) {
+            this.pc = new IntcodeComputer(program);
+            this.pc.setIn(this);
+            this.pc.setOut(this);
+            this.panels = panels;
+            this.currentPoint = startingPoint;
+        }
+
+        void launch() {
+            pc.run();
+        }
+
+        @Override
+        public void write(long n) {
+            in.addLast((int) n);
+            if (in.size() == 2) {
+                paint(in.removeFirst(), in.removeFirst());
+            }
+        }
+
+        @Override
+        public long read() {
             if (!panels.containsKey(currentPoint)) {
                 panels.put(currentPoint, COLOR_BLACK);
             }
 
-            Integer color = null;
-            Integer turnTo = null;
-
             if (panels.get(currentPoint) == COLOR_BLACK) {
-                color = run(ctx, program, 0);
-                turnTo = run(ctx, program, 0);
+                return 0;
             } else if (panels.get(currentPoint) == COLOR_WHITE) {
-                color = run(ctx, program, 1);
-                turnTo = run(ctx, program, 1);
+                return 1;
             } else {
                 throw new IllegalStateException(panels.get(currentPoint) + "");
             }
+        }
 
-            if (color == null || turnTo == null) {
-                break;
-            }
-
+        private void paint(int color, int turnTo) {
             panels.put(currentPoint, color);
 
             if (currentDir == DIR_UP) {
@@ -152,7 +161,7 @@ public class Day11 {
             }
         }
 
-        return panels;
+        public void close() { }
     }
 
     private static class Point {
@@ -195,122 +204,6 @@ public class Day11 {
         @Override
         public String toString() {
             return "(" + x + ", " + y + ")";
-        }
-    }
-
-    private static Integer run(Context ctx, List<Long> input, int id) {
-        while (ctx.pos < input.size() && ctx.memory.get(ctx.pos) != 99) {
-            int cmd = (int) ctx.memory.get(ctx.pos);
-            int opcode = opcode(cmd);
-            if (opcode == 1) {
-                long a = value(ctx, cmd, 1);
-                long b = value(ctx, cmd, 2);
-                ctx.memory.set(addr(ctx, cmd, 3), a + b);
-                ctx.pos += 4;
-            } else if (opcode == 2) {
-                long a = value(ctx, cmd, 1);
-                long b = value(ctx, cmd, 2);
-                ctx.memory.set(addr(ctx, cmd, 3), a * b);
-                ctx.pos += 4;
-            } else if (opcode == 3) {
-                int in = id;
-                ctx.memory.set(addr(ctx, cmd, 1), in);
-                ctx.pos += 2;
-            } else if (opcode == 4) {
-                int out = (int) value(ctx, cmd, 1);
-                ctx.pos += 2;
-                return out;
-            } else if (opcode == 5) {
-                long v = value(ctx, cmd, 1);
-                if (v != 0) {
-                    ctx.pos = (int) value(ctx, cmd, 2);
-                } else {
-                    ctx.pos += 3;
-                }
-            } else if (opcode == 6) {
-                long v = value(ctx, cmd, 1);
-                if (v == 0) {
-                    ctx.pos = (int) value(ctx, cmd, 2);
-                } else {
-                    ctx.pos += 3;
-                }
-            } else if (opcode == 7) {
-                long a = value(ctx, cmd, 1);
-                long b = value(ctx, cmd, 2);
-                if (a < b) {
-                    ctx.memory.set(addr(ctx, cmd, 3), 1);
-                } else {
-                    ctx.memory.set(addr(ctx, cmd, 3), 0);
-                }
-                ctx.pos += 4;
-            } else if (opcode == 8) {
-                long a = value(ctx, cmd, 1);
-                long b = value(ctx, cmd, 2);
-                if (a == b) {
-                    ctx.memory.set(addr(ctx, cmd, 3), 1);
-                } else {
-                    ctx.memory.set(addr(ctx, cmd, 3), 0);
-                }
-                ctx.pos += 4;
-            } else if (opcode == 9) {
-                ctx.relativeBase += (int) value(ctx, cmd, 1);
-                ctx.pos += 2;
-            } else {
-                throw new IllegalStateException("Unknown command: " + opcode); 
-            } 
-        }
-
-        return null;
-    }
-
-    private static int opcode(int instruction) {
-        return instruction % 100;
-    }
-
-    private static int addr(Context ctx, int instruction, int idx) {
-        int mode = instruction / (int) Math.pow(10, idx + 1) % 10;
-        if (mode == 0) {
-            return (int) ctx.memory.get(ctx.pos + idx);
-        } else if (mode == 1) {
-            return ctx.pos + idx;
-        } else if (mode == 2) {
-            return ctx.relativeBase + (int) ctx.memory.get(ctx.pos + idx);
-        } else {
-            throw new IllegalArgumentException("mode");
-        }
-    }
-
-    private static long value(Context ctx, int instruction, int idx) {
-        return ctx.memory.get(addr(ctx, instruction, idx));
-    }
-
-    private static class Context {
-
-        Memory memory;
-        int relativeBase;
-        int pos;
-    }
-
-    private static class Memory {
-
-        private List<Long> data; 
-
-        Memory(List<Long> initialData) {
-            this.data = new ArrayList<>(initialData);
-        }
-
-        void set(int idx, long value) {
-            expandIfNeeded(idx);
-            data.set(idx, value);
-        }
-
-        long get(int idx) {
-            expandIfNeeded(idx);
-            return data.get(idx);
-        }
-
-        private void expandIfNeeded(int idx) {
-            while (data.size() <= idx) data.add(0L);
         }
     }
 }
