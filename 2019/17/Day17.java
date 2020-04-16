@@ -1,5 +1,7 @@
-import java.io.FileReader;
-import java.io.BufferedReader;
+import ahodanenok.aoc.intcode.IntcodeComputer;
+import ahodanenok.aoc.intcode.WIn;
+import ahodanenok.aoc.intcode.Out;
+
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Set;
@@ -18,20 +20,13 @@ public class Day17 {
     private static final int DIR_DOWN = 86;
 
     public static void main(String[] args) throws Exception {
-        List<Long> input = getInput();
-
-input.set(0, 2L);
-
-Context ctx = new Context();
-ctx.memory = new Memory(input);
-run(ctx, input, 65);
-
-        //part1(input);
-        //part2(input);
+        long[] program = IntcodeComputer.load("input.txt");
+        part1(program);
+        part2(program);
     }
 
-    private static void part1(List<Long> input) {
-        Set<Point> scaffolds = view(input).scaffolds;
+    private static void part1(long[] program) {
+        Set<Point> scaffolds = view(program).scaffolds;
 
         Set<Point> intersections = new HashSet<>();
         for (Point sc : scaffolds) {
@@ -53,8 +48,8 @@ run(ctx, input, 65);
         System.out.println("Part 1: " + paramSum);
     }
 
-    private static void part2(List<Long> input) {
-        View view = view(input);
+    private static void part2(long[] program) {
+        View view = view(program);
 
         int steps = 0;
         List<String> instructions = new ArrayList<>();
@@ -95,15 +90,15 @@ run(ctx, input, 65);
 
         if (steps > 0) instructions.add(steps + "");
 //instructions = Arrays.asList("R","8","R","8","R","4","R","4","R","8","L","6","L","2","R","4","R","4","R","8","R","8","R","8","L","6","L","2");
-        System.out.println(instructions);
+        //System.out.println(instructions);
 
         boolean[] used = new boolean[instructions.size()];
         List<Routine> routines = new ArrayList<>();
         routines(instructions, used, routines, 3);
 
-        for (Routine r : routines) {
-            System.out.println(r.length + " at " + r.positions);
-        }
+        //for (Routine r : routines) {
+        //    System.out.println(r.length + " at " + r.positions);
+        //}
 
         List<Integer> main = new ArrayList<>();
 
@@ -119,51 +114,52 @@ run(ctx, input, 65);
             }
         }
 
-        System.out.println(main);
+        //System.out.println(main);
 
-        input = new ArrayList<>(input);
-        input.set(0, 2L);
-
-        Context ctx = new Context();
-        ctx.memory = new Memory(input);
-
-        run(ctx, input, 65);
-
-        /*for (int i = 0; i < main.size(); i++) {
-            run(ctx, input, 'A' + main.get(i));
+        WIn in = new WIn();
+        for (int i = 0; i < main.size(); i++) {
+            in.add('A' + main.get(i));
             if (i < main.size() - 1) {
-                run(ctx, input, 44);
+                in.add(',');
             }
         }
-        run(ctx, input, 10);
+        in.add('\n');
 
         for (Routine r : routines) {
             for (int i = r.positions.get(0); i < r.positions.get(0) + r.length; i++) {
                 char[] cmd = instructions.get(i).toCharArray();
                 for (int j = 0; j < cmd.length; j++) {
-                    run(ctx, input, cmd[j]); 
+                    in.add(cmd[j]);
                 }
-      
+
                 if (i < r.positions.get(0) + r.length - 1) {
-                    run(ctx, input, 44);
+                    in.add(',');
                 }
             } 
 
-            run(ctx, input, 10);
+           in.add('\n');
         }
 
-        run(ctx, input, 'n');
+        in.add('n');
+        in.add('\n');
 
-        Long result = 0L;
-        while (true) {
-           Long out = run(ctx, input, 0);
-           if (out == null) {
-               System.out.println(result); 
-               break;
-           }
+        IntcodeComputer pc = new IntcodeComputer(program);
+        pc.memset(0, 2);
+        pc.setIn(in);
+        pc.setOut(new Out() {
+            private long dust;
 
-           result = out;
-        }*/
+            @Override
+            public void write(long n) {
+                dust = n;
+            }
+
+            @Override
+            public void close() {
+                System.out.println("Part 2: " + dust);
+            }
+        });
+        pc.run();
     }
 
     private static boolean routines(List<String> instructions, boolean[] used, List<Routine> routines, int count) {
@@ -233,57 +229,50 @@ run(ctx, input, 65);
         return (n + "").charAt(0);
     }
 
-    private static View view(List<Long> input) {
-        Context ctx = new Context();
-        ctx.memory = new Memory(input);
+    private static View view(long[] program) {
+        
 
         View view = new View();
         view.scaffolds = new HashSet<>();
 
-        int x = 0;
-        int y = 0;
-        Long out;
-        while ((out = run(ctx, input, 0)) != null) {
-            if (out == 35) {
-                view.scaffolds.add(new Point(x, y));
-                x++;
-            } else if (out == 46) {
-                x++;
-            } else if (out == 10) {
-                x = 0;
-                y++;
-            } else if (out == DIR_LEFT) {
-                view.robot = new Point(x, y);
-                view.dir = Dir.LEFT;
-                x++;
-            } else if (out == DIR_RIGHT) {
-                view.robot = new Point(x, y);
-                view.dir = Dir.RIGHT;
-                x++;
-            } else if (out == DIR_DOWN) {
-                view.robot = new Point(x, y);
-                view.dir = Dir.DOWN;
-                x++;
-            } else if (out == DIR_UP) {
-                view.robot = new Point(x, y);
-                view.dir = Dir.UP;
-                x++;
+        IntcodeComputer pc = new IntcodeComputer(program);
+        pc.setOut(new Out() {
+            int x = 0;
+            int y = 0;
+
+            public void write(long out) {
+                if (out == 35) {
+                    view.scaffolds.add(new Point(x, y));
+                    x++;
+                } else if (out == 46) {
+                    x++;
+                } else if (out == 10) {
+                    x = 0;
+                    y++;
+                } else if (out == DIR_LEFT) {
+                    view.robot = new Point(x, y);
+                    view.dir = Dir.LEFT;
+                    x++;
+                } else if (out == DIR_RIGHT) {
+                    view.robot = new Point(x, y);
+                    view.dir = Dir.RIGHT;
+                    x++;
+                } else if (out == DIR_DOWN) {
+                    view.robot = new Point(x, y);
+                    view.dir = Dir.DOWN;
+                    x++;
+                } else if (out == DIR_UP) {
+                    view.robot = new Point(x, y);
+                    view.dir = Dir.UP;
+                    x++;
+                } else {
+                    throw new IllegalStateException();
+                }
             }
-        }
+        });
+        pc.run();
 
         return view;
-    }
-
-    private static List<Long> getInput() throws Exception {
-        List<Long> input = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
-            String line = reader.readLine();
-            for (String n : line.split(",")) {
-                input.add(Long.parseLong(n.trim()));
-            }
-        }
-
-        return input;
     }
 
     private static class Routine {
@@ -416,132 +405,4 @@ run(ctx, input, 65);
             return "(" + x + ", " + y + ")";
         }
     }
-
-    private static Long run(Context ctx, List<Long> input, int id) {
-        while (ctx.memory.get(ctx.pos) != 99) {
-            int cmd = (int) ctx.memory.get(ctx.pos);
-            int opcode = opcode(cmd);
-            if (opcode == 1) {
-//System.out.println("SUM");
-                long a = value(ctx, cmd, 1);
-//System.out.println("  a = " + a);  
-                long b = value(ctx, cmd, 2);
-//System.out.println("  b = " + b);  
-//System.out.println("  to = " + addr(ctx, cmd, 3));
-                ctx.memory.set(addr(ctx, cmd, 3), a + b);
-                ctx.pos += 4;
-            } else if (opcode == 2) {
-//System.out.println("MUL");
-                long a = value(ctx, cmd, 1);
-//System.out.println("  a = " + a);  
-                long b = value(ctx, cmd, 2);
-//System.out.println("  b = " + b);  
-//System.out.println("  to = " + addr(ctx, cmd, 3));
-                ctx.memory.set(addr(ctx, cmd, 3), a * b);
-                ctx.pos += 4;
-            } else if (opcode == 3) {
-                int in = id;
-                System.out.print((char) id);
-                ctx.memory.set(addr(ctx, cmd, 1), in);
-                ctx.pos += 2;
-            } else if (opcode == 4) {
-                long out = value(ctx, cmd, 1);
-                ctx.pos += 2;
-                return out;
-            } else if (opcode == 5) {
-                long v = value(ctx, cmd, 1);
-                if (v != 0) {
-                    ctx.pos = (int) value(ctx, cmd, 2);
-                } else {
-                    ctx.pos += 3;
-                }
-            } else if (opcode == 6) {
-                long v = value(ctx, cmd, 1);
-                if (v == 0) {
-                    ctx.pos = (int) value(ctx, cmd, 2);
-                } else {
-                    ctx.pos += 3;
-                }
-            } else if (opcode == 7) {
-                long a = value(ctx, cmd, 1);
-                long b = value(ctx, cmd, 2);
-                if (a < b) {
-                    ctx.memory.set(addr(ctx, cmd, 3), 1);
-                } else {
-                    ctx.memory.set(addr(ctx, cmd, 3), 0);
-                }
-                ctx.pos += 4;
-            } else if (opcode == 8) {
-                long a = value(ctx, cmd, 1);
-                long b = value(ctx, cmd, 2);
-                if (a == b) {
-                    ctx.memory.set(addr(ctx, cmd, 3), 1);
-                } else {
-                    ctx.memory.set(addr(ctx, cmd, 3), 0);
-                }
-                ctx.pos += 4;
-            } else if (opcode == 9) {
-                ctx.relativeBase += (int) value(ctx, cmd, 1);
-                ctx.pos += 2;
-            } else {
-                throw new IllegalStateException("Unknown command: " + opcode); 
-            } 
-        }
-
-        return null;
-    }
-
-    private static int opcode(int instruction) {
-        return instruction % 100;
-    }
-
-    private static int addr(Context ctx, int instruction, int idx) {
-        int mode = instruction / (int) Math.pow(10, idx + 1) % 10;
-//System.out.println("  " + idx + ": " + mode);
-        if (mode == 0) {
-            return (int) ctx.memory.get(ctx.pos + idx);
-        } else if (mode == 1) {
-            return ctx.pos + idx;
-        } else if (mode == 2) {
-            return ctx.relativeBase + (int) ctx.memory.get(ctx.pos + idx);
-        } else {
-            throw new IllegalArgumentException("mode");
-        }
-    }
-
-    private static long value(Context ctx, int instruction, int idx) {
-        return ctx.memory.get(addr(ctx, instruction, idx));
-    }
-
-    private static class Context {
-
-        List<Long> input;
-        Memory memory;
-        int relativeBase;
-        int pos;
-    }
-
-    private static class Memory {
-
-        private List<Long> data; 
-
-        Memory(List<Long> initialData) {
-            this.data = new ArrayList<>(initialData);
-        }
-
-        void set(int idx, long value) {
-            expandIfNeeded(idx);
-            data.set(idx, value);
-        }
-
-        long get(int idx) {
-            expandIfNeeded(idx);
-            return data.get(idx);
-        }
-
-        private void expandIfNeeded(int idx) {
-            while (data.size() <= idx) data.add(0L);
-        }
-    }
 }
-
