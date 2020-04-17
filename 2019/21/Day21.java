@@ -17,10 +17,23 @@ public class Day21 {
      *   OR T J
      *   NOT C T
      *   OR T J
-     *   NOT D T
-     *   NOT T T
-     *   AND T J
+     *   AND D J
      *   WALK
+     */
+
+    /**
+     * Part 2:
+     *   NOT A T
+     *   NOT B J
+     *   OR T J
+     *   NOT C T
+     *   OR T J
+     *   AND D J
+     *   NOT E T
+     *   NOT T T
+     *   OR H T
+     *   AND T J
+     *   RUN
      */
 
     public static void main(String[] args) throws Exception {
@@ -36,7 +49,7 @@ public class Day21 {
             } 
 
             in.add('\n');
-            if ("WALK".equals(cmd)) {
+            if ("WALK".equals(cmd) || "RUN".equals(cmd)) {
                 break;
             }
         }
@@ -47,7 +60,7 @@ public class Day21 {
             @Override
             public void write(long n) {
                 if (n > 0xFF) {
-                    System.out.println("Part 1: " + n);
+                    System.out.println("Damage: " + n);
                 } else {
                     System.out.print((char) n);
                 }
