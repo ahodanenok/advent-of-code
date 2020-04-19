@@ -10,36 +10,34 @@ import java.util.Arrays;
  */
 public class Day22 {
 
-    private static final int DECK_SIZE = 10007;
-
     public static void main(String[] args) throws Exception {
         List<Shuffle> shuffles = getInput();
 
-        short[] deck = new short[DECK_SIZE];
-        for (short i = 0; i < deck.length; i++) deck[i] = i;
-
-        shuffle(deck, shuffles);
-        //System.out.println(Arrays.toString(deck));
-
-        part1(deck);
+        part1(shuffles);
+        //part2(shuffles);
     }
 
-    private static void part1(short[] deck) {
-        int pos = -1;
-        for (int i = 0; i < deck.length; i++) {
-            if (deck[i] == 2019) {
-                pos = i;
-                break; 
-            }
-        }
-
+    private static void part1(List<Shuffle> shuffles) {
+        long pos = shuffle(shuffles, 10007, 2019);
         System.out.println("Part 1: " + pos);
     }
 
-    private static void shuffle(short[] deck, List<Shuffle> shuffles) {
+    private static void part2(List<Shuffle> shuffles) {
+        long pos = 2020;
+        for (long n = 0; n < 101741582076661L; n++) {
+            pos = shuffle(shuffles, 119315717514047L, pos);
+        }
+
+        System.out.println("Part 2: " + pos);
+    }
+
+    private static long shuffle(List<Shuffle> shuffles, long deckSize, long trackPos) {
+        long pos = trackPos;
         for (Shuffle sh : shuffles) {
-            sh.apply(deck);
-        }  
+            pos = sh.apply(deckSize, pos);
+        }
+
+        return pos; 
     } 
 
     private static List<Shuffle> getInput() throws Exception {
@@ -65,7 +63,7 @@ public class Day22 {
     }
 
     private interface Shuffle {
-        void apply(short[] deck);
+        long apply(long deckSize, long pos); 
     }
 
     private static class CutShuffle implements Shuffle {
@@ -77,16 +75,8 @@ public class Day22 {
         }
 
         @Override
-        public void apply(short[] deck) {
-            if (count < 0) {
-                short[] cut = Arrays.copyOfRange(deck, deck.length + count, deck.length);
-                System.arraycopy(deck, 0, deck, -count, deck.length + count); 
-                System.arraycopy(cut, 0, deck, 0, -count);
-            } else {
-                short[] cut = Arrays.copyOf(deck, count);
-                System.arraycopy(deck, count, deck, 0, deck.length - count);
-                System.arraycopy(cut, 0, deck, deck.length - count, count);
-            }
+        public long apply(long deckSize, long pos) {
+            return (pos + deckSize - count) % deckSize;
         }
     } 
 
@@ -99,26 +89,16 @@ public class Day22 {
         }
 
         @Override
-        public void apply(short[] deck) {
-            short[] stack = Arrays.copyOf(deck, deck.length);
-            Arrays.fill(deck, (short) -1);
-
-            int j = 0;
-            for (int i = 0; i < stack.length; i++) {
-                while (deck[j] != -1) j = (j + step) % deck.length;    
-                deck[j] = stack[i];
-            }
+        public long apply(long deckSize, long pos) {
+           return (pos * step) % deckSize;
         }
     } 
 
     private static class NewStackShuffle implements Shuffle {
 
         @Override
-        public void apply(short[] deck) {
-            short[] stack = Arrays.copyOf(deck, deck.length); 
-            for (int i = 0; i < deck.length; i++) {
-                deck[i] = stack[deck.length - i - 1];
-            }
+        public long apply(long deckSize, long pos) {
+            return deckSize - pos - 1; 
         }
     } 
 }
