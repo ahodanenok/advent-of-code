@@ -3,6 +3,7 @@ import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.math.BigInteger;
 
 /**
  * Advent of Code - Day 22
@@ -14,7 +15,7 @@ public class Day22 {
         List<Shuffle> shuffles = getInput();
 
         part1(shuffles);
-        //part2(shuffles);
+        part2(shuffles);
     }
 
     private static void part1(List<Shuffle> shuffles) {
@@ -22,11 +23,25 @@ public class Day22 {
         System.out.println("Part 1: " + pos);
     }
 
+    // Thanks to: 
+    // https://www.reddit.com/r/adventofcode/comments/ee0rqi/2019_day_22_solutions/fbnifwk/
     private static void part2(List<Shuffle> shuffles) {
-        long pos = 2020;
-        for (long n = 0; n < 101741582076661L; n++) {
-            pos = shuffle(shuffles, 119315717514047L, pos);
-        }
+        BigInteger n = BigInteger.valueOf(101741582076661L);
+        BigInteger deckSize = BigInteger.valueOf(119315717514047L);
+        BigInteger x = BigInteger.valueOf(2020);
+        BigInteger y = BigInteger.valueOf(shuffle(shuffles, deckSize.longValue(), x.longValue())); 
+        BigInteger z = BigInteger.valueOf(shuffle(shuffles, deckSize.longValue(), y.longValue()));
+        BigInteger a = y.subtract(z).multiply(x.subtract(y).modInverse(deckSize)).mod(deckSize); 
+        BigInteger b = y.subtract(a.multiply(x)).mod(deckSize);
+
+
+        // f^n(x) = A^n * x + (A^n - 1) * modinv(A - 1, D) * B
+        // inverse: (x - (A^n - 1) * modinv(A - 1, D) * B) * modinv(A^n)
+        BigInteger an = a.modPow(n, deckSize);
+        BigInteger pos = x.subtract(
+               an.subtract(BigInteger.ONE)
+                   .multiply(a.subtract(BigInteger.ONE).modInverse(deckSize))
+                   .multiply(b)).multiply(an.modInverse(deckSize)).mod(deckSize);
 
         System.out.println("Part 2: " + pos);
     }
