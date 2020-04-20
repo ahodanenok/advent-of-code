@@ -5,6 +5,8 @@ import ahodanenok.aoc.intcode.Out;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.LinkedList;
+import java.util.Set;
+import java.util.HashSet;
 
 /**
  * Advent of Code - Day 23
@@ -20,14 +22,46 @@ public class Day23 {
             network.add(new PC(address, program));
         }
 
-        network.activate();
+        Supervisor supervisor = new Supervisor();
+        network.activate(supervisor);
+
+        System.out.println("Part 1: " + supervisor.part1);
+        System.out.println("Part 2: " + supervisor.part2);
+    }
+
+    private static class Supervisor {
+
+        long part1 = -1;
+        long part2 = -1;
+
+        Set<Long> natDeliveredY = new HashSet<>();
+
+        void onPacketSent(Packet packet) {
+            if (packet.to == 255 && part1 == -1) {
+                part1 = packet.y;
+            }
+        }
+
+        void onNatPacketSent(Packet natPacket) {
+            if (natDeliveredY.contains(natPacket.y) && part2 == -1) {
+                part2 = natPacket.y; 
+            }
+
+            natDeliveredY.add(natPacket.y);
+        }
+
+        boolean resume() {
+           return part1 == -1 || part2 == -1; 
+        }
     }
 
     private static class Network {
 
+        private Supervisor supervisor;
         private Map<Long, PC> computers = new TreeMap<>();
-        private boolean enabled;
 
+        private Packet natPacket;
+        
         void add(PC pc) {
             pc.connect(this);
             computers.put(pc.address, pc);
@@ -35,25 +69,34 @@ public class Day23 {
 
         void send(Packet packet) {
             if (packet.to == 255) {
-                System.out.println("Part 1: " + packet.y);
-                enabled = false;
+                natPacket = new Packet(0, packet.x, packet.y);
             }
 
             if (computers.containsKey(packet.to)) {
                 computers.get(packet.to).receive(packet);
             }
+
+            supervisor.onPacketSent(packet);
         }
 
-        void activate() {
-            enabled = true;
-            while (true) {
+        void activate(Supervisor supervisor) {
+            this.supervisor = supervisor;
+            while (supervisor.resume()) {
                 for (PC pc : computers.values()) {
-                    if (!enabled) {
-                        return;
-                    }
-
                     pc.activate();
                 } 
+
+                int idleCount = 0;
+                for (PC pc : computers.values()) {
+                    if (pc.idle()) {
+                        idleCount++;
+                    }
+                }
+
+                if (idleCount == computers.size() && natPacket != null) {
+                    send(natPacket);
+                    supervisor.onNatPacketSent(natPacket); 
+                }
             }
         }
     }
@@ -74,7 +117,6 @@ public class Day23 {
 
         void connect(Network network) {
             this.network = network;
-            //this.nic.setStopOnOut(true);
             this.nic.setIn(this);
             this.nic.setOut(this);
             this.incoming.add(address);
@@ -89,6 +131,10 @@ public class Day23 {
             this.nic.run();
         }
 
+        boolean idle() {
+            return this.incoming.isEmpty() && this.outbound.isEmpty();
+        }
+
         @Override
         public void write(long n) {
             outbound.addLast(n);
@@ -96,7 +142,6 @@ public class Day23 {
                 long to = outbound.removeFirst();
                 long x = outbound.removeFirst();
                 long y = outbound.removeFirst();
-                //System.out.println("sending from " + address + " to " + to + ", x=" + x + ", y= " + y);
                 nic.interrupt();
                 network.send(new Packet(to, x, y)); 
             }
@@ -104,7 +149,6 @@ public class Day23 {
 
         @Override
         public long read() {
-           //System.out.println("read");
            if (incoming.isEmpty()) {
                nic.interrupt();
                return -1;
