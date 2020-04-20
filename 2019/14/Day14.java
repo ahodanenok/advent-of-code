@@ -13,7 +13,29 @@ public class Day14 {
 
     public static void main(String[] args) throws Exception {
         NF factory = new NF(getReactions());
+        part1(factory);
+        part2(factory);
+    }
+
+    private static void part1(NF factory) {
         System.out.println("Part 1: " + factory.oreNeeded(new Chemical("FUEL", 1), new Storage()));
+    }
+
+    private static void part2(NF factory) {
+        long oreMax = 1000000000000L; 
+        long oreConsumed = 0;
+        long fuel = 0;
+        Storage storage = new Storage();
+        while (true) {
+            oreConsumed += factory.oreNeeded(new Chemical("FUEL", 1), storage);
+            if (oreConsumed > oreMax) {
+                break;
+            }
+
+            fuel++;
+        }
+ 
+        System.out.println("Part 2: " + fuel); 
     }
 
     private static Map<Chemical, List<Chemical>> getReactions() throws Exception {
