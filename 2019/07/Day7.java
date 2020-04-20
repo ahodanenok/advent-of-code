@@ -32,12 +32,8 @@ public class Day7 {
         for (List<Integer> phases : allPhases) {
             long in = 0;
             for (int i = 0; i < phases.size(); i++) {
-                IntcodeComputer pc = new IntcodeComputer(ams);
-                pc.setIn(new WIn(phases.get(i), in));
-                AmpOut out = new AmpOut();
-                pc.setOut(out);
-                pc.run();
-                in = out.result;
+                Amplifier amp = new Amplifier(phases.get(i), ams);
+                in = amp.process(in);
             }
  
             currentSignal = Math.max(in, currentSignal);
@@ -59,30 +55,20 @@ public class Day7 {
 
         long currentSignal = Long.MIN_VALUE;
         for (List<Integer> phases : allPhases) {
-            List<IntcodeComputer> computers = new ArrayList<>();
-    
+            List<Amplifier> amplifiers = new ArrayList<>();
             for (int i = 0; i < phases.size(); i++) {
-                IntcodeComputer pc = new IntcodeComputer(ams);
-                pc.setStopOnOut(true);
-                pc.setIn(new WIn(phases.get(i)));
-                computers.add(pc);
+                amplifiers.add(new Amplifier(phases.get(i), ams));
             }
 
             long in = 0;
             int currentAmp = 0;
             while (true) {
-                IntcodeComputer pc = computers.get(currentAmp);
-                ((WIn) pc.getIn()).add(in);
-
-                AmpOut out = new AmpOut();
-                pc.setOut(out);
-
-                pc.run();
-                if (!out.hasResult) {
+                long out = amplifiers.get(currentAmp).process(in);
+                if (out == -1) {
                     break;
                 }
 
-                in = out.result;
+                in = out;
                 currentAmp = (currentAmp + 1) % 5;
             }
 
@@ -104,16 +90,30 @@ public class Day7 {
         }
     }
 
-    private static class AmpOut implements Out {
+    private static class Amplifier implements Out {
 
-        long result;
-        boolean hasResult;
+        private IntcodeComputer pc;
+        private WIn in;
+        private long amplifiedSignal;
+
+        Amplifier(int phase, long[] program) {
+            this.in = new WIn(phase);
+            this.pc = new IntcodeComputer(program);
+            this.pc.setIn(in);
+            this.pc.setOut(this);
+        }
+
+        long process(long signal) {
+            amplifiedSignal = -1;
+            in.add(signal);
+            pc.run();
+            return amplifiedSignal;
+        }
 
         @Override
         public void write(long n) {
-            result = n;
-            hasResult = true;
+            amplifiedSignal = n;
+            pc.interrupt();
         }
     }
 }
-
