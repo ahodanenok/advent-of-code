@@ -6,6 +6,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Arrays;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  * Advent of Code - Day 20
@@ -16,6 +18,7 @@ public class Day20 {
     public static void main(String[] args) throws Exception {
         Maze maze = getMaze();
         part1(maze);
+        part2(maze);
     }
 
     private static void part1(Maze maze) {
@@ -54,14 +57,99 @@ public class Day20 {
         }
     }
 
+    private static void part2(Maze maze) {
+        Set<State> seen = new HashSet<>();
+
+        LinkedList<State> queue = new LinkedList<>();
+        queue.addLast(new State(maze.start, 0, 1));
+
+        while (!queue.isEmpty()) {
+            State current = queue.removeFirst();
+            if (current.point.equals(maze.exit) && current.level == 1) {
+                System.out.println("Part 2: " + current.steps);
+                break;
+            }
+
+            if (maze.portals.containsKey(current.point)) {
+                if (maze.inner.contains(current.point)) {
+                    current = new State(maze.portals.get(current.point), current.steps + 1, current.level + 1);
+                } else if (maze.outer.contains(current.point)) {
+                    current = new State(maze.portals.get(current.point), current.steps + 1, current.level - 1);
+                } else {
+                    throw new IllegalStateException();
+                }
+
+                seen.add(current);
+            }
+
+            for (Point next : Arrays.asList(
+                    current.point.up(), current.point.down(),
+                    current.point.left(), current.point.right())) {
+                if (!maze.open.contains(next)) {
+                    continue;
+                }
+
+                if (current.level != 1 && (next.equals(maze.start) || next.equals(maze.exit))) {
+                    continue;
+                }
+
+                if (current.level == 1 && maze.outer.contains(next)) { 
+                    continue;
+                }
+
+
+                State state = new State(next, current.steps + 1, current.level);
+                if (seen.contains(state)) {
+                    continue;
+                }
+
+                seen.add(state);
+                queue.addLast(state);
+            }
+        }
+
+        /*for (int y = 0; y < 128; y++) {
+            for (int x = 0; x < 128; x++) {
+                if (maze.open.contains(new Point(x, y)) && seen.contains(new State(new Point(x, y), 0, 1))) {
+                    System.out.print('+');
+                } else if (maze.open.contains(new Point(x, y))) {
+                    System.out.print('.');
+                } else if (seen.contains(new State(new Point(x, y), 0, 1))) {
+                    System.out.print('?');
+                } else {
+                    System.out.print(' ');
+                }
+            }
+
+            System.out.println();
+        }*/
+    }
+
     private static class State {
 
         private Point point;
         private int steps;
+        private int level;
 
         State(Point point, int steps) {
+            this(point, steps, 1);
+        }
+
+        State(Point point, int steps, int level) {
             this.point = point;
             this.steps = steps;
+            this.level = level;
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * point.hashCode() + level;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            State other = (State) obj;
+            return other.point.equals(point) && level == other.level;
         }
     }
 
@@ -100,10 +188,10 @@ public class Day20 {
 
                         if ("AA".equals(portal)) {
                             maze.start = point;
-                        }
+                        } else 
                         if ("ZZ".equals(portal)) {
                             maze.exit = point;
-                        } 
+                        } else
                         if (portals.containsKey(portal)) {
                             maze.portals.put(portals.get(portal), point);
                             maze.portals.put(point, portals.get(portal));
@@ -120,6 +208,25 @@ public class Day20 {
             }
         }
 
+        int xMin = Integer.MAX_VALUE;
+        int xMax = Integer.MIN_VALUE;
+        int yMin = Integer.MAX_VALUE;
+        int yMax = Integer.MIN_VALUE;
+        for (Point p : maze.portals.keySet()) {
+            xMin = Math.min(p.x, xMin);
+            xMax = Math.max(p.x, xMax);
+            yMin = Math.min(p.y, yMin);
+            yMax = Math.max(p.y, yMax);
+        }
+
+        for (Point p : maze.portals.keySet()) {
+            if (p.x == xMin || p.x == xMax || p.y == yMin || p.y == yMax) {
+                maze.outer.add(p); 
+            } else {
+                maze.inner.add(p);
+            }
+        }
+
         return maze;
     }
 
@@ -127,6 +234,8 @@ public class Day20 {
 
         Set<Point> open = new HashSet<>();
         Map<Point, Point> portals = new HashMap<>();
+        Set<Point> inner = new HashSet<>();
+        Set<Point> outer = new HashSet<>();
         Point start;
         Point exit;
     }
