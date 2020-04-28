@@ -1,13 +1,6 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.TreeSet;
-import java.util.LinkedList;
+import java.util.*;
 
 /**
  * Advent of Code - Day 18
@@ -21,50 +14,45 @@ public class Day18 {
      */
 
     public static void main(String[] args) throws Exception {
-        TunnelsMap map = getMap();
-        part1(map);
-    }
-
-    private static void part1(TunnelsMap map) {
-        System.out.println("Part 1: " + collectKeys(map));
+        System.out.println("Part 1: " + collectKeys(getMap("input.txt")));
+        System.out.println("Part 2: " + collectKeys(getMap("input2.txt")));
     }
 
     private static int collectKeys(TunnelsMap map) {
-        State start = new State();
-        start.point = map.start;
+        RobotState start = new RobotState(map.start);
 
-        Map<State, Integer> distances = new HashMap<>();
+        Map<RobotState, Integer> distances = new HashMap<>();
         distances.put(start, 0);
 
-        java.util.PriorityQueue<State> queue = new java.util.PriorityQueue<>(new java.util.Comparator<State>() {
+        PriorityQueue<RobotState> queue = new PriorityQueue<>(new Comparator<RobotState>() {
             @Override
-            public int compare(State a, State b) {
+            public int compare(RobotState a, RobotState b) {
                 return a.steps - b.steps;
             }
         });
         queue.offer(start);
 
         while (!queue.isEmpty()) {
-            State current = queue.remove();
+            RobotState current = queue.remove();
             if (current.keys.size() == map.keys.size()) {
                 return current.steps;
             }
 
-            Set<Point> reachableKeys = findReachableKeys(current.point, current.keys, map);
-            for (Point k : reachableKeys) {
-                State next = new State();
-                next.point = k;
-                next.keys = new TreeSet<>(current.keys);
-                next.keys.add(map.keys.get(k));
+            for (int i = 0; i < current.positions.length; i++) {
+                for (Point k : reachableKeys(current.positions[i], current.keys, map)) {
+                    RobotState next = new RobotState(current);
+                    next.positions[i] = k;
+                    next.keys.add(map.keys.get(k));
 
-                if (!distances.containsKey(next)) {
-                    distances.put(next, 100000);
-                }
+                    if (!distances.containsKey(next)) {
+                        distances.put(next, Integer.MAX_VALUE);
+                    }
 
-                next.steps = current.steps + steps(current.point, k, current.keys, map);
-                if (!distances.containsKey(next) || next.steps < distances.get(next)) {
-                    distances.put(next, next.steps);
-                    queue.offer(next);
+                    next.steps = current.steps + steps(current.positions[i], k, current.keys, map);
+                    if (!distances.containsKey(next) || next.steps < distances.get(next)) {
+                        distances.put(next, next.steps);
+                        queue.offer(next);
+                    }
                 }
             }
         }
@@ -72,7 +60,7 @@ public class Day18 {
         return Integer.MAX_VALUE;
     }
 
-    private static Set<Point> findReachableKeys(Point from, Set<Character> keys, TunnelsMap map) {
+    private static Set<Point> reachableKeys(Point from, Set<Character> keys, TunnelsMap map) {
         Set<Point> seen = new HashSet<>();
         Set<Point> reachable = new HashSet<>();
 
@@ -141,8 +129,8 @@ public class Day18 {
         return Integer.MAX_VALUE;
     }
 
-    private static TunnelsMap getMap() throws Exception {
-        try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
+    private static TunnelsMap getMap(String file) throws Exception {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
             TunnelsMap map = new TunnelsMap();
 
             String line;
@@ -156,7 +144,7 @@ public class Day18 {
                     } else if (cell == '.') {
                         map.open.add(point);
                     } else if (cell == '@') {
-                        map.start = point;
+                        map.start.add(point);
                         map.open.add(point);
                     } else if (cell >= 'a' && cell <= 'z') { 
                         map.keys.put(point, cell);
@@ -177,7 +165,7 @@ public class Day18 {
 
     private static class TunnelsMap {
 
-        Point start;
+        List<Point> start = new LinkedList<>();
         Set<Point> open = new HashSet<>();
         Map<Point, Character> doors = new HashMap<>();
         Map<Point, Character> keys = new HashMap<>();
@@ -194,19 +182,35 @@ public class Day18 {
         }
     }
 
-    private static class State {
+    private static class RobotState {
 
         int steps;
-        Point point;
-        TreeSet<Character> keys = new TreeSet<>();
+        TreeSet<Character> keys; 
+        Point[] positions;
 
-        public boolean equals(Object obj) {
-            State other = (State) obj;
-            return point.equals(other.point) && keys.equals(other.keys);
+        RobotState(List<Point> positions) {
+            this.keys = new TreeSet<>();
+            this.positions = new Point[positions.size()];
+            for (int i = 0; i < positions.size(); i++) {
+                this.positions[i] = positions.get(i);
+            }
         }
 
+        RobotState(RobotState s) {
+            this.keys = new TreeSet<>(s.keys);
+            this.steps = s.steps;
+            this.positions = Arrays.copyOf(s.positions, s.positions.length);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            RobotState other = (RobotState) obj;
+            return Arrays.equals(positions, other.positions) && keys.equals(other.keys);
+        }
+
+        @Override
         public int hashCode() {
-            return 31 * point.hashCode() + keys.hashCode();
+            return 31 * Arrays.hashCode(positions) + keys.hashCode();
         }
     }
 
