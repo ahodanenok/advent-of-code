@@ -11,12 +11,32 @@ public class Day1 {
 
     public static void main(String[] args) throws Exception {
         List<Integer> numbers = getNumbers();
+        part1(numbers);
+        part2(numbers);
+    }
+
+    private static void part1(List<Integer> numbers) {
         for (int i = 0; i < numbers.size(); i++) {
-            int n = numbers.get(i);
+            int a = numbers.get(i);
             for (int j = i + 1; j < numbers.size(); j++) {
-                if (n + numbers.get(j) == 2020) {
-                    System.out.println("Part 1: " + (n * numbers.get(j)));
-                    break;
+                int b = numbers.get(j);
+                if (a + b == 2020) {
+                    System.out.println("Part 1: " + a * b);
+                }
+            }
+        }
+    }
+
+    private static void part2(List<Integer> numbers) {
+        for (int i = 0; i < numbers.size(); i++) {
+            int a = numbers.get(i);
+            for (int j = i + 1; j < numbers.size(); j++) {
+                int b = numbers.get(j);
+                for (int k = j + 1; k < numbers.size(); k++) {
+                    int c = numbers.get(k);
+                    if (a + b + c == 2020) {
+                        System.out.println("Part 2: " + a * b * c);
+                    }
                 }
             }
         }
