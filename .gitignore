@@ -1,3 +1,6 @@
 *.class
 *.swp
 *.swo
+*.iml
+.idea
+out
