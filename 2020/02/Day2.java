@@ -11,7 +11,11 @@ public class Day2 {
 
 	public static void main(String[] args) throws Exception {
 		List<Password> passwords = getPasswords();
-		
+		part1(passwords);
+		part2(passwords);
+	}
+	
+	private static void part1(List<Password> passwords) {
 		int validCount = 0;
 		for (Password p : passwords) {
 			int times = 0;
@@ -21,12 +25,27 @@ public class Day2 {
 				}
 			}
 			
-			if (times >= p.minTimes && times <= p.maxTimes) {
+			if (times >= p.low && times <= p.high) {
 				validCount++;
 			}
 		}
 		
 		System.out.println("Part 1: " + validCount);
+	}
+
+	private static void part2(List<Password> passwords) {
+		int validCount = 0;
+		for (Password p : passwords) {
+			int times = 0;
+			if (p.value.charAt(p.low - 1) == p.requiredChar) times++;
+			if (p.value.charAt(p.high - 1) == p.requiredChar) times++;
+
+			if (times == 1) {
+				validCount++;
+			}
+		}
+
+		System.out.println("Part 2: " + validCount);
 	}
 	
 	private static List<Password> getPasswords() throws Exception {
@@ -39,10 +58,10 @@ public class Day2 {
 				String[] policyTimesParts = policyParts[0].split("-");
 				
 				Password p = new Password();
-				p.value = parts[1];
+				p.value = parts[1].trim();
 				p.requiredChar = policyParts[1].charAt(0);
-				p.minTimes = Integer.parseInt(policyTimesParts[0]);
-				p.maxTimes = Integer.parseInt(policyTimesParts[1]);
+				p.low = Integer.parseInt(policyTimesParts[0]);
+				p.high = Integer.parseInt(policyTimesParts[1]);
 				
 				passwords.add(p);
 			}
@@ -55,7 +74,7 @@ public class Day2 {
 	
 		String value;
 		char requiredChar;
-		int minTimes;
-		int maxTimes;
+		int low;
+		int high;
 	}
 }
