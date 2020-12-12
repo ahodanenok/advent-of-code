@@ -17,7 +17,11 @@ public class Day7 {
 
     public static void main(String[] args) throws Exception {
         List<Bag> bags = getBags();
+        part1(bags);
+        part2(bags);
+    }
 
+    private static void part1(List<Bag> bags) {
         Map<String, List<String>> index = new HashMap<>();
         for (Bag b : bags) {
             for (String h : b.holds.keySet()) {
@@ -39,6 +43,30 @@ public class Day7 {
         }
 
         System.out.println("Part 1: " + allContainers.size());
+    }
+
+    private static void part2(List<Bag> bags) {
+        Map<String, Map<String, Integer>> index = new HashMap<>();
+        for (Bag b : bags) {
+            index.put(b.name, b.holds);
+        }
+
+        System.out.println("Part 2: " + countBagsRequired("shiny gold", index));
+    }
+
+    private static int countBagsRequired(String bag, Map<String, Map<String, Integer>> bags) {
+        Map<String, Integer> holds = bags.get(bag);
+        if (holds == null) {
+            return 0;
+        }
+
+        int count = 0;
+        for (Map.Entry<String, Integer> h : holds.entrySet()) {
+            count += h.getValue();
+            count += countBagsRequired(h.getKey(), bags) * h.getValue();
+        }
+
+        return count;
     }
 
     private static List<Bag> getBags() throws Exception {
