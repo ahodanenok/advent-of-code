@@ -3,6 +3,8 @@ import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Advent of Code - Day 10
@@ -15,6 +17,11 @@ public class Day10 {
         adapters.sort(Comparator.naturalOrder());
         adapters.add(adapters.get(adapters.size() - 1) + 3);
 
+        part1(adapters);
+        part2(adapters);
+    }
+
+    private static void part1(List<Integer> adapters) {
         int oneCount = 0;
         int threeCount = 0;
         int prevJolt = 0;
@@ -29,6 +36,34 @@ public class Day10 {
         }
 
         System.out.println("Part 1: " + oneCount * threeCount);
+    }
+
+    private static void part2(List<Integer> adapters) {
+        List<Integer> copy = new ArrayList<>();
+        copy.add(0);
+        copy.addAll(adapters);
+        System.out.println("Part 2: " + countCombinations(copy, 0, new HashMap<>()));
+    }
+
+    private static long countCombinations(List<Integer> adapters, int currentIdx, Map<Integer, Long> memo) {
+        int adapter = adapters.get(currentIdx);
+
+        if (memo.containsKey(adapter)) {
+            return memo.get(adapter);
+        }
+
+        if (currentIdx == adapters.size() - 1) {
+            return 1;
+        }
+
+        long count = 0;
+        int i = currentIdx + 1;
+        while (i < adapters.size() && adapters.get(i) - adapter < 4) {
+            count += countCombinations(adapters, i++, memo);
+        }
+
+        memo.put(adapter, count);
+        return count;
     }
 
     private static List<Integer> getAdapters() throws Exception {
