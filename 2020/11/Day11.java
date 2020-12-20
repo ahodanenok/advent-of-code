@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.function.Function;
 
 /**
  * Advent of Code - Day 11
@@ -11,7 +12,11 @@ public class Day11 {
 
     public static void main(String[] args) throws Exception {
         Set<Seat> seats = getSeats();
+        part1(seats);
+        part2(seats);
+    }
 
+    private static void part1(Set<Seat> seats) {
         Set<Seat> occupied = new HashSet<>();
         occupied.addAll(seats);
         while (true) {
@@ -44,6 +49,94 @@ public class Day11 {
         }
 
         System.out.println("Part 1: " + occupied.size());
+    }
+
+    private static void part2(Set<Seat> seats) {
+        int width = Integer.MIN_VALUE;
+        int height = Integer.MIN_VALUE;
+        for (Seat seat : seats) {
+            width = Math.max(seat.col, width);
+            height = Math.max(seat.row, height);
+        }
+        width++;
+        height++;
+
+        Set<Seat> occupied = new HashSet<>();
+        occupied.addAll(seats);
+        while (true) {
+            /*System.out.println();
+            for (int row = 0; row < height; row++) {
+                for (int col = 0; col < width; col++) {
+                    if (occupied.contains(new Seat(row, col))) {
+                        System.out.print('#');
+                    } else if (seats.contains(new Seat(row, col))) {
+                        System.out.print('L');
+                    } else {
+                        System.out.print('.');
+                    }
+                }
+
+                System.out.println();
+            }*/
+
+            Set<Seat> next = new HashSet<>();
+            for (Seat seat : seats) {
+                int nc = 0;
+                if (isVisibleOccupied(seat, s -> s.top(), width, height, seats, occupied)) nc++;
+                if (isVisibleOccupied(seat, s -> s.topRight(), width, height, seats, occupied)) nc++;
+                if (isVisibleOccupied(seat, s -> s.right(), width, height, seats, occupied)) nc++;
+                if (isVisibleOccupied(seat, s -> s.bottomRight(), width, height, seats, occupied)) nc++;
+                if (isVisibleOccupied(seat, s -> s.bottom(), width, height, seats, occupied)) nc++;
+                if (isVisibleOccupied(seat, s -> s.bottomLeft(), width, height, seats, occupied)) nc++;
+                if (isVisibleOccupied(seat, s -> s.left(), width, height, seats, occupied)) nc++;
+                if (isVisibleOccupied(seat, s -> s.topLeft(), width, height, seats, occupied)) nc++;
+
+                //System.out.printf("(%d, %d) -> %d%n", seat.row, seat.col, nc);
+
+                if (!occupied.contains(seat) && nc == 0) {
+                    next.add(seat);
+                } else if (occupied.contains(seat) && nc > 4) {
+                    continue;
+                } else if (occupied.contains(seat)) {
+                    next.add(seat);
+                }
+            }
+
+            if (occupied.equals(next)) {
+                break;
+            }
+
+            occupied = next;
+        }
+
+        System.out.println("Part 2: " + occupied.size());
+    }
+
+    private static boolean isVisibleOccupied(Seat from, 
+                                             Function<Seat, Seat> next,
+                                             int width,
+                                             int height,
+                                             Set<Seat> seats,
+                                             Set<Seat> occupied) {
+        Seat current = from;
+        while (true) {
+            current = next.apply(current);
+
+            if (occupied.contains(current)) {
+                return true;
+            }
+
+            if (seats.contains(current)) {
+                return false;
+            }
+
+            if (current.row < 0 
+                    || current.row >= height
+                    || current.col < 0
+                    || current.col >= width) {
+                return false;
+            }
+        }
     }
 
     private static Set<Seat> getSeats() throws Exception {
