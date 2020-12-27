@@ -11,28 +11,31 @@ public class Day15 {
 
     public static void main(String[] args) throws Exception {
         List<Integer> input = Arrays.asList(1, 17, 0, 10, 18, 11, 6);
-        int targetTurn = 2020;
+        System.out.println("Part 1: " + numberSpokenAt(input, 2020));
+        System.out.println("Part 2: " + numberSpokenAt(input, 30000000));
+    }
 
+    private static int numberSpokenAt(List<Integer> startingNumbers, final int turn) {
         Map<Integer, Integer> lastMentioned = new HashMap<>();
-        for (int i = 0; i < input.size(); i++) {
-            lastMentioned.put(input.get(i), i + 1);
+        for (int i = 0; i < startingNumbers.size(); i++) {
+            lastMentioned.put(startingNumbers.get(i), i + 1);
         }
 
-        int numberSpoken = input.get(input.size() - 1);
-        int prevTurn = input.size();
+        int numberSpoken = startingNumbers.get(startingNumbers.size() - 1);
+        int prevTurn = startingNumbers.size();
         while (true) {
-            Integer spokenAtTurn = lastMentioned.get(numberSpoken);
+            Integer spokenAtTurn = lastMentioned.getOrDefault(numberSpoken, prevTurn);
             //System.out.printf("turn=%d, number=%d, spokenAtTurn=%d%n", prevTurn, numberSpoken, spokenAtTurn);
 
             int nextNumber;
-            if (spokenAtTurn == null || spokenAtTurn == prevTurn) {
-                nextNumber = 0;
-            } else {
+            if (spokenAtTurn != prevTurn) {
                 nextNumber = prevTurn - spokenAtTurn;
+            } else {
+                nextNumber = 0;
             }
 
             lastMentioned.put(numberSpoken, prevTurn);
-            if (prevTurn == targetTurn) {
+            if (prevTurn == turn) {
                 break;
             }
 
@@ -40,6 +43,6 @@ public class Day15 {
             prevTurn++;
         }
 
-        System.out.println("Part 1: " + numberSpoken);
+        return numberSpoken;
     }
 }
