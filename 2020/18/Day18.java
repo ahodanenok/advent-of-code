@@ -3,6 +3,8 @@ import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Advent of Code - Day 18
@@ -12,19 +14,39 @@ public class Day18 {
 
     public static void main(String[] args) throws Exception {
         List<String> expressions = getExpressions();
+        part1(expressions);
+        part2(expressions);
+    }
+
+    private static void part1(List<String> expressions) {
+        Map<Character, Integer> precedence = new HashMap<>();
+        precedence.put('*', 1);
+        precedence.put('+', 1);
 
         long resultSum = 0;
         for (String expr : expressions) {
-            resultSum += evaluate(expr, 0).value;
+            resultSum += evaluate(expr, 0, precedence).value;
         }
 
         System.out.println("Part 1: " + resultSum);
     }
 
-    private static Result evaluate(String expr, int from) {
-        int pos = from;
+    private static void part2(List<String> expressions) {
+        Map<Character, Integer> precedence = new HashMap<>();
+        precedence.put('*', 1);
+        precedence.put('+', 2);
 
-        char lastOp = '\0';
+        long resultSum = 0;
+        for (String expr : expressions) {
+            resultSum += evaluate(expr, 0, precedence).value;
+        }
+
+        System.out.println("Part 2: " + resultSum);
+    }
+
+    private static Result evaluate(String expr, int from, Map<Character, Integer> precedence) {
+        int pos = from;
+        LinkedList<Character> operators = new LinkedList<>();
         LinkedList<Long> stack = new LinkedList<>();
         while (pos < expr.length()) {
             char ch = expr.charAt(pos);
@@ -44,27 +66,26 @@ public class Day18 {
 
                 stack.addLast(Long.parseLong(sb.toString()));
             } else if (ch == '+' || ch == '*') {
-                if (lastOp != '\0') {
-                    evaluateOperator(lastOp, stack);
+                while (!operators.isEmpty() && precedence.get(operators.peekLast()) >= precedence.get(ch)) {
+                    evaluateOperator(operators.removeLast(), stack);
                 }
 
-                lastOp = ch;
+                operators.addLast(ch);
                 pos++;
             } else if (ch == '(') {
-                Result result = evaluate(expr, pos + 1);
+                Result result = evaluate(expr, pos + 1, precedence);
                 stack.addLast(result.value);
                 pos = result.pos + 1;
             } else if (ch == ')') {
-                evaluateOperator(lastOp, stack);
-                lastOp = '\0';
+                evaluateOperator(operators.removeLast(), stack);
                 break;
             } else {
                 throw new IllegalStateException(ch + "");
             }
         }
 
-        if (lastOp != '\0') {
-            evaluateOperator(lastOp, stack);
+        while (!operators.isEmpty()) {
+            evaluateOperator(operators.removeLast(), stack);
         }
 
         if (stack.size() > 1) {
