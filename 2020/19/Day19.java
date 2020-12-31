@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Collections;
 
 /**
  * Advent of Code - Day 19
@@ -12,23 +13,28 @@ import java.util.HashMap;
 public class Day19 {
 
     public static void main(String[] args) throws Exception {
-        Input input = getInput();
+        System.out.println("Part 1: " + getMatchedCount("input_1.txt"));
+        System.out.println("Part 2: " + getMatchedCount("input_2.txt"));
+    }
+
+    private static int getMatchedCount(String inputName) throws Exception {
+        Input input = getInput(inputName);
 
         int matchedCount = 0;
         Rule rule = input.rules.get(0);
         for (String msg : input.messages) {
-            //System.out.println(msg + ": " + rule.matches(msg, 0));
-            if (rule.matches(msg, 0) == msg.length()) {
+            List<Integer> result = rule.matches(msg, 0);
+            if (!result.isEmpty() && result.stream().anyMatch(pos -> pos == msg.length())) {
                 matchedCount++;
             }
         }
 
-        System.out.println("Part 1: " + matchedCount);
+        return matchedCount;
     }
 
-    private static Input getInput() throws Exception {
+    private static Input getInput(String name) throws Exception {
         Input input = new Input();
-        try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(name))) {
             String line;
             while (!(line = reader.readLine()).isEmpty()) {
                 int separatorIdx = line.indexOf(':');
@@ -82,7 +88,7 @@ public class Day19 {
     }
 
     private interface Rule {
-        int matches(String str, int pos);
+        List<Integer> matches(String str, int pos);
     }
 
     private static class ExactRule implements Rule {
@@ -93,8 +99,10 @@ public class Day19 {
             this.ch = ch;
         }
 
-        public int matches(String str, int pos) {
-            return pos < str.length() && str.charAt(pos) == ch ? pos + 1 : -1;
+        public List<Integer> matches(String str, int pos) {
+            return pos < str.length() && str.charAt(pos) == ch 
+                ? Collections.singletonList(pos + 1)
+                : Collections.emptyList();
         }
     }
 
@@ -108,7 +116,7 @@ public class Day19 {
             this.rules = rules;
         }
 
-        public int matches(String str, int pos) {
+        public List<Integer> matches(String str, int pos) {
             return rules.get(id).matches(str, pos);
         }
     }
@@ -121,16 +129,22 @@ public class Day19 {
             this.rules = rules;
         }
 
-        public int matches(String str, int pos) {
-            int nextPos = pos;
+        public List<Integer> matches(String str, int pos) {
+            List<Integer> result = Collections.singletonList(pos);
             for (Rule rule : rules) {
-                nextPos = rule.matches(str, nextPos);
-                if (nextPos == -1) {
-                    break;
+                List<Integer> next = new ArrayList<>();
+                for (Integer r : result) {
+                    next.addAll(rule.matches(str, r));
                 }
+
+                if (next.isEmpty()) {
+                    return Collections.emptyList();
+                }
+
+                result = next;
             }
 
-            return nextPos;
+            return result;
         }
     }
 
@@ -144,9 +158,12 @@ public class Day19 {
             this.right = right;
         }
 
-        public int matches(String str, int pos) {
-            int nextPos = left.matches(str, pos);
-            return nextPos == -1 && right != null ? right.matches(str, pos) : nextPos;
+        public List<Integer> matches(String str, int pos) {
+            List<Integer> result = new ArrayList<>();
+            result.addAll(left.matches(str, pos));
+            result.addAll(right.matches(str, pos));
+
+            return result;
         }
     }
 }
