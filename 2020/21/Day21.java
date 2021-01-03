@@ -6,6 +6,8 @@ import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.TreeMap;
+import java.util.StringJoiner;
 
 /**
  * Advent of Code - Day 21
@@ -15,7 +17,36 @@ public class Day21 {
 
     public static void main(String[] args) throws Exception {
         List<Food> foods = getFoods();
+        part1(foods);
+        part2(foods);
+    }
 
+    private static void part1(List<Food> foods) {
+        Map<String, String> allergenIngridients = getAllergenIngridients(foods);
+        Set<String> dangerous = new HashSet<>(allergenIngridients.values());
+
+        int cleanCount = 0;
+        for (Food food : foods) {
+            for (String ingridient : food.ingridients) {
+                if (!dangerous.contains(ingridient)) {
+                    cleanCount++;
+                }
+            }
+        }
+
+        System.out.println("Part 1: " + cleanCount);
+    }
+
+    private static void part2(List<Food> foods) {
+        StringJoiner joiner = new StringJoiner(",");
+        for (String ingridient : new TreeMap<>(getAllergenIngridients(foods)).values()) {
+            joiner.add(ingridient);
+        }
+
+        System.out.println("Part 2: " + joiner);
+    }
+
+    private static Map<String, String> getAllergenIngridients(List<Food> foods) {
         Map<String, Set<String>> allergenIngridients = new HashMap<>();
         for (Food food : foods) {
             for (String allergen : food.allergens) {
@@ -50,21 +81,16 @@ public class Day21 {
             }
         }
 
-        Set<String> allergic = new HashSet<>();
-        for (Set<String> ingridients : allergenIngridients.values()) {
-            allergic.addAll(ingridients);
-        }
-
-        int cleanCount = 0;
-        for (Food food : foods) {
-            for (String ingridient : food.ingridients) {
-                if (!allergic.contains(ingridient)) {
-                    cleanCount++;
-                }
+        Map<String, String> result = new HashMap<>();
+        for (Map.Entry<String, Set<String>> entry : allergenIngridients.entrySet()) {
+            if (entry.getValue().size() != 1) {
+                throw new IllegalStateException(entry.toString());
             }
+
+            result.put(entry.getKey(), entry.getValue().iterator().next());
         }
 
-        System.out.println("Part 1: " + cleanCount);
+        return result;
     }
 
     private static List<Food> getFoods() throws Exception {
