@@ -1,10 +1,10 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.StringJoiner;
+import java.util.Iterator;
+import java.math.BigInteger;
 
 /**
  * Advent of Code - Day 23
@@ -13,20 +13,37 @@ import java.util.StringJoiner;
 public class Day23 {
 
     public static void main(String[] args) {
-        Cups cups = new Cups("523764819");
+        String input = "523764819";
+        part1(input);
+        part2(input);
+    }
 
+    private static void part1(String input) {
+        GameOfCrab game = new GameOfCrab(new CupsIterator(input));
         for (int t = 0; t < 100; t++) {
-            cups.makeTurn();
+            game.makeTurn();
         }
 
         StringJoiner str = new StringJoiner("");
-        Cup currentCup = cups.cups.get(1).next;
+        Cup currentCup = game.cups.get(1).next;
         while (currentCup.num != 1) {
             str.add(currentCup.num + "");
             currentCup = currentCup.next;
         }
 
         System.out.println("Part 1: " + str);
+    }
+
+    private static void part2(String input) {
+        GameOfCrab game = new GameOfCrab(new CupsIterator(input, 1_000_000));
+        for (int t = 0; t < 10_000_000; t++) {
+            game.makeTurn();
+        }
+
+        Cup oneCup = game.cups.get(1);
+        BigInteger result = BigInteger.valueOf(oneCup.next.num)
+                .multiply(BigInteger.valueOf(oneCup.next.next.num));
+        System.out.println("Part 2: " + result);
     }
 
     private static class Cup {
@@ -45,46 +62,53 @@ public class Day23 {
         }
     }
 
-    private static class Cups {
+    private static class GameOfCrab {
 
-        private Map<Integer, Cup> cups;
-        private int currentNum;
-        private int minNum;
-        private int maxNum;
+        Map<Integer, Cup> cups;
+        Cup currentCup;
+        int minNum;
+        int maxNum;
 
-        Cups(String def) {
-            minNum = Integer.MAX_VALUE;
-            maxNum = Integer.MIN_VALUE;
+        GameOfCrab(CupsIterator iterator) {
             cups = new HashMap<>();
-            for (int i = 0; i < def.length(); i++) {
-                Cup current = cups.computeIfAbsent(def.charAt(i) - '0', Cup::new);
-                Cup next = cups.computeIfAbsent(def.charAt((i + 1) % def.length()) - '0', Cup::new);
 
-                current.next = next;
-                next.prev = current;
+            Cup firstCup = iterator.next();
+            cups.put(firstCup.num, firstCup);
+            minNum = firstCup.num;
+            maxNum = firstCup.num;
 
-                minNum = Math.min(current.num, minNum);
-                maxNum = Math.max(current.num, maxNum);
+            Cup prevCup = firstCup;
+            while (iterator.hasNext()) {
+                Cup cup = iterator.next();
+                cups.put(cup.num, cup);
+                prevCup.next = cup;
+                cup.prev = prevCup;
+                prevCup = cup;
+
+                minNum = Math.min(cup.num, minNum);
+                maxNum = Math.max(cup.num, maxNum);
             }
 
-            currentNum = def.charAt(0) - '0';
+            firstCup.prev = prevCup;
+            prevCup.next = firstCup;
+
+            currentCup = firstCup;
         }
 
         void makeTurn() {
-            Cup currentCup = cups.get(currentNum);
             Cup firstCupToRemove = currentCup.next;
             Cup lastCupToRemove = firstCupToRemove.next.next;
 
             currentCup.next = lastCupToRemove.next;
             lastCupToRemove.next.prev = currentCup;
 
-            int destinationNum = currentNum;
+            int destinationNum = currentCup.num;
             do {
                 destinationNum--;
                 if (destinationNum < minNum) {
                     destinationNum = maxNum;
                 }
-            } while (destinationNum == currentNum
+            } while (destinationNum == currentCup.num
                     || firstCupToRemove.num == destinationNum
                     || firstCupToRemove.next.num == destinationNum
                     || firstCupToRemove.next.next.num == destinationNum);
@@ -95,7 +119,42 @@ public class Day23 {
             destinationCup.next.prev = lastCupToRemove;
             destinationCup.next = firstCupToRemove;
 
-            currentNum = currentCup.next.num;
+            currentCup = currentCup.next;
+        }
+    }
+
+    private static class CupsIterator implements Iterator<Cup> {
+
+        private String input;
+        private int idx;
+        private int limit;
+
+        CupsIterator(String input) {
+            this(input, input.length());
+        }
+
+        CupsIterator(String input, int limit) {
+            this.idx = 1;
+            this.input = input;
+            this.limit = limit;
+        }
+
+        @Override
+        public Cup next() {
+            Integer result;
+            if (idx <= input.length()) {
+                result = input.charAt(idx - 1) - '0';
+            } else {
+                result = idx;
+            }
+
+            idx++;
+            return new Cup(result);
+        }
+
+        @Override
+        public boolean hasNext() {
+            return idx <= limit;
         }
     }
 }
