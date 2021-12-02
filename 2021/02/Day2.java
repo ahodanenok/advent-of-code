@@ -20,6 +20,7 @@ public class Day2 {
         }
 
         part1(commands);
+        part2(commands);
     }
 
     public static void part1(List<Command> commands) {
@@ -38,6 +39,26 @@ public class Day2 {
         }
 
         System.out.println("Part 1: " + (x * y));
+    }
+
+    public static void part2(List<Command> commands) {
+        long x = 0;
+        long y = 0;
+        long aim = 0;
+        for (Command cmd : commands) {
+            if ("forward".equals(cmd.action)) {
+                x += cmd.arg;
+                y += cmd.arg * aim;
+            } else if ("up".equals(cmd.action)) {
+                aim -= cmd.arg;
+            } else if ("down".equals(cmd.action)) {
+                aim += cmd.arg;
+            } else {
+                throw new IllegalStateException("Unknown command: " + cmd.action);
+            }
+        }
+
+        System.out.println("Part 2: " + (x * y));
     }
 
     private static class Command {
