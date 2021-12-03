@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.function.BiPredicate;
 
 /**
  * Advent of Code - Day 3
@@ -19,6 +20,7 @@ public class Day3 {
         }
 
         part1(numbers);
+        part2(numbers);
     }
 
     private static void part1(List<String> numbers) {
@@ -55,5 +57,42 @@ public class Day3 {
         }
 
         System.out.println("Part 1: " + (gamma * epsilon));
+    }
+
+    private static void part2(List<String> numbers) {
+        int supportRating = findRating(new ArrayList<>(numbers),
+            (s, digit) -> s > 0 && digit == '1' || s < 0 && digit == '0' || s == 0 && digit == '1');
+        int scrubberRating = findRating(new ArrayList<>(numbers),
+            (s, digit) -> s > 0 && digit == '0' || s < 0 && digit == '1' || s == 0 && digit == '0');
+
+        System.out.println("Part 2: " + (supportRating * scrubberRating));
+    }
+
+    private static int findRating(List<String> numbers, BiPredicate<Integer, Character> criteria) {
+        int round = 0;
+        while (numbers.size() > 1) {
+            int s = 0;
+            for (String num : numbers) {
+                char digit = num.charAt(round);
+                if (digit == '0') {
+                    s--;
+                } else if (digit == '1') {
+                    s++;
+                } else {
+                    throw new IllegalStateException("what is this digit?? -> '" + digit + "'");
+                }
+            }
+
+            for (int i = numbers.size() - 1; i >= 0; i--) {
+                char digit = numbers.get(i).charAt(round);
+                if (!criteria.test(s, digit)) {
+                    numbers.remove(i);
+                }
+            }
+
+            round++;
+        }
+
+        return Integer.parseInt(numbers.get(0), 2);
     }
 }
