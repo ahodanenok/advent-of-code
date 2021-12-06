@@ -14,7 +14,8 @@ public class Day5 {
 
     public static void main(String[] args) throws Exception {
         List<Line> lines = getInput();
-        part1(lines);
+        System.out.println("Part 1: " + getOverlapsCount(lines, false));
+        System.out.println("Part 2: " + getOverlapsCount(lines, true));
     }
 
     private static List<Line> getInput() throws Exception {
@@ -37,7 +38,7 @@ public class Day5 {
         return lines;
     }
 
-    private static void part1(List<Line> lines) {
+    private static int getOverlapsCount(List<Line> lines, boolean considerDiagonals) {
         Map<String, Integer> overlaps = new HashMap<>();
         for (Line line : lines) {
             if (line.x1 == line.x2) {
@@ -52,6 +53,14 @@ public class Day5 {
                 for (int x = xStart; x <= xEnd; x++) {
                     overlaps.merge(x + "_" + line.y1, 1, Integer::sum);
                 }
+            } else if (considerDiagonals) {
+                int dx = line.x1 < line.x2 ? 1 : -1;
+                int dy = line.y1 < line.y2 ? 1 : -1;
+                for (int x = line.x1, y = line.y1; x != line.x2; x += dx, y += dy) {
+                    overlaps.merge(x + "_" + y, 1, Integer::sum);
+                }
+
+                overlaps.merge(line.x2 + "_" + line.y2, 1, Integer::sum);
             }
         }
 
@@ -62,7 +71,7 @@ public class Day5 {
             }
         }
 
-        System.out.println("Part 1: " + overlapsCount);
+        return overlapsCount;
     }
 
     private static class Line {
