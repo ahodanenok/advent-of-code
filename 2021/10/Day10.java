@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Comparator;
 
 /**
  * Advent of Code - Day 10
@@ -13,7 +14,6 @@ import java.util.HashMap;
 public class Day10 {
 
     private static final Map<Character, Character> CLOSINGS;
-    private static final Map<Character, Integer> SCORES;
 
     static {
         CLOSINGS = new HashMap<>();
@@ -21,17 +21,10 @@ public class Day10 {
         CLOSINGS.put('[', ']');
         CLOSINGS.put('{', '}');
         CLOSINGS.put('<', '>');
-
-        SCORES = new HashMap<>();
-        SCORES.put(')', 3);
-        SCORES.put(']', 57);
-        SCORES.put('}', 1197);
-        SCORES.put('>', 25137);
     }
 
     public static void main(String[] args) throws Exception {
-        List<String> lines = getInput();
-        part1(lines);
+        score(getInput());
     }
 
     private static List<String> getInput() throws Exception {
@@ -46,24 +39,64 @@ public class Day10 {
         return lines;
     }
 
-    private static void part1(List<String> lines) {
-        int score = 0;
+    private static void score(List<String> lines) {
+        int corruptedScore = 0;
+        List<Long> incompletedScores = new ArrayList<>();
+
+        nextLine:
         for (String line : lines) {
             LinkedList<Character> stack = new LinkedList<>();
+
             for (int i = 0; i < line.length(); i++) {
                 char ch = line.charAt(i);
                 if (CLOSINGS.containsKey(ch)) {
                     stack.push(ch);
                 } else if (!stack.isEmpty()) {
-                    char opening = stack.pop();
-                    if (CLOSINGS.get(opening) != ch) {
-                        score += SCORES.get(ch);
-                        break;
+                    if (CLOSINGS.get(stack.pop()) != ch) {
+                        if (ch == ')') {
+                            corruptedScore += 3;
+                        } else if (ch == ']') {
+                            corruptedScore += 57;
+                        } else if (ch == '}') {
+                            corruptedScore += 1197;
+                        } else if (ch == '>') {
+                            corruptedScore += 25137;
+                        } else {
+                            throw new IllegalStateException("Unknown closing: " + ch);
+                        }
+
+                        continue nextLine;
                     }
                 }
             }
+
+            if (!stack.isEmpty()) {
+                long score = 0;
+                while (!stack.isEmpty()) {
+                    score *= 5;
+
+                    char closing = CLOSINGS.get(stack.pop());
+                    if (closing == ')') {
+                        score += 1;
+                    } else if (closing == ']') {
+                        score += 2;
+                    } else if (closing == '}') {
+                        score += 3;
+                    } else if (closing == '>') {
+                        score += 4;
+                    } else {
+                        throw new IllegalStateException("Unknown closing: " + closing);
+                    }
+                }
+
+                incompletedScores.add(score);
+            }
         }
 
-        System.out.println("Part 1: " + score);
+        System.out.println("Part 1: " + corruptedScore);
+
+        incompletedScores.sort(Comparator.naturalOrder());
+        long incompletedScore = incompletedScores.get(incompletedScores.size() / 2);
+        System.out.println("Part 2: " + incompletedScore);
     }
 }
