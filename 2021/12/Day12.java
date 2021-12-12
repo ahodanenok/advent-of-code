@@ -13,9 +13,16 @@ import java.util.HashMap;
  */
 public class Day12 {
 
+    private static final String START_CAVE = "start";
+    private static final String END_CAVE = "end";
+
+    private static final String ALLOW_REPEAT_CAVE = "REPEAT";
+    private static final String DISALLOW_REPEAT_CAVE = "NOT_REPEAT";
+
     public static void main(String[] args) throws Exception {
         Map<String, List<String>> caves = getInput();
         part1(caves);
+        part2(caves);
     }
 
     private static Map<String, List<String>> getInput() throws Exception {
@@ -44,21 +51,31 @@ public class Day12 {
 
     private static void part1(Map<String, List<String>> caves) {
         Set<String> visited = new HashSet<>();
-        visited.add("start");
-        int count = countPaths(caves, "start", visited);
-        System.out.println("Part 1: " + count);
+        visited.add(START_CAVE);
+        System.out.println("Part 1: " + countPaths(caves, START_CAVE, visited, DISALLOW_REPEAT_CAVE));
     }
 
-    private static int countPaths(Map<String, List<String>> caves, String currentCave, Set<String> visited) {
-        if (currentCave.equals("end")) {
+    private static void part2(Map<String, List<String>> caves) {
+        Set<String> visited = new HashSet<>();
+        visited.add(START_CAVE);
+        System.out.println("Part 2: " + countPaths(caves, START_CAVE, visited, ALLOW_REPEAT_CAVE));
+    }
+
+    private static int countPaths(Map<String, List<String>> caves, String currentCave, Set<String> visited, String repeat) {
+        if (currentCave.equals(END_CAVE)) {
             return 1;
         }
 
         int count = 0;
         for (String cave : caves.get(currentCave)) {
-            if (cave.toUpperCase().equals(cave) || visited.add(cave)) {
-                count += countPaths(caves, cave, visited);
+            if (cave.toUpperCase().equals(cave)) {
+                count += countPaths(caves, cave, visited, repeat);
+            } else if (!visited.contains(cave)) {
+                visited.add(cave);
+                count += countPaths(caves, cave, visited, repeat);
                 visited.remove(cave);
+            } else if (ALLOW_REPEAT_CAVE.equals(repeat) && !START_CAVE.equals(cave)) {
+                count += countPaths(caves, cave, visited, cave);
             }
         }
 
