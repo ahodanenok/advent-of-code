@@ -14,6 +14,7 @@ public class Day13 {
     public static void main(String[] args) throws Exception {
         Manual manual = getInput();
         part1(manual);
+        part2(manual);
     }
 
     private static Manual getInput() throws Exception {
@@ -40,6 +41,33 @@ public class Day13 {
     private static void part1(Manual manual) {
         Set<Dot> dots = manual.folds.get(0).execute(manual.dots);
         System.out.println("Part 1: " + dots.size());
+    }
+
+    private static void part2(Manual manual) {
+        Set<Dot> dots = manual.dots;
+        for (Fold fold : manual.folds) {
+            dots = fold.execute(dots);
+        }
+
+        int rowMax = Integer.MIN_VALUE;
+        int colMax = Integer.MIN_VALUE;
+        for (Dot dot : dots) {
+            rowMax = Math.max(dot.row, rowMax);
+            colMax = Math.max(dot.col, colMax);
+        }
+
+        System.out.println("Part 2:");
+        for (int row = 0; row <= rowMax; row++) {
+            for (int col = 0; col <= colMax; col++) {
+                if (dots.contains(new Dot(row, col))) {
+                    System.out.print("*");
+                } else {
+                    System.out.print(" ");
+                }
+            }
+
+            System.out.println();
+        }
     }
 
     private static class Manual {
