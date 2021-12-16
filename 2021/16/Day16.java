@@ -13,6 +13,7 @@ public class Day16 {
     public static void main(String[] args) throws Exception {
         Packet packet = readPacket(getInput());
         part1(packet);
+        part2(packet);
     }
 
     private static Message getInput() throws Exception {
@@ -39,6 +40,59 @@ public class Day16 {
         }
 
         System.out.println("Part 1: " + versionSum);
+    }
+
+    private static void part2(Packet packet) {
+        System.out.println("Part 2: " + evaluatePacket(packet));
+    }
+
+    // recursion finds me :(
+    private static long evaluatePacket(Packet packet) {
+        if (packet.type == Packet.TYPE_LITERAL) {
+            return packet.value;
+        } else if (packet.type == Packet.TYPE_SUM) {
+            long sum = 0;
+            for (Packet sub : packet.subPackets) {
+                sum += evaluatePacket(sub);
+            }
+
+            return sum;
+        } else if (packet.type == Packet.TYPE_PRODUCT) {
+            long product = 1;
+            for (Packet sub : packet.subPackets) {
+                product *= evaluatePacket(sub);
+            }
+
+            return product;
+        } else if (packet.type == Packet.TYPE_MIN) {
+            long min = Long.MAX_VALUE;
+            for (Packet sub : packet.subPackets) {
+                min = Math.min(evaluatePacket(sub), min);
+            }
+
+            return min;
+        } else if (packet.type == Packet.TYPE_MAX) {
+            long max = Long.MIN_VALUE;
+            for (Packet sub : packet.subPackets) {
+                max = Math.max(evaluatePacket(sub), max);
+            }
+
+            return max;
+        } else if (packet.type == Packet.TYPE_GT) {
+            long a = evaluatePacket(packet.subPackets.get(0));
+            long b = evaluatePacket(packet.subPackets.get(1));
+            return a > b ? 1 : 0;
+        } else if (packet.type == Packet.TYPE_LT) {
+            long a = evaluatePacket(packet.subPackets.get(0));
+            long b = evaluatePacket(packet.subPackets.get(1));
+            return a < b ? 1 : 0;
+        } else if (packet.type == Packet.TYPE_EQ) {
+            long a = evaluatePacket(packet.subPackets.get(0));
+            long b = evaluatePacket(packet.subPackets.get(1));
+            return a == b ? 1 : 0;
+        } else {
+            throw new IllegalStateException("Unknown packet type: " + packet.type);
+        }
     }
 
     private static Packet readPacket(Message message) {
@@ -150,7 +204,14 @@ public class Day16 {
 
     private static class Packet {
 
+        static final int TYPE_SUM = 0;
+        static final int TYPE_PRODUCT = 1;
+        static final int TYPE_MIN = 2;
+        static final int TYPE_MAX = 3;
         static final int TYPE_LITERAL = 4;
+        static final int TYPE_GT = 5;
+        static final int TYPE_LT = 6;
+        static final int TYPE_EQ = 7;
 
         final int version;
         final int type;
