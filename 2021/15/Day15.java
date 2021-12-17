@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.PriorityQueue;
+import java.util.function.BiFunction;
 
 /**
  * Advent of Code - Day 15
@@ -13,67 +15,120 @@ import java.util.HashSet;
 public class Day15 {
 
     public static void main(String[] args) throws Exception {
-        Map<Point, Integer> caves = getInput();
-        part1(caves);
+        Cave cave = getInput();
+        part1(cave);
+        part2(cave);
     }
 
-    private static Map<Point, Integer> getInput() throws Exception {
-        Map<Point, Integer> caves = new HashMap<>();
+    private static Cave getInput() throws Exception {
+        Map<Point, Integer> walls = new HashMap<>();
         try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
             int row = 0;
             String line;
             while ((line = reader.readLine()) != null) {
                 for (int col = 0; col < line.trim().length(); col++) {
-                    caves.put(new Point(row, col), line.charAt(col) - '0');
+                    walls.put(new Point(row, col), line.charAt(col) - '0');
                 }
 
                 row++;
             }
         }
 
-        return caves;
+        return new Cave(walls);
     }
 
-    private static void part1(Map<Point, Integer> caves) {
-        Point initial = new Point(0, 0);
-        Point target = new Point(
-            caves.keySet().stream().mapToInt(p -> p.row).max().orElse(0),
-            caves.keySet().stream().mapToInt(p -> p.col).max().orElse(0));
+    private static void part1(Cave cave) {
+        System.out.println("Part 1: " + lowestRisk(cave));
+    }
 
-        Map<Point, Integer> risks = new HashMap<>();
-        risks.put(initial, 0);
+    private static void part2(Cave cave) {
+        Cave entireCave = new Cave(extend(
+            extend(cave.walls, 5, (p, idx) -> new Point(p.row, p.col + (cave.width * idx))),
+            5,
+            (p, idx) -> new Point(p.row + (cave.height * idx), p.col)));
 
-        Set<Point> unvisited = new HashSet<>();
-        unvisited.addAll(caves.keySet());
+        System.out.println("Part 2: " + lowestRisk(entireCave));
+    }
 
-        Point current = null;
-        while (true) {
-            current = unvisited.stream()
-                .min((a, b) -> Integer.compare(
-                    risks.getOrDefault(a, Integer.MAX_VALUE),
-                    risks.getOrDefault(b, Integer.MAX_VALUE)))
-                .orElseThrow(IllegalStateException::new);
+    private static Map<Point, Integer> extend(Map<Point, Integer> walls, int times, BiFunction<Point, Integer, Point> mapper) {
+        Map<Point, Integer> extended = new HashMap<>();
+        extended.putAll(walls);
 
-            if (current.equals(target)) {
+        for (Map.Entry<Point, Integer> entry : walls.entrySet()) {
+            for (int i = 1; i < times; i++) {
+                int risk = entry.getValue() + i;
+                if (risk > 9) {
+                    risk -= 9;
+                }
+
+                extended.put(mapper.apply(entry.getKey(), i), risk);
+            }
+        }
+
+        return extended;
+    }
+
+    private static int lowestRisk(Cave cave) {
+        Map<Point, Integer> totalRisk = new HashMap<>();
+        totalRisk.put(cave.entrance, 0);
+
+        Set<Point> considered = new HashSet<>();
+        considered.add(cave.entrance);
+
+        PriorityQueue<Point> queue = new PriorityQueue<>(
+            (a, b) -> Integer.compare(
+                totalRisk.getOrDefault(a, Integer.MAX_VALUE),
+                totalRisk.getOrDefault(b, Integer.MAX_VALUE)));
+        queue.offer(cave.entrance);
+
+        while (!queue.isEmpty()) {
+            Point current = queue.poll();
+            if (current.equals(cave.exit)) {
                 break;
             }
 
-            int riskCurrent = risks.get(current);
+            int riskCurrent = totalRisk.get(current);
             for (Point n : Arrays.asList(current.left(), current.right(), current.top(), current.bottom())) {
-                if (!unvisited.contains(n)) {
+                if (!cave.walls.containsKey(n) || considered.contains(n)) {
                     continue;
                 }
 
-                int risk = riskCurrent + caves.get(n);
-                if (risk < risks.getOrDefault(n, Integer.MAX_VALUE)) {
-                    risks.put(n, risk);
+                int risk = riskCurrent + cave.walls.get(n);
+                if (risk < totalRisk.getOrDefault(n, Integer.MAX_VALUE)) {
+                    totalRisk.put(n, risk);
+                    // order may change after the new risk level has been assigned
+                    queue.remove(n);
                 }
-            }
 
-            unvisited.remove(current);
+                considered.add(n);
+                queue.offer(n);
+            }
         }
 
-        System.out.println("Part 1: " + risks.get(target));
+        return totalRisk.get(cave.exit);
+    }
+
+    private static class Cave {
+
+        final Map<Point, Integer> walls;
+
+        final Point entrance;
+        final Point exit;
+
+        final int width;
+        final int height;
+
+        Cave(Map<Point, Integer> walls) {
+            this.walls = walls;
+
+            this.entrance = new Point(0, 0);
+            this.exit = new Point(
+                walls.keySet().stream().mapToInt(p -> p.row).max().orElse(0),
+                walls.keySet().stream().mapToInt(p -> p.col).max().orElse(0));
+
+            this.width = exit.col + 1;
+            this.height = exit.row + 1;
+        }
     }
 
     private static class Point {
