@@ -11,6 +11,7 @@ public class Day17 {
         //target area: x=209..238, y=-86..-59
         Target target = new Target(209, -86, 238, -59);
         part1(target);
+        part2(target);
     }
 
     private static void part1(Target target) {
@@ -18,10 +19,10 @@ public class Day17 {
         int axMax = Math.min(target.xStart, target.xEnd);
 
         int yMax = Integer.MIN_VALUE;
-        for (int ay = 1; ay < ayMax; ay++) {
-            for (int ax = 1; ax < axMax; ax++) {
+        for (int ay = 0; ay <= ayMax; ay++) {
+            for (int ax = 1; ax <= axMax; ax++) {
                 int y = launchWithStyle(ax, ay, target);
-                if (y != -1) {
+                if (y != Integer.MIN_VALUE) {
                     yMax = Math.max(y, yMax);
                 }
             }
@@ -30,13 +31,30 @@ public class Day17 {
         System.out.println("Part 1: " + yMax);
     }
 
+    private static void part2(Target target) {
+        int ayMax = Math.abs(Math.min(target.yStart, target.yEnd));
+        int axMax = Math.max(target.xStart, target.xEnd);
+
+        int count = 0;
+        for (int ay = -ayMax; ay <= ayMax; ay++) {
+            for (int ax = 0; ax <= axMax; ax++) {
+                int y = launchWithStyle(ax, ay, target);
+                if (y != Integer.MIN_VALUE) {
+                    count++;
+                }
+            }
+        }
+
+        System.out.println("Part 2: " + count);
+    }
+
     private static int launchWithStyle(int ax, int ay, Target target) {
         int x = 0;
         int y = 0;
         int dax = ax > 0 ? 1 : -1;
         int yMax = y;
 
-        while (x < target.xEnd && y > target.yEnd) {
+        while (x <= target.xEnd && y >= target.yStart) {
             x += ax;
             y += ay;
             yMax = Math.max(y, yMax);
@@ -52,7 +70,7 @@ public class Day17 {
             ay--;
         }
 
-        return -1;
+        return Integer.MIN_VALUE;
     }
 
     private static class Target {
