@@ -10,17 +10,38 @@ import java.util.ArrayList;
 public class Day18 {
 
     public static void main(String[] args) throws Exception {
-        List<Fish> fish = getInput();
-        part1(fish);
+        part1();
+        part2();
     }
 
-    private static void part1(List<Fish> fish) {
+    private static void part1() throws Exception {
+        List<Fish> fish = getInput();
         Fish result = fish.get(0);
         for (int i = 1; i < fish.size(); i++) {
             result = add(result, fish.get(i));
         }
 
         System.out.println("Part 1: " + result.magnitude());
+    }
+
+    private static void part2() throws Exception {
+        int maxMagnitude = Integer.MIN_VALUE;
+        int size = getInput().size();
+        for (int i = 0; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                if (i == j) {
+                    continue;
+                }
+
+                // the simplest, but not the fastest approach...
+                List<Fish> fish = getInput();
+
+                int magnitude = add(fish.get(i), fish.get(j)).magnitude();
+                maxMagnitude = Math.max(magnitude, maxMagnitude);
+            }
+        }
+
+        System.out.println("Part 2: " + maxMagnitude);
     }
 
     private static Fish add(Fish a, Fish b) {
@@ -203,7 +224,7 @@ public class Day18 {
 
     private static interface Element {
 
-        long magnitude();
+        int magnitude();
 
         boolean isSplitable();
 
@@ -218,6 +239,11 @@ public class Day18 {
         Fish(Element left, Element right) {
             this.left = left;
             this.right = right;
+        }
+
+        @Override
+        public int magnitude() {
+            return 3 * left.magnitude() + 2 * right.magnitude();
         }
 
         @Override
@@ -247,11 +273,6 @@ public class Day18 {
         }
 
         @Override
-        public long magnitude() {
-            return 3 * left.magnitude() + 2 * right.magnitude();
-        }
-
-        @Override
         public String toString() {
             return "[" + left + "," + right + "]";
         }
@@ -268,7 +289,7 @@ public class Day18 {
         }
 
         @Override
-        public long magnitude() {
+        public int magnitude() {
             return value;
         }
 
