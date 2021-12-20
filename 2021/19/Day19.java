@@ -18,72 +18,29 @@ public class Day19 {
 
     private static final int BEACONS_OVERLAP_THRESHOLD = 12;
 
-    /*private static final List<Orientation> ORIENTATIONS = Arrays.asList(
-
-        new Orientation(Axis.X_NEG, Axis.Y_POS, Axis.Z_POS), // (-x, y, z)
-        new Orientation(Axis.X_NEG, Axis.Y_NEG, Axis.Z_POS), // (-x, -y, z)
-        new Orientation(Axis.X_NEG, Axis.Y_POS, Axis.Z_NEG), // (-x, y, -z)
-        new Orientation(Axis.X_NEG, Axis.Y_NEG, Axis.Z_NEG), // (-x, -y, -z)
-        new Orientation(Axis.X_NEG, Axis.Z_POS, Axis.Y_POS), // (-x, z, y)
-        new Orientation(Axis.X_NEG, Axis.Z_POS, Axis.Y_NEG), // (-x, z, -y)
-        new Orientation(Axis.X_NEG, Axis.Z_NEG, Axis.Y_POS), // (-x, -z, y)
-        new Orientation(Axis.X_NEG, Axis.Z_NEG, Axis.Y_NEG), // (-x, -z, -y)
-        
-        new Orientation(Axis.Y_NEG, Axis.X_POS, Axis.Z_POS), // (-y, x, z)
-        new Orientation(Axis.Y_NEG, Axis.X_NEG, Axis.Z_POS), // (-y, -x, z)
-        new Orientation(Axis.Y_NEG, Axis.X_POS, Axis.Z_NEG), // (-y, x, -z)
-        new Orientation(Axis.Y_NEG, Axis.X_NEG, Axis.Z_NEG), // (-y, -x, -z)
-        new Orientation(Axis.Y_NEG, Axis.Z_POS, Axis.X_POS), // (-y, z, x)
-        new Orientation(Axis.Y_NEG, Axis.Z_POS, Axis.X_NEG), // (-y, z, -x)
-        new Orientation(Axis.Y_NEG, Axis.Z_NEG, Axis.X_POS), // (-y, -z, x)
-        new Orientation(Axis.Y_NEG, Axis.Z_NEG, Axis.X_NEG), // (-y, -z, -x)
-
-        new Orientation(Axis.Z_NEG, Axis.X_POS, Axis.Y_POS), // (-z, x, y)
-        new Orientation(Axis.Z_NEG, Axis.X_NEG, Axis.Y_POS), // (-z, -x, y)
-        new Orientation(Axis.Z_NEG, Axis.X_POS, Axis.Y_NEG), // (-z, x, -y)
-        new Orientation(Axis.Z_NEG, Axis.X_NEG, Axis.Y_NEG), // (-z, -x, -y)
-        new Orientation(Axis.Z_NEG, Axis.Y_POS, Axis.X_POS), // (-z, y, x)
-        new Orientation(Axis.Z_NEG, Axis.Y_POS, Axis.X_NEG), // (-z, y, -x)
-        new Orientation(Axis.Z_NEG, Axis.Y_NEG, Axis.X_POS), // (-z, -y, x)
-        new Orientation(Axis.Z_NEG, Axis.Y_NEG, Axis.X_NEG),  // (-z, -y, -x)
-
-        new Orientation(Axis.X_POS, Axis.Y_POS, Axis.Z_POS), // (x, y, z)
-        new Orientation(Axis.X_POS, Axis.Y_NEG, Axis.Z_POS), // (x, -y, z)
-        new Orientation(Axis.X_POS, Axis.Y_POS, Axis.Z_NEG), // (x, y, -z)
-        new Orientation(Axis.X_POS, Axis.Y_NEG, Axis.Z_NEG), // (x, -y, -z)
-        new Orientation(Axis.X_POS, Axis.Z_POS, Axis.Y_POS), // (x, z, y)
-        new Orientation(Axis.X_POS, Axis.Z_POS, Axis.Y_NEG), // (x, z, -y)
-        new Orientation(Axis.X_POS, Axis.Z_NEG, Axis.Y_POS), // (x, -z, y)
-        new Orientation(Axis.X_POS, Axis.Z_NEG, Axis.Y_NEG), // (x, -z, -y)
-        
-        new Orientation(Axis.Y_POS, Axis.X_POS, Axis.Z_POS), // (y, x, z)
-        new Orientation(Axis.Y_POS, Axis.X_NEG, Axis.Z_POS), // (y, -x, z)
-        new Orientation(Axis.Y_POS, Axis.X_POS, Axis.Z_NEG), // (y, x, -z)
-        new Orientation(Axis.Y_POS, Axis.X_NEG, Axis.Z_NEG), // (y, -x, -z)
-        new Orientation(Axis.Y_POS, Axis.Z_POS, Axis.X_POS), // (y, z, x)
-        new Orientation(Axis.Y_POS, Axis.Z_POS, Axis.X_NEG), // (y, z, -x)
-        new Orientation(Axis.Y_POS, Axis.Z_NEG, Axis.X_POS), // (y, -z, x)
-        new Orientation(Axis.Y_POS, Axis.Z_NEG, Axis.X_NEG), // (y, -z, -x)
-
-        new Orientation(Axis.Z_POS, Axis.X_POS, Axis.Y_POS), // (z, x, y)
-        new Orientation(Axis.Z_POS, Axis.X_NEG, Axis.Y_POS), // (z, -x, y)
-        new Orientation(Axis.Z_POS, Axis.X_POS, Axis.Y_NEG), // (z, x, -y)
-        new Orientation(Axis.Z_POS, Axis.X_NEG, Axis.Y_NEG), // (z, -x, -y)
-        new Orientation(Axis.Z_POS, Axis.Y_POS, Axis.X_POS), // (z, y, x)
-        new Orientation(Axis.Z_POS, Axis.Y_POS, Axis.X_NEG), // (z, y, -x)
-        new Orientation(Axis.Z_POS, Axis.Y_NEG, Axis.X_POS), // (z, -y, x)
-        new Orientation(Axis.Z_POS, Axis.Y_NEG, Axis.X_NEG)  // (z, -y, -x)
-    );*/
-
     public static void main(String[] args) throws Exception {
-        List<Scanner> scanners = getInput();
-        part1(scanners);
+        Trench map = buildMap(getInput());
+        part1(map);
+        part2(map);
     }
 
-    private static void part1(List<Scanner> scanners) {
-    getOrientations();
-        Scanner result = buildMap(scanners);
-        System.out.println("Part 1: " + result.beacons.size());
+    private static void part1(Trench map) {
+        System.out.println("Part 1: " + map.beacons.size());
+    }
+
+    private static void part2(Trench map) {
+        int maxDistance = Integer.MIN_VALUE;
+        List<Location> scannerLocations = new ArrayList<>(map.scanners);
+        for (int i = 0; i < scannerLocations.size(); i++) {
+            for (int j = i + 1; j < scannerLocations.size(); j++) {
+                int d = scannerLocations.get(i).distanceTo(scannerLocations.get(j));
+                if (d > maxDistance) {
+                    maxDistance = d;
+                }
+            }
+        }
+
+        System.out.println("Part 2: " + maxDistance);
     }
 
     private static List<Orientation> getOrientations() {
@@ -165,9 +122,11 @@ public class Day19 {
         return scanners;
     }
 
-    private static Scanner buildMap(List<Scanner> scanners) {
+    private static Trench buildMap(List<Scanner> scanners) {
         // assuming the first is 0 scanner
-        Scanner result = scanners.get(0);
+        Trench map = new Trench();
+        map.beacons.addAll(scanners.get(0).beacons);
+        map.scanners.add(new Location(0, 0, 0));
 
         LinkedList<Scanner> queue = new LinkedList<>();
         for (int i = 1; i < scanners.size(); i++) {
@@ -181,14 +140,14 @@ public class Day19 {
             Scanner current = queue.poll();
             for (Orientation orientA : orientations) {
                 for (Orientation orientB : orientations) {
-                    for (Location ca : new HashSet<>(result.beacons)) {
+                    for (Location ca : new HashSet<>(map.beacons)) {
                         for (Location cb : current.beacons) {
                             Location scannerLocation = getScannerLocation(orientA, ca, orientB, cb);
 
                             int overlapCount = 0;
                             for (Location b : current.beacons) {
                                 Location beaconLocation = getBeaconLocation(orientB, scannerLocation, b);
-                                if (result.beacons.contains(beaconLocation)) {
+                                if (map.beacons.contains(beaconLocation)) {
                                     overlapCount++;
                                 }
 
@@ -198,8 +157,9 @@ public class Day19 {
                             }
 
                             if (overlapCount == BEACONS_OVERLAP_THRESHOLD) {
+                                map.scanners.add(scannerLocation);
                                 for (Location b : current.beacons) {
-                                    result.beacons.add(getBeaconLocation(orientB, scannerLocation, b));
+                                    map.beacons.add(getBeaconLocation(orientB, scannerLocation, b));
                                 }
 
                                 continue next;
@@ -212,7 +172,13 @@ public class Day19 {
             queue.offer(current);
         }
 
-        return result;
+        return map;
+    }
+
+    private static class Trench {
+
+        final Set<Location> scanners = new HashSet<>();
+        final Set<Location> beacons = new HashSet<>();
     }
 
     private static class Scanner {
@@ -235,6 +201,10 @@ public class Day19 {
             this.x = x;
             this.y = y;
             this.z = z;
+        }
+
+        int distanceTo(Location other) {
+            return Math.abs(x - other.x) + Math.abs(y - other.y) + Math.abs(z - other.z);
         }
 
         @Override
