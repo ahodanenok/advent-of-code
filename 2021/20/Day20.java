@@ -16,6 +16,7 @@ public class Day20 {
     public static void main(String[] args) throws Exception {
         Input input = getInput();
         part1(input);
+        part2(input);
     }
 
     private static void part1(Input input) {
@@ -25,6 +26,19 @@ public class Day20 {
         }
 
         System.out.println("Part 1: " + image.pixels.size());
+    }
+
+    private static void part2(Input input) {
+        Image image = input.image;
+        for (int i = 0; i < 50; i++) {
+            image = enchance(image, input.algorithm);
+        }
+
+        if (!image.lit) {
+            throw new IllegalStateException("Infinity is lit!");
+        }
+
+        System.out.println("Part 2: " + image.pixels.size());
     }
 
     private static Image enchance(Image image, String algorithm) {
