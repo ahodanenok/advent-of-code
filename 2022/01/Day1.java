@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 /**
  * Advent of Code - Day 1
@@ -12,6 +13,7 @@ public class Day1 {
     public static void main(String[] args) throws Exception {
         List<Integer> calories = getCalories();
         part1(calories);
+        part2(calories);
     }
 
     private static List<Integer> getCalories() throws Exception {
@@ -34,14 +36,12 @@ public class Day1 {
     }
 
     private static void part1(List<Integer> calories) {
-        // i hope someone made it to the shore
-        Integer maxCalories = calories.get(0);
-        for (int i = 0; i < calories.size(); i++) {
-            if (calories.get(i).compareTo(maxCalories) > 0) {
-                maxCalories = calories.get(i);
-            }
-        }
-
+        Integer maxCalories = calories.stream().sorted(Comparator.reverseOrder()).findFirst().get();
         System.out.println("Part 1: " + maxCalories);
+    }
+
+    private static void part2(List<Integer> calories) {
+        Integer maxCalories = calories.stream().sorted(Comparator.reverseOrder()).limit(3).reduce(0, Integer::sum);
+        System.out.println("Part 2: " + maxCalories);
     }
 }
