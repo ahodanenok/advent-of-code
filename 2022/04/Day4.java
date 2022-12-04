@@ -12,6 +12,7 @@ public class Day4 {
     public static void main(String[] args) throws Exception {
         List<Assignment> assignments = getAssignments();
         part1(assignments);
+        part2(assignments);
     }
 
     private static List<Assignment> getAssignments() throws Exception {
@@ -43,6 +44,17 @@ public class Day4 {
         System.out.println("Part 1: " + containedCount);
     }
 
+    private static void part2(List<Assignment> assignments) {
+        int overlapedCount = 0;
+        for (Assignment a : assignments) {
+            if (a.firstElf.overlaps(a.secondElf)) {
+                overlapedCount++;
+            }
+        }
+
+        System.out.println("Part 2: " + overlapedCount);
+    }
+
     private static class Assignment {
 
         final Sections firstElf;
@@ -66,6 +78,10 @@ public class Day4 {
 
         boolean contains(Sections other) {
             return from <= other.from && to >= other.to;
+        }
+
+        boolean overlaps(Sections other) {
+            return from <= other.to && to >= other.from;
         }
     }
 }
