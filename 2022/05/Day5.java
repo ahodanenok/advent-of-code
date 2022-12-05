@@ -12,8 +12,8 @@ import java.io.FileReader;
 public class Day5 {
 
     public static void main(String[] args) throws Exception {
-        Input input = getInput();
-        part1(input);
+        part1(getInput());
+        part2(getInput());
     }
 
     private static Input getInput() throws Exception {
@@ -49,6 +49,25 @@ public class Day5 {
         }
 
         System.out.print("Part 1: ");
+        for (LinkedList<Character> stack : input.stacks.values()) {
+            System.out.print(stack.peek());
+        }
+        System.out.println();
+    }
+
+    private static void part2(Input input) {
+        LinkedList<Character> crane = new LinkedList<>();
+        for (Move move : input.procedure) {
+            for (int n = 0; n < move.count; n++) {
+                crane.push(input.stacks.get(move.from).pop());
+            }
+
+            while (!crane.isEmpty()) {
+                input.stacks.get(move.to).push(crane.pop());
+            }
+        }
+
+        System.out.print("Part 2: ");
         for (LinkedList<Character> stack : input.stacks.values()) {
             System.out.print(stack.peek());
         }
