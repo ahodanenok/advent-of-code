@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.Comparator;
 
 /**
  * Advent of Code - Day 7
@@ -12,8 +13,37 @@ import java.util.HashMap;
 public class Day7 {
 
     public static void main(String[] args) throws Exception {
-        List<Object> log = getLog();
-        part1(log);
+        Dir root = recreateFilesystem(getLog());
+        part1(root);
+        part2(root);
+    }
+
+    private static void part1(Dir root) {
+        List<Integer> sizes = new ArrayList<>();
+        collectSizesInRange(root, 0, 100_000, sizes);
+        System.out.println("Part 1: " + sizes.stream().reduce(0, Integer::sum));
+    }
+
+    private static void part2(Dir root) {
+        List<Integer> sizes = new ArrayList<>();
+        collectSizesInRange(root, 0, Integer.MAX_VALUE, sizes);
+        sizes.sort(Comparator.reverseOrder());
+        int emptySize = 70_000_000 - sizes.get(0); // root is the largest
+        int needSize = 30_000_000 - emptySize;
+        System.out.println("Part 2: " + sizes.stream().filter(s -> s >= needSize).min(Comparator.naturalOrder()).orElse(-1));
+    }
+
+    private static int collectSizesInRange(Dir current, int minSize, int maxSize, List<Integer> sizes) {
+        int totalSize = current.size;
+        for (Dir dir : current.subdirs.values()) {
+            totalSize += collectSizesInRange(dir, minSize, maxSize, sizes);
+        }
+
+        if (totalSize >= minSize && totalSize <= maxSize) {
+            sizes.add(totalSize);
+        }
+
+        return totalSize;
     }
 
     private static List<Object> getLog() throws Exception {
@@ -46,7 +76,7 @@ public class Day7 {
         return log;
     }
 
-    private static void part1(List<Object> log) {
+    private static Dir recreateFilesystem(List<Object> log) {
         Dir root = new Dir();
         Dir current = root;
         for (Object item : log) {
@@ -76,22 +106,7 @@ public class Day7 {
             }
         }
 
-        List<Integer> sizes = new ArrayList<>();
-        findSizesLessThen(root, 100000, sizes);
-        System.out.println("Part 1: " + sizes.stream().reduce(0, Integer::sum));
-    }
-
-    private static int findSizesLessThen(Dir current, int maxDirSize, List<Integer> sizes) {
-        int totalSize = current.size;
-        for (Dir dir : current.subdirs.values()) {
-            totalSize += findSizesLessThen(dir, maxDirSize, sizes);
-        }
-
-        if (totalSize <= maxDirSize) {
-            sizes.add(totalSize);
-        }
-
-        return totalSize;
+        return root;
     }
 
     private static class Dir {
