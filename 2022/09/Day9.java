@@ -18,18 +18,22 @@ public class Day9 {
 
     public static void main(String[] args) throws Exception {
         List<Motion> motions = getMotions();
-        part1(motions);
+        System.out.println("Part 1: " + simulateRope(2, motions));
+        System.out.println("Part 2: " + simulateRope(10, motions));
     }
 
-    private static void part1(List<Motion> motions) {
-        Position head = new Position(0, 0);
-        Position tail = head;
+    private static int simulateRope(int knots, List<Motion> motions) {
+        List<Position> rope = new ArrayList<>();
+        for (int i = 0; i < knots; i++) {
+            rope.add(new Position(0, 0));
+        }
 
         Set<Position> tailVisited = new HashSet<>();
-        tailVisited.add(tail);
+        tailVisited.add(rope.get(0));
 
         for (Motion m : motions) {
             for (int s = 0; s < m.steps; s++) {
+                Position head = rope.get(0);
                 if (m.dir == DIR_UP) {
                     head = new Position(head.row - 1, head.col);
                 } else if (m.dir == DIR_RIGHT) {
@@ -42,24 +46,44 @@ public class Day9 {
                     throw new IllegalStateException("Unknown dir: " + m.dir);
                 }
 
-                int dx = head.col - tail.col;
-                int dy = head.row - tail.row;
-
-                if (dy == 2) { // top
-                    tail = new Position(tail.row + 1, head.col);
-                } else if (dx == -2) { // right
-                    tail = new Position(head.row, tail.col - 1);
-                } else if (dy == -2) { // bottom
-                    tail = new Position(tail.row - 1, head.col);
-                } else if (dx == 2) { // left
-                    tail = new Position(head.row, tail.col + 1);
+                rope.set(0, head);
+                for (int i = 1; i < knots; i++) {
+                    rope.set(i, pull(rope.get(i), rope.get(i - 1)));
                 }
 
-                tailVisited.add(tail);
+                tailVisited.add(rope.get(knots - 1));
             }
         }
 
-        System.out.println("Part 1: " + tailVisited.size());
+        return tailVisited.size();
+    }
+
+    private static Position pull(Position source, Position target) {
+        int dx = target.col - source.col;
+        int dy = target.row - source.row;
+
+        Position pos;
+        if (dx == -2 && dy == 2) { // top-right
+            pos = new Position(source.row + 1, source.col - 1);
+        } else if (dx == -2 && dy == -2) { // bottom-right
+            pos = new Position(source.row - 1, source.col - 1);
+        } else if (dx == 2 && dy == -2) { // bottom-left
+            pos = new Position(source.row - 1, source.col + 1);
+        } else if (dx == 2 && dy == 2) { // top-left
+            pos = new Position(source.row + 1, source.col + 1);
+        } else if (dy == 2) { // top
+            pos = new Position(source.row + 1, target.col);
+        } else if (dx == -2) { // right
+            pos = new Position(target.row, source.col - 1);
+        } else if (dy == -2) { // bottom
+            pos = new Position(source.row - 1, target.col);
+        } else if (dx == 2) { // left
+            pos = new Position(target.row, source.col + 1);
+        } else {
+            pos = source;
+        }
+
+        return pos;
     }
 
     private static List<Motion> getMotions() throws Exception {
