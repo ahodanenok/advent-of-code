@@ -12,6 +12,7 @@ public class Day8 {
     public static void main(String[] args) throws Exception {
         int[][] grid = getGrid();
         part1(grid);
+        part2(grid);
     }
 
     private static void part1(int[][] grid) {
@@ -68,6 +69,50 @@ public class Day8 {
 
         int visibleExterior = n * n - (n - 2) * (n - 2);
         System.out.println("Part 1: " + (visibleInterior.size() + visibleExterior));
+    }
+
+    private static void part2(int[][] grid) {
+        int scoreMax = Integer.MIN_VALUE;
+        for (int row = 0; row < grid.length; row++) {
+            for (int col = 0; col < grid.length; col++) {
+                int visibleTop = 0;
+                for (int i = row - 1; i >= 0; i--) {
+                    visibleTop++;
+                    if (grid[i][col] >= grid[row][col]) {
+                        break;
+                    }
+                }
+
+                int visibleBottom = 0;
+                for (int i = row + 1; i < grid.length; i++) {
+                    visibleBottom++;
+                    if (grid[i][col] >= grid[row][col]) {
+                        break;
+                    }
+                }
+
+                int visibleLeft = 0;
+                for (int i = col - 1; i >= 0; i--) {
+                    visibleLeft++;
+                    if (grid[row][i] >= grid[row][col]) {
+                        break;
+                    }
+                }
+
+                int visibleRight = 0;
+                for (int i = col + 1; i < grid.length; i++) {
+                    visibleRight++;
+                    if (grid[row][i] >= grid[row][col]) {
+                        break;
+                    }
+                }
+
+                int score = visibleTop * visibleBottom * visibleLeft * visibleRight;
+                scoreMax = Math.max(scoreMax, score);
+            }
+        }
+
+        System.out.println("Part 2: " + scoreMax);
     }
 
     private static int[][] getGrid() throws Exception {
