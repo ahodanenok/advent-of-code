@@ -12,9 +12,12 @@ public class Day10 {
     private static final String INST_NOOP = "noop";
     private static final String INST_ADDX = "addx";
 
+    private static final int LINE_WIDTH = 40;
+
     public static void main(String[] args) throws Exception {
         List<Instruction> instructions = getInstructions();
         part1(instructions);
+        part2(instructions);
     }
 
     private static void part1(List<Instruction> instructions) {
@@ -41,11 +44,44 @@ public class Day10 {
     }
 
     private static int readSignalStrength(int x, int cycle) {
-        if (cycle == 20 || cycle == 60 || cycle == 100 || cycle == 140 || cycle == 180 || cycle == 220) {
+        if (cycle == 20 || (cycle - 20) % 40 == 0) {
             return x * cycle;
         }
 
         return 0;
+    }
+
+    private static void part2(List<Instruction> instructions) {
+        int cycle = 0;
+        int x = 1;
+
+        for (Instruction inst : instructions) {
+            if (INST_NOOP == inst.type) {
+                drawPixel(x, cycle);
+                cycle++;
+            } else if (INST_ADDX == inst.type) {
+                drawPixel(x, cycle);
+                cycle++;
+
+                drawPixel(x, cycle);
+                cycle++;
+
+                x += inst.arg;
+            }
+        }
+    }
+
+    private static void drawPixel(int x, int cycle) {
+        int crt = cycle % LINE_WIDTH;
+        if (crt >= x - 1 && crt <= x + 1) {
+            System.out.print('#');
+        } else {
+            System.out.print('.');
+        }
+
+        if (crt + 1 == LINE_WIDTH) {
+            System.out.println();
+        }
     }
 
     private static List<Instruction> getInstructions() throws Exception {
