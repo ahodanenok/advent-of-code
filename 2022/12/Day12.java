@@ -15,13 +15,35 @@ public class Day12 {
     public static void main(String[] args) throws Exception {
         Heightmap map = getHeightmap();
         part1(map);
+        part2(map);
     }
 
     private static void part1(Heightmap map) {
-        int gridHeight = map.grid.size();
-        int gridWidth = map.grid.get(0).length();
+        for (int row = 0; row < map.height; row++) {
+            for (int col = 0; col < map.width; col++) {
+                if (map.isStart(row, col)) {
+                    System.out.println("Part 1: " + move(map, row, col));
+                    return;
+                }
+            }
+        }
+    }
 
-        Step initialStep = new Step(map.rowStart, map.colStart, 0);
+    private static void part2(Heightmap map) {
+        int shortestPath = Integer.MAX_VALUE;
+        for (int row = 0; row < map.height; row++) {
+            for (int col = 0; col < map.width; col++) {
+                if (map.heightAt(row, col) == 'a') {
+                    shortestPath = Math.min(move(map, row, col), shortestPath);
+                }
+            }
+        }
+
+        System.out.println("Part 2: " + shortestPath);
+    }
+
+    private static int move(Heightmap map, int rowStart, int colStart) {
+        Step initialStep = new Step(rowStart, colStart, 0);
 
         Set<Step> triedSteps = new HashSet<>();
         triedSteps.add(initialStep);
@@ -30,18 +52,13 @@ public class Day12 {
         queue.addLast(initialStep);
         while (!queue.isEmpty()) {
             Step currentStep = queue.removeFirst();
-            char height = map.grid.get(currentStep.row).charAt(currentStep.col);
-            if (height == 'E') {
-                System.out.println("Part 1: " + currentStep.count);
-                break;
-            }
-
-            if (height == 'S') {
-                height = 'a';
+            if (map.isEnd(currentStep.row, currentStep.col)) {
+                return currentStep.count;
             }
 
             int row = currentStep.row;
             int col = currentStep.col;
+            char height = map.heightAt(row, col);
             int nextCount = currentStep.count + 1;
             for (Step nextStep : List.of(
                     new Step(row - 1, col, nextCount),
@@ -49,16 +66,12 @@ public class Day12 {
                     new Step(row, col - 1, nextCount),
                     new Step(row, col + 1, nextCount))) {
                 if (triedSteps.contains(nextStep)
-                        || nextStep.row < 0 || nextStep.row >= gridHeight
-                        || nextStep.col < 0 || nextStep.col >= gridWidth) {
+                        || nextStep.row < 0 || nextStep.row >= map.height
+                        || nextStep.col < 0 || nextStep.col >= map.width) {
                     continue;
                 }
 
-                char heightTo = map.grid.get(nextStep.row).charAt(nextStep.col);
-                if (heightTo == 'E') {
-                    heightTo = 'z';
-                }
-
+                char heightTo = map.heightAt(nextStep.row, nextStep.col);
                 if (heightTo - height > 1) {
                     continue;
                 }
@@ -67,6 +80,8 @@ public class Day12 {
                 triedSteps.add(nextStep);
             }
         }
+
+        return Integer.MAX_VALUE;
     }
 
     private static Heightmap getHeightmap() throws Exception {
@@ -74,29 +89,41 @@ public class Day12 {
         try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (map.rowStart == -1 && map.colStart == -1) {
-                    for (int col = 0; col < line.length(); col++) {
-                        if (line.charAt(col) == 'S') {
-                            map.rowStart = map.grid.size();
-                            map.colStart = col;
-                            break;
-                        }
-                    }
-                }
-
                 map.grid.add(line);
             }
         }
+
+        map.height = map.grid.size();
+        map.width = map.grid.get(0).length();
 
         return map;
     }
 
     private static class Heightmap {
 
-        int rowStart = -1;
-        int colStart = -1;
+        int height;
+        int width;
 
         List<String> grid = new ArrayList<>();
+
+        boolean isStart(int row, int col) {
+            return grid.get(row).charAt(col) == 'S';
+        }
+
+        boolean isEnd(int row, int col) {
+            return grid.get(row).charAt(col) == 'E';
+        }
+
+        char heightAt(int row, int col) {
+            char h = grid.get(row).charAt(col);
+            if (h == 'S') {
+                return 'a';
+            } else if (h == 'E') {
+                return 'z';
+            } else {
+                return h;
+            }
+        }
     }
 
     private static class Step {
