@@ -13,6 +13,7 @@ public class Day13 {
     public static void main(String[] args) throws Exception {
         List<Pair> pairs = getPairs();
         part1(pairs);
+        part2(pairs);
     }
 
     private static void part1(List<Pair> pairs) {
@@ -29,14 +30,33 @@ public class Day13 {
         System.out.println("Part 1: " + sum);
     }
 
+    private static void part2(List<Pair> pairs) {
+        List<Object> packets = new ArrayList<>();
+        for (Pair p : pairs) {
+            packets.add(parseValue(new ValueReader(p.left)));
+            packets.add(parseValue(new ValueReader(p.right)));
+        }
+
+        Object divider_1 = List.of(List.of(2));
+        packets.add(divider_1);
+
+        Object divider_2 = List.of(List.of(6));
+        packets.add(divider_2);
+
+        packets.sort(Day13::compareValues);
+
+        int key = (packets.indexOf(divider_1) + 1) * (packets.indexOf(divider_2) + 1);
+        System.out.println("Part 2: " + key);
+    }
+
     private static Object parseValue(ValueReader reader) {
         char token = reader.consume();
         if (Character.isDigit(token)) {
             String num = token + "";
-            while (reader.hasNext() && Character.isDigit(token = reader.peek())) {
+            while (reader.hasNext() && Character.isDigit(reader.peek())) {
                 num += reader.consume();
             }
-        
+
             return Integer.parseInt(num);
         } else if (token == '[') {
             List<Object> list = new ArrayList<>();
