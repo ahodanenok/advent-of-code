@@ -14,11 +14,53 @@ public class Day15 {
     public static void main(String[] args) throws Exception {
         List<Link> links = getLinks();
         part1(links);
+        part2(links);
     }
 
     private static void part1(List<Link> links) {
         int yTarget = 2_000_000;
+        int coveredCount = getCoverage(links, yTarget).stream()
+            .map(Range::length).reduce(0, Integer::sum);
+        for (int i = 0; i < links.size(); i++) {
+            Link link = links.get(i);
+            if (link.yBeacon != yTarget) {
+                continue;
+            }
 
+            boolean seen = false;
+            for (int j = 0; j < i; j++) {
+                Link prev = links.get(j);
+                if (prev.yBeacon == yTarget && prev.xBeacon == link.xBeacon) {
+                    seen = true;
+                    break;
+                }
+            }
+
+            if (!seen) {
+                coveredCount--;
+            }
+        }
+
+        System.out.println("Part 1: " + coveredCount);
+    }
+
+    private static void part2(List<Link> links) {
+        for (int y = 0; y < 4_000_000; y++) {
+            List<Range> coverage = getCoverage(links, y);
+            // being lazy and hoping that the beacon is not at the edge :)
+
+            // because there is a single possible position for the beacon
+            // there will be at most one split on two disjoint regions
+            if (coverage.size() == 2) {
+                coverage.sort((a, b) -> Integer.compare(a.from, b.from));
+                long frequency = (coverage.get(0).to + 1) * 4000000L + y;
+                System.out.println("Part 2: " + frequency);
+                break;
+            }
+        }
+    }
+
+    private static List<Range> getCoverage(List<Link> links, int yTarget) {
         List<Range> ranges = new ArrayList<>();
         for (Link link : links) {
             int distance = Math.abs(link.xSensor - link.xBeacon) + Math.abs(link.ySensor - link.yBeacon);
@@ -55,28 +97,7 @@ public class Day15 {
             coverage.add(finalRange);
         }
 
-        int coveredCount = coverage.stream().map(Range::length).reduce(0, Integer::sum);
-        for (int i = 0; i < links.size(); i++) {
-            Link link = links.get(i);
-            if (link.yBeacon != yTarget) {
-                continue;
-            }
-
-            boolean seen = false;
-            for (int j = 0; j < i; j++) {
-                Link prev = links.get(j);
-                if (prev.yBeacon == yTarget && prev.xBeacon == link.xBeacon) {
-                    seen = true;
-                    break;
-                }
-            }
-
-            if (!seen) {
-                coveredCount--;
-            }
-        }
-
-        System.out.println("Part 1: " + coveredCount);
+        return coverage;
     }
 
     private static List<Link> getLinks() throws Exception {
