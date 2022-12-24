@@ -1,8 +1,9 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.math.BigInteger;
 
 /**
- *
+ * Advent of Code - Day 17
  * https://adventofcode.com/2022/day/17
  */
 public class Day17 {
@@ -12,36 +13,98 @@ public class Day17 {
     public static void main(String[] args) throws Exception {
         String jets = getJets();
         part1(jets);
-
-        //boolean[][] chamber = new boolean[7][CHAMBER_WIDTH];
-        //Rock.CROSS.moveLeft(chamber, 2, 3);
-        //Rock.CROSS.moveLeft(chamber, 2, 3);
-        //printChamber(chamber);
-
-    }
-
-    private static void printChamber(boolean[][] chamber) {
-        for (int row = chamber.length - 1; row >= 0; row--) {
-            for (int col = 0; col < CHAMBER_WIDTH; col++) {
-                if (chamber[row][col]) {
-                    System.out.print('#');
-                } else {
-                    System.out.print('.');
-                }
-            }
-            System.out.println();
-        }
+        part2(jets);
     }
 
     private static void part1(String jets) {
-        // tallest rock is 4 tiles and there will be 2022 rocks at max
-        boolean[][] chamber = new boolean[4 * 2022][CHAMBER_WIDTH];
-        int height = 0;
+        System.out.println("Part 1: " + simulate(jets, 2022, -1).height);
+    }
 
+    private static void part2(String jets) {
+        // hope there will be a pattern :)
+        SimulationResult result = simulate(jets, 5000, -1);
+
+        int floorStart = 0;
+        int floorHeight = 0;
+
+        int f0 = 0;
+        int f1 = 1;
+        int h = 0;
+
+        next:
+        // searching for a pattern
+        while (f0 < result.height) {
+            for (int x = 0; x < CHAMBER_WIDTH; x++) {
+                if (result.chamber[f0 + h][x] != result.chamber[f1 + h][x]) {
+                    f1++;
+                    if (f1 > result.height) {
+                        f0++;
+                        f1 = f0 + 1;
+                    }
+                    h = 0;
+
+                    continue next;
+                }
+            }
+
+            h++;
+            if (f0 + h == f1) {
+                if (h > floorHeight) {
+                    floorStart = f0;
+                    floorHeight = h;
+                }
+
+                f0++;
+                f1 = f0 + 1;
+                h = 0;
+            }
+        }
+
+        BigInteger rockCount = new BigInteger("1000000000000");
+        BigInteger height = BigInteger.ZERO;
+
+        // calculate height for ground floor
+        SimulationResult a = simulate(jets, -1, floorStart);
+        height = height.add(BigInteger.valueOf(a.height));
+        rockCount = rockCount.subtract(BigInteger.valueOf(a.rockCount));
+        //System.out.printf("a.height=%d, a.rocks=%d, height=%d, rockCount=%d%n", a.height, a.rockCount, height, rockCount);
+
+        // calculate height for repeating floors
+        SimulationResult b = simulate(jets, -1, floorStart + floorHeight);
+        height = height.add(rockCount.divide(BigInteger.valueOf(b.rockCount - a.rockCount)).multiply(BigInteger.valueOf(floorHeight)));
+        rockCount = rockCount.mod(BigInteger.valueOf(b.rockCount - a.rockCount));
+        //System.out.printf("b.height=%d, b.rocks=%d, height=%d, rockCount=%d%n", b.height, b.rockCount, height, rockCount);
+
+        // calculate height for remaining rocks - roof!
+        if (rockCount.compareTo(BigInteger.ZERO) > 0) {
+            SimulationResult c = simulate(jets, a.rockCount + rockCount.intValue(), -1);
+            height = height.add(BigInteger.valueOf(c.height - a.height));
+            rockCount = rockCount.subtract(BigInteger.valueOf(c.rockCount - a.rockCount));
+            //System.out.printf("c.height=%d, c.rocks=%d, height=%d, rockCount=%d%n", c.height, c.rockCount, height, rockCount);
+        }
+
+        if (rockCount.compareTo(BigInteger.ZERO) != 0) {
+            throw new IllegalStateException("Rock count: " + rockCount);
+        }
+
+        System.out.println("Part 2: " + height);
+    }
+
+    private static SimulationResult simulate(String jets, int maxRocks, int maxHeight) {
+        boolean[][] chamber = new boolean[Math.max(4 * maxRocks, maxHeight) + 10][CHAMBER_WIDTH];
+
+        if (maxRocks == -1) {
+            maxRocks = Integer.MAX_VALUE;
+        }
+        if (maxHeight == -1) {
+            maxHeight = Integer.MAX_VALUE;
+        }
+
+        int height = 0;
         Rock[] rocks = Rock.values();
         int rockCount = 0;
         int jetPos = 0;
-        while (rockCount < 2022) {
+        while (true) {
             Rock rock = rocks[rockCount % rocks.length];
             int x = 2;
             int y = height + 3;
@@ -65,21 +128,42 @@ public class Day17 {
                 if (rock.moveDown(chamber, x, y)) {
                     y--;
                 } else {
-                    rock.draw(chamber, x, y);
-                    height = Math.max(y + rock.height, height);
                     break;
                 }
             }
 
+            if (y + rock.height > maxHeight) {
+                break;
+            }
+
+            rock.draw(chamber, x, y);
+            height = Math.max(y + rock.height, height);
             rockCount++;
+
+            if (rockCount == maxRocks) {
+                break;
+            }
         }
 
-        System.out.println("Part 1: " + height);
+        return new SimulationResult(chamber, height, rockCount);
     }
 
     private static String getJets() throws Exception {
         try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
             return reader.readLine();
+        }
+    }
+
+    private static class SimulationResult {
+
+        final boolean chamber[][];
+        final int height;
+        final int rockCount;
+
+        SimulationResult(boolean[][] chamber, int height, int rockCount) {
+            this.chamber = chamber;
+            this.height = height;
+            this.rockCount = rockCount;
         }
     }
 
