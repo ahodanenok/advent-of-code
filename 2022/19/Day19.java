@@ -2,7 +2,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -15,105 +14,83 @@ public class Day19 {
     public static void main(String[] args) throws Exception {
         List<Blueprint> blueprints = getBlueprints();
         part1(blueprints);
+        part2(blueprints);
     }
 
     private static void part1(List<Blueprint> blueprints) {
         int qualityLevel = 0;
         for (Blueprint b : blueprints) {
-            qualityLevel += simulate(b, new Minute(0, 0, 0, 0, 0, 1, 0, 0, 0)) * b.num;
+            qualityLevel += simulate(b, 24, new Minute(0, 0, 0, 0, 0, 1, 0, 0, 0)) * b.num;
         }
 
         System.out.println("Part 1: " + qualityLevel);
     }
 
-    private static int simulate(Blueprint b, Minute m) {
-        if (m.num == 24) {
+    private static void part2(List<Blueprint> blueprints) {
+        int product = 1;
+        for (int i = 0; i < 3; i++) {
+            product *= simulate(blueprints.get(i), 32, new Minute(0, 0, 0, 0, 0, 1, 0, 0, 0));
+        }
+
+        System.out.println("Part 2: " + product);
+    }
+
+    private static int simulate(Blueprint b, int maxMinutes, Minute m) {
+        if (m.num == maxMinutes) {
             return m.geodeOpened;
         }
 
         int geodeOpenedMax = Integer.MIN_VALUE;
 
-        int oreCollected = m.oreRobots;
-        int clayCollected = m.clayRobots;
-        int obsidianCollected = m.obsidianRobots;
-        int geodeOpened = m.geodeRobots;
-
-        if (b.geodeRobot.enoughResources(m)) {
-            geodeOpenedMax = Math.max(
-                geodeOpenedMax,
-                simulate(b, new Minute(
-                    m.num + 1,
-                    m.geodeOpened + geodeOpened,
-                    m.oreCollected + oreCollected - b.geodeRobot.oreCost,
-                    m.clayCollected + clayCollected - b.geodeRobot.clayCost,
-                    m.obsidianCollected + obsidianCollected - b.geodeRobot.obsidianCost,
-                    m.oreRobots,
-                    m.clayRobots,
-                    m.obsidianRobots,
-                    m.geodeRobots + 1)));
+        geodeOpenedMax = Math.max(geodeOpenedMax, simulate(b, maxMinutes, tryBuildRobot(m, maxMinutes, b.geodeRobot, 0, 0, 0, 1)));
+        geodeOpenedMax = Math.max(geodeOpenedMax, simulate(b, maxMinutes, tryBuildRobot(m, maxMinutes, b.obsidianRobot, 0, 0, 1, 0)));
+        if (m.clayRobots <= b.obsidianRobot.clayCost) {
+            geodeOpenedMax = Math.max(geodeOpenedMax, simulate(b, maxMinutes, tryBuildRobot(m, maxMinutes, b.clayRobot, 0, 1, 0, 0)));
         }
-
-        if (b.obsidianRobot.enoughResources(m)) {
-            geodeOpenedMax = Math.max(
-                geodeOpenedMax,
-                simulate(b, new Minute(
-                    m.num + 1,
-                    m.geodeOpened + geodeOpened,
-                    m.oreCollected + oreCollected - b.obsidianRobot.oreCost,
-                    m.clayCollected + clayCollected - b.obsidianRobot.clayCost,
-                    m.obsidianCollected + obsidianCollected - b.obsidianRobot.obsidianCost,
-                    m.oreRobots,
-                    m.clayRobots,
-                    m.obsidianRobots + 1,
-                    m.geodeRobots)));
-        }
-
-        if (b.clayRobot.enoughResources(m)) {
-            geodeOpenedMax = Math.max(
-                geodeOpenedMax,
-                simulate(b, new Minute(
-                    m.num + 1,
-                    m.geodeOpened + geodeOpened,
-                    m.oreCollected + oreCollected - b.clayRobot.oreCost,
-                    m.clayCollected + clayCollected - b.clayRobot.clayCost,
-                    m.obsidianCollected + obsidianCollected - b.clayRobot.obsidianCost,
-                    m.oreRobots,
-                    m.clayRobots + 1,
-                    m.obsidianRobots,
-                    m.geodeRobots)));
-        }
- 
-        if (m.oreRobots <= Math.max(Math.max(b.geodeRobot.oreCost, b.obsidianRobot.oreCost), b.clayRobot.oreCost) && b.oreRobot.enoughResources(m)) {
-            geodeOpenedMax = Math.max(
-                geodeOpenedMax,
-                simulate(b, new Minute(
-                    m.num + 1,
-                    m.geodeOpened + geodeOpened,
-                    m.oreCollected + oreCollected - b.oreRobot.oreCost,
-                    m.clayCollected + clayCollected - b.oreRobot.clayCost,
-                    m.obsidianCollected + obsidianCollected - b.oreRobot.obsidianCost,
-                    m.oreRobots + 1,
-                    m.clayRobots,
-                    m.obsidianRobots,
-                    m.geodeRobots)));
-        }
-
-        {
-            geodeOpenedMax = Math.max(
-                geodeOpenedMax,
-                simulate(b, new Minute(
-                    m.num + 1,
-                    m.geodeOpened + geodeOpened,
-                    m.oreCollected + oreCollected,
-                    m.clayCollected + clayCollected,
-                    m.obsidianCollected + obsidianCollected,
-                    m.oreRobots,
-                    m.clayRobots,
-                    m.obsidianRobots,
-                    m.geodeRobots)));
+        if (m.oreRobots <= Math.max(Math.max(b.geodeRobot.oreCost, b.obsidianRobot.oreCost), b.clayRobot.oreCost)) {
+            geodeOpenedMax = Math.max(geodeOpenedMax, simulate(b, maxMinutes, tryBuildRobot(m, maxMinutes, b.oreRobot, 1, 0, 0, 0)));
         }
 
         return geodeOpenedMax;
+    }
+
+    private static Minute tryBuildRobot(Minute m, int maxMinutes, Robot robot, int oreRobotsInc, int clayRobotsInc, int obsidianRobotsInc, int geodeRobotsInc) {
+        int n = m.num;
+        int oreCollected = m.oreCollected;
+        int clayCollected = m.clayCollected;
+        int obsidianCollected = m.obsidianCollected;
+        int geodeOpened = m.geodeOpened;
+        while (n < maxMinutes && (robot.oreCost > oreCollected || robot.clayCost > clayCollected || robot.obsidianCost > obsidianCollected)) {
+            n++;
+            oreCollected += m.oreRobots;
+            clayCollected += m.clayRobots;
+            obsidianCollected += m.obsidianRobots;
+            geodeOpened += m.geodeRobots;
+        }
+
+        if (n < maxMinutes && robot.oreCost <= oreCollected && robot.clayCost <= clayCollected && robot.obsidianCost <= obsidianCollected) {
+            return new Minute(
+                n + 1,
+                geodeOpened + m.geodeRobots,
+                oreCollected + m.oreRobots - robot.oreCost,
+                clayCollected + m.clayRobots - robot.clayCost,
+                obsidianCollected + m.obsidianRobots - robot.obsidianCost,
+                m.oreRobots + oreRobotsInc,
+                m.clayRobots + clayRobotsInc,
+                m.obsidianRobots + obsidianRobotsInc,
+                m.geodeRobots + geodeRobotsInc);
+        } else {
+            return new Minute(
+                n,
+                geodeOpened,
+                oreCollected,
+                clayCollected,
+                obsidianCollected,
+                m.oreRobots,
+                m.clayRobots,
+                m.obsidianRobots,
+                m.geodeRobots);
+        }
     }
 
     private static List<Blueprint> getBlueprints() throws Exception {
@@ -198,22 +175,6 @@ public class Day19 {
             this.oreCost = oreCost;
             this.clayCost = clayCost;
             this.obsidianCost = obsidianCost;
-        }
-
-        boolean enoughResources(Minute minute) {
-            if (oreCost > minute.oreCollected) {
-                return false;
-            }
-
-            if (clayCost > minute.clayCollected) {
-                return false;
-            }
-
-            if (obsidianCost > minute.obsidianCollected) {
-                return false;
-            }
-
-            return true;
         }
     }
 }
