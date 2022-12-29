@@ -14,11 +14,13 @@ import java.util.regex.Matcher;
 public class Day21 {
 
     public static void main(String[] args) throws Exception {
-        List<Monkey> monkeys = getMonkeys();
-        part1(monkeys);
+        part1();
+        part2();
     }
 
-    private static void part1(List<Monkey> monkeys) {
+    private static void part1() throws Exception {
+        List<Monkey> monkeys = getMonkeys("input-1.txt");
+
         Map<String, Monkey> context = new HashMap<>();
         for (Monkey m : monkeys) {
             context.put(m.name, m);
@@ -27,14 +29,63 @@ public class Day21 {
         System.out.println("Part 1: " + context.get("root").job.apply(context));
     }
 
-    private static List<Monkey> getMonkeys() throws Exception {
+    private static void part2() throws Exception {
+        List<Monkey> monkeys = getMonkeys("input-2.txt");
+
+        Map<String, Monkey> context = new HashMap<>();
+        for (Monkey m : monkeys) {
+            context.put(m.name, m);
+        }
+
+        long lo = 0;
+        long hi = 1;
+        // works only for the decreasing case, as it is in my input :)
+        while (true) {
+            if (evalWithInput(hi, context) < 0) {
+                break;
+            }
+
+            lo = hi;
+            hi *= 2;
+        }
+
+        long n;
+        while (true) {
+            n = lo + (hi - lo) / 2;
+
+            long res = evalWithInput(n, context);
+            if (res == 0) {
+                break;
+            }
+
+            if (res < 0) {
+                hi = n - 1;
+            } else {
+                lo = n + 1;
+            }
+        }
+
+        while (evalWithInput(n - 1, context) == 0) {
+            n--;
+        }
+
+        System.out.println("Part 2: " + n);
+    }
+
+    private static long evalWithInput(long n, Map<String, Monkey> context) {
+        context.put("humn", new Monkey("humn", new NumberJob(n)));
+        return context.get("root").job.apply(context);
+    }
+
+    private static List<Monkey> getMonkeys(String inputFile) throws Exception {
         List<Monkey> monkeys = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(inputFile))) {
             Pattern numPattern = Pattern.compile("^([a-z]+): ([0-9]+)$");
             Pattern sumPattern = Pattern.compile("^([a-z]+): ([a-z]+) \\+ ([a-z]+)$");
             Pattern subPattern = Pattern.compile("^([a-z]+): ([a-z]+) - ([a-z]+)$");
             Pattern divPattern = Pattern.compile("^([a-z]+): ([a-z]+) / ([a-z]+)$");
             Pattern mulPattern = Pattern.compile("^([a-z]+): ([a-z]+) \\* ([a-z]+)$");
+            Pattern eqPattern = Pattern.compile("^([a-z]+): ([a-z]+) = ([a-z]+)$");
 
             String line;
             Matcher m;
@@ -66,6 +117,12 @@ public class Day21 {
                 m = mulPattern.matcher(line);
                 if (m.find()) {
                     monkeys.add(new Monkey(m.group(1), new MultiplyJob(m.group(2), m.group(3))));
+                    continue;
+                }
+
+                m = eqPattern.matcher(line);
+                if (m.find()) {
+                    monkeys.add(new Monkey(m.group(1), new EqualsJob(m.group(2), m.group(3))));
                     continue;
                 }
 
@@ -179,6 +236,28 @@ public class Day21 {
             Monkey rightMonkey = context.get(rightMonkeyName);
 
             return leftMonkey.job.apply(context) / rightMonkey.job.apply(context);
+        }
+    }
+
+    private static class EqualsJob implements Job {
+
+        final String leftMonkeyName;
+        final String rightMonkeyName;
+
+        EqualsJob(String leftMonkeyName, String rightMonkeyName) {
+            this.leftMonkeyName = leftMonkeyName;
+            this.rightMonkeyName = rightMonkeyName;
+        }
+
+        @Override
+        public long apply(Map<String, Monkey> context) {
+            Monkey leftMonkey = context.get(leftMonkeyName);
+            Monkey rightMonkey = context.get(rightMonkeyName);
+
+            long left = leftMonkey.job.apply(context);
+            long right = rightMonkey.job.apply(context);
+
+            return Long.compare(left, right);
         }
     }
 }
