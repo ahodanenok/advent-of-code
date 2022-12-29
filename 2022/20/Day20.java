@@ -12,67 +12,81 @@ public class Day20 {
     public static void main(String[] args) throws Exception {
         List<Integer> file = getEncryptedFile();
         part1(file);
+        part2(file);
     }
 
     private static void part1(List<Integer> file) {
-        Num[] numbers = file.stream().map(Num::new).toArray(n -> new Num[n]);
-
-        int movedCount = 0;
-        int nIdx = 0;
-        while (movedCount < numbers.length) {
-            Num n = numbers[nIdx];
-            if (n.moved) {
-                nIdx = (nIdx + 1) % numbers.length;
-                continue;
-            }
-
-            nIdx = move(numbers, nIdx);
-            movedCount++;
+        Num[] numbers = new Num[file.size()];
+        for (int i = 0; i < file.size(); i++) {
+            numbers[i] = new Num(i, file.get(i));
         }
 
-        int zeroIdx = -1;
-        for (int i = 0; i < numbers.length; i++) {
-            if (numbers[i].value == 0) {
-                zeroIdx = i;
-                break;
-            }
+        mix(numbers);
+
+        int zeroIdx = 0;
+        while (numbers[zeroIdx].value != 0) {
+            zeroIdx++;
         }
 
-        int a = numbers[(zeroIdx + 1000) % numbers.length].value;
-        int b = numbers[(zeroIdx + 2000) % numbers.length].value;
-        int c = numbers[(zeroIdx + 3000) % numbers.length].value;
+        long a = numbers[(zeroIdx + 1000) % numbers.length].value;
+        long b = numbers[(zeroIdx + 2000) % numbers.length].value;
+        long c = numbers[(zeroIdx + 3000) % numbers.length].value;
         System.out.println("Part 1: " + (a + b + c));
     }
 
-    private static int move(Num[] numbers, int idx) {
+    private static void part2(List<Integer> file) {
+        Num[] numbers = new Num[file.size()];
+        for (int i = 0; i < file.size(); i++) {
+            numbers[i] = new Num(i, file.get(i) * 811589153L);
+        }
+
+        for (int t = 0; t < 10; t++) {
+            mix(numbers);
+        }
+
+        int zeroIdx = 0;
+        while (numbers[zeroIdx].value != 0) {
+            zeroIdx++;
+        }
+
+        long a = numbers[(zeroIdx + 1000) % numbers.length].value;
+        long b = numbers[(zeroIdx + 2000) % numbers.length].value;
+        long c = numbers[(zeroIdx + 3000) % numbers.length].value;
+        System.out.println("Part 2: " + (a + b + c));
+    }
+
+    private static void mix(Num[] numbers) {
+        for (int i = 0; i < numbers.length; i++) {
+            int idx = 0;
+            while (numbers[idx].idx != i) {
+                idx++;
+            }
+
+            move(numbers, idx);
+        }
+    }
+
+    private static void move(Num[] numbers, int idx) {
         Num n = numbers[idx];
         int t = numbers.length - 1;
 
         int toIdx;
         // black magic begins!
         if (n.value > 0) {
-            toIdx = (idx + n.value) % t;
+            toIdx = (int) ((idx + n.value) % t);
         } else if (n.value < 0) {
-            toIdx = (t + ((idx + n.value) % t)) % t;
+            toIdx = (int) ((t + ((idx + n.value) % t)) % t);
         } else {
             toIdx = idx;
         }
 
-        int nextIdx;
         if (toIdx > idx) {
             System.arraycopy(numbers, idx + 1, numbers, idx, toIdx - idx);
-            nextIdx = idx;
         } else if (toIdx < idx) {
             System.arraycopy(numbers, toIdx, numbers, toIdx + 1, idx - toIdx);
-            nextIdx = (idx + 1) % numbers.length;
-        } else {
-            nextIdx = (idx + 1) % numbers.length;
         }
 
         numbers[toIdx] = n;
-        n.moved = true;
-
-        return nextIdx;
     }
 
     private static List<Integer> getEncryptedFile() throws Exception {
@@ -89,13 +103,14 @@ public class Day20 {
 
     private static class Num {
 
-        final int value;
-        boolean moved;
+        final int idx;
+        final long value;
 
-        Num(int value) {
+        Num(int idx, long value) {
+            this.idx = idx;
             this.value = value;
         }
-        
+
         @Override
         public String toString() {
             return value + "";
