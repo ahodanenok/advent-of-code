@@ -16,18 +16,81 @@ public class Day23 {
     public static void main(String[] args) throws Exception {
         List<Location> elves = getElves();
         part1(elves);
+        part2(elves);
     }
 
-    private static void part1(List<Location> inputElves) {
-        Proposal noneProposal = new Proposal(Arrays.asList(Direction.values()), null);
-        LinkedList<Proposal> proposals = new LinkedList<>();
-        proposals.add(new Proposal(List.of(Direction.N, Direction.NE, Direction.NW), Direction.N));
-        proposals.add(new Proposal(List.of(Direction.S, Direction.SE, Direction.SW), Direction.S));
-        proposals.add(new Proposal(List.of(Direction.W, Direction.NW, Direction.SW), Direction.W));
-        proposals.add(new Proposal(List.of(Direction.E, Direction.NE, Direction.SE), Direction.E));
-
-        List<Location> elves = inputElves;
+    private static void part1(List<Location> elves) {
+        Simulation s = new Simulation(elves);
         for (int n = 0; n < 10; n++) {
+            s.spread();
+        }
+
+        int rowMin = Integer.MAX_VALUE;
+        int rowMax = Integer.MIN_VALUE;
+        int colMin = Integer.MAX_VALUE;
+        int colMax = Integer.MIN_VALUE;
+        for (Location elf : s.elves) {
+            rowMin = Math.min(elf.row, rowMin);
+            rowMax = Math.max(elf.row, rowMax);
+            colMin = Math.min(elf.col, colMin);
+            colMax = Math.max(elf.col, colMax);
+        }
+
+        int area = (rowMax - rowMin + 1) * (colMax - colMin + 1);
+        System.out.println("Part 1: " + (area - s.elves.size()));
+    }
+
+    private static void part2(List<Location> elves) {
+        Simulation s = new Simulation(elves);
+        int n = 0;
+        while (s.changedCount != 0) {
+            s.spread();
+            n++;
+            //System.out.printf("%d -> %d%n", n, s.changedCount);
+        }
+
+        System.out.println("Part 2: " + n);
+    }
+
+    private static List<Location> getElves() throws Exception {
+        List<Location> elves = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
+            int row = 0;
+            String line;
+            while ((line = reader.readLine()) != null) {
+                for (int col = 0; col < line.length(); col++) {
+                    if (line.charAt(col) == '#') {
+                        elves.add(new Location(row, col));
+                    }
+                }
+
+                row++;
+            }
+        }
+
+        return elves;
+    }
+
+    private static class Simulation {
+
+        private final Proposal noneProposal;
+        private final LinkedList<Proposal> proposals;
+
+        List<Location> elves;
+        int changedCount = -1;
+
+        Simulation(List<Location> elves) {
+            this.elves = elves;
+            this.noneProposal = new Proposal(Arrays.asList(Direction.values()), null);
+
+            this.proposals = new LinkedList<>();
+            this.proposals.add(new Proposal(List.of(Direction.N, Direction.NE, Direction.NW), Direction.N));
+            this.proposals.add(new Proposal(List.of(Direction.S, Direction.SE, Direction.SW), Direction.S));
+            this.proposals.add(new Proposal(List.of(Direction.W, Direction.NW, Direction.SW), Direction.W));
+            this.proposals.add(new Proposal(List.of(Direction.E, Direction.NE, Direction.SE), Direction.E));
+        }
+
+        void spread() {
             /*for (int row = -2; row < 10; row++) {
                 for (int col = -3; col < 10; col++) {
                     if (elves.contains(new Location(row, col))) {
@@ -40,6 +103,7 @@ public class Day23 {
             }
             System.out.println();*/
 
+            int changedCount = 0;
             Map<Location, List<Location>> proposed = new HashMap<>();
             for (Location elf : elves) {
                 Location next = noneProposal.propose(elf, elves);
@@ -65,6 +129,9 @@ public class Day23 {
             for (Map.Entry<Location, List<Location>> entry : proposed.entrySet()) {
                 if (entry.getValue().size() == 1) {
                     nextElves.add(entry.getKey());
+                    if (!entry.getKey().equals(entry.getValue().get(0))) {
+                        changedCount++;
+                    }
                 } else {
                     nextElves.addAll(entry.getValue());
                 }
@@ -72,40 +139,8 @@ public class Day23 {
 
             elves = nextElves;
             proposals.add(proposals.removeFirst());
+            this.changedCount = changedCount;
         }
-
-        int rowMin = Integer.MAX_VALUE;
-        int rowMax = Integer.MIN_VALUE;
-        int colMin = Integer.MAX_VALUE;
-        int colMax = Integer.MIN_VALUE;
-        for (Location elf : elves) {
-            rowMin = Math.min(elf.row, rowMin);
-            rowMax = Math.max(elf.row, rowMax);
-            colMin = Math.min(elf.col, colMin);
-            colMax = Math.max(elf.col, colMax);
-        }
-
-        int area = (rowMax - rowMin + 1) * (colMax - colMin + 1);
-        System.out.println("Part 1: " + (area - elves.size()));
-    }
-
-    private static List<Location> getElves() throws Exception {
-        List<Location> elves = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
-            int row = 0;
-            String line;
-            while ((line = reader.readLine()) != null) {
-                for (int col = 0; col < line.length(); col++) {
-                    if (line.charAt(col) == '#') {
-                        elves.add(new Location(row, col));
-                    }
-                }
-
-                row++;
-            }
-        }
-
-        return elves;
     }
 
     private static class Proposal {
