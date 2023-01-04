@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 /**
- *
+ * Advent of Code - Day 24
  * https://adventofcode.com/2022/day/24
  */
 public class Day24 {
@@ -14,9 +14,24 @@ public class Day24 {
     public static void main(String[] args) throws Exception {
         Valley valley = getValley();
         part1(valley);
+        part2(valley);
     }
 
     private static void part1(Valley valley) {
+        System.out.println("Part 1: " + makeExpedition(valley).minutes);
+    }
+
+    private static void part2(Valley valley) {
+        ExpeditionResult first = makeExpedition(valley);
+        ExpeditionResult second = makeExpedition(
+            new Valley(valley.height, valley.width, valley.exit, valley.entry, first.blizzards));
+        ExpeditionResult third = makeExpedition(
+            new Valley(valley.height, valley.width, valley.entry, valley.exit, second.blizzards));
+    
+        System.out.println("Part 2: " + (first.minutes + second.minutes + third.minutes));
+    }
+
+    private static ExpeditionResult makeExpedition(Valley valley) {
         List<Blizzard> blizzards = valley.blizzards;
         Set<Location> expeditions = new HashSet<>();
         expeditions.add(valley.entry);
@@ -59,7 +74,7 @@ public class Day24 {
             minutes++;
         }
 
-        System.out.println("Part 1: " + minutes);
+        return new ExpeditionResult(minutes, blizzards);
     }
 
     private static Valley getValley() throws Exception {
@@ -191,5 +206,16 @@ public class Day24 {
         };
 
         abstract Location next(Location location);
+    }
+
+    private static class ExpeditionResult {
+
+        final int minutes;
+        final List<Blizzard> blizzards;
+
+        ExpeditionResult(int minutes, List<Blizzard> blizzards) {
+            this.minutes = minutes;
+            this.blizzards = blizzards;
+        }
     }
 }
