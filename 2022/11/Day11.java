@@ -1,11 +1,11 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Arrays;
 import java.util.function.Function;
-import java.util.function.Predicate;
 
 /**
  * Advent of Code - Day 11
@@ -14,21 +14,23 @@ import java.util.function.Predicate;
 public class Day11 {
 
     public static void main(String[] args) throws Exception {
-        List<Monkey> monkeys = getMonkeys();
-        part1(monkeys);
+        part1(getMonkeys());
+        part2(getMonkeys());
     }
 
-    private static void part1(List<Monkey> monkeys) {
+   private static void part1(List<Monkey> monkeys) {
+        BigInteger three = BigInteger.valueOf(3);
         int[] inspectedCount = new int[monkeys.size()];
         for (int n = 0; n < 20; n++) {
             for (int i = 0; i < monkeys.size(); i++) {
                 Monkey m = monkeys.get(i);
-                Iterator<Long> items = m.items.iterator();
+                Iterator<BigInteger> items = m.items.iterator();
                 while (items.hasNext()) {
-                    long item = items.next();
-                    long worry = m.operation.apply(item);
-                    worry /= 3;
-                    if (m.test.test(worry)) {
+                    BigInteger item = items.next();
+                    // that's some scary stuff when using modulo
+                    // don't know how to handle inverse, so no common procedure
+                    BigInteger worry = m.operation.apply(item).divide(three);
+                    if (worry.remainder(m.divisor).equals(BigInteger.ZERO)) {
                         monkeys.get(m.monkeyOnTrue).items.add(worry);
                     } else {
                         monkeys.get(m.monkeyOnFalse).items.add(worry);
@@ -45,6 +47,37 @@ public class Day11 {
         System.out.println("Part 1: " + monkeyBusiness);
     }
 
+    private static void part2(List<Monkey> monkeys) {
+        BigInteger modulo = BigInteger.ONE;
+        for (Monkey m : monkeys) {
+            modulo = modulo.multiply(m.divisor);
+        }
+
+        long[] inspectedCount = new long[monkeys.size()];
+        for (int n = 0; n < 10000; n++) {
+            for (int i = 0; i < monkeys.size(); i++) {
+                Monkey m = monkeys.get(i);
+                Iterator<BigInteger> items = m.items.iterator();
+                while (items.hasNext()) {
+                    BigInteger item = items.next();
+                    BigInteger worry = m.operation.apply(item).mod(modulo);
+                    if (worry.remainder(m.divisor).equals(BigInteger.ZERO)) {
+                        monkeys.get(m.monkeyOnTrue).items.add(worry);
+                    } else {
+                        monkeys.get(m.monkeyOnFalse).items.add(worry);
+                    }
+
+                    inspectedCount[i]++;
+                    items.remove();
+                }
+            }
+        }
+
+        Arrays.sort(inspectedCount);
+        long monkeyBusiness = inspectedCount[monkeys.size() - 2] * inspectedCount[monkeys.size() - 1];
+        System.out.println("Part 2: " + monkeyBusiness);
+    }
+
     private static List<Monkey> getMonkeys() throws Exception {
         List<Monkey> monkeys = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
@@ -54,24 +87,24 @@ public class Day11 {
 
                 String[] items = reader.readLine().split("[,:] ");
                 for (int i = 1; i < items.length; i++) {
-                    monkey.items.add(Long.parseLong(items[i]));
+                    monkey.items.add(new BigInteger(items[i]));
                 }
 
                 String op = reader.readLine();
                 if (op.contains("old * old")) {
-                    monkey.operation = worry -> worry * worry;
+                    monkey.operation = worry -> worry.multiply(worry);
                 } else if (op.contains(" * ")) {
-                    long multiplier = Long.parseLong(op.split(" \\* ")[1]);
-                    monkey.operation = worry -> worry * multiplier;
+                    BigInteger multiplier = new BigInteger(op.split(" \\* ")[1]);
+                    monkey.operation = worry -> worry.multiply(multiplier);
                 } else if (op.contains(" + ")) {
-                    long add = Long.parseLong(op.split(" \\+ ")[1]);
-                    monkey.operation = worry -> worry + add;
+                    BigInteger add = new BigInteger(op.split(" \\+ ")[1]);
+                    monkey.operation = worry -> worry.add(add);
                 } else {
                     throw new IllegalStateException(op);
                 }
 
-                long divisor = Long.parseLong(reader.readLine().split("by ")[1]);
-                monkey.test = worry -> worry % divisor == 0;
+                BigInteger divisor = new BigInteger(reader.readLine().split("by ")[1]);
+                monkey.divisor = divisor;
                 monkey.monkeyOnTrue = Integer.parseInt(reader.readLine().split("monkey ")[1]);
                 monkey.monkeyOnFalse = Integer.parseInt(reader.readLine().split("monkey ")[1]);
                 reader.readLine();
@@ -85,9 +118,9 @@ public class Day11 {
 
     private static class Monkey {
 
-        List<Long> items = new ArrayList<>();
-        Function<Long, Long> operation;
-        Predicate<Long> test;
+        List<BigInteger> items = new ArrayList<>();
+        Function<BigInteger, BigInteger> operation;
+        BigInteger divisor;
         int monkeyOnTrue;
         int monkeyOnFalse;
     }
