@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.function.BiConsumer;
 
 /**
  * Advent of Code - Day 16
@@ -15,88 +16,127 @@ import java.util.regex.Matcher;
 public class Day16 {
 
     public static void main(String[] args) throws Exception {
-        List<Valve> valves = getValves();
+        Map<String, Valve> valves = getValves();
         part1(valves);
+        part2(valves);
     }
 
-    private static void part1(List<Valve> valves) {
-        Map<String, Valve> valvesByName = new HashMap<>();
-        for (Valve v : valves) {
-            valvesByName.put(v.name, v);
+    private static void part1(Map<String, Valve> valvesByName) {
+        Map<Valve, List<ValveDistance>> valvesReachable = new HashMap<>();
+        for (Valve v : valvesByName.values()) {
+            valvesReachable.put(v, findReachableValves(v, List.of(), valvesByName));
         }
 
-        int totalMinutes = 30;
-        int maxPressureReleased = Integer.MIN_VALUE;
+        Countdown countdown = new Countdown(30, valvesByName.get("AA"), 0);
+        System.out.println("Part 1: " + openValves(countdown, valvesReachable, List.of()));
+    }
 
-        LinkedList<Minute> queue = new LinkedList<>();
-        queue.add(new Minute(0, valvesByName.get("AA"), 0));
-        while (!queue.isEmpty()) {
-            Minute currentMinute = queue.removeFirst();
-            if (currentMinute.num == totalMinutes) {
-                maxPressureReleased = Math.max(currentMinute.pressureReleased, maxPressureReleased);
+    private static void part2(Map<String, Valve> valvesByName) {
+        List<Valve> usefulValves = new ArrayList<>();
+        Map<Valve, List<ValveDistance>> valvesReachable = new HashMap<>();
+        for (Valve v : valvesByName.values()) {
+            if (v.flow > 0) {
+                usefulValves.add(v);
+            }
+
+            valvesReachable.put(v, findReachableValves(v, List.of(), valvesByName));
+        }
+
+        int[] n = new int[] { 1 };
+        long[] maxPressureReleased = new long[] { Long.MIN_VALUE };
+        splitValves(new ArrayList<>(), new ArrayList<>(), usefulValves, 0, (valvesForMe, valvesForElephant) -> {
+            Countdown countdown = new Countdown(26, valvesByName.get("AA"), 0);
+            maxPressureReleased[0] = Math.max(
+                openValves(countdown, valvesReachable, valvesForElephant) + openValves(countdown, valvesReachable, valvesForMe),
+                maxPressureReleased[0]);
+        });
+
+        System.out.println("Part 2: " + maxPressureReleased[0]);
+    }
+
+    private static void splitValves(List<Valve> valvesForMe, List<Valve> valvesForElephant, 
+            List<Valve> valves, int valvesIdx, BiConsumer<List<Valve>, List<Valve>> consumer) {
+        if (valvesForMe.size() + valvesForElephant.size() == valves.size()) {
+            // calculate only for the first half, we've already seen remaining
+            if (valvesForMe.size() >= valvesForElephant.size()) {
+                consumer.accept(valvesForMe, valvesForElephant);
+            }
+
+            return;
+        }
+
+        valvesForMe.add(valves.get(valvesIdx));
+        splitValves(valvesForMe, valvesForElephant, valves, valvesIdx + 1, consumer);
+        valvesForMe.remove(valvesForMe.size() - 1);
+
+        valvesForElephant.add(valves.get(valvesIdx));
+        splitValves(valvesForMe, valvesForElephant, valves, valvesIdx + 1, consumer);
+        valvesForElephant.remove(valvesForElephant.size() - 1);
+    }
+
+    private static int openValves(Countdown countdown, Map<Valve, List<ValveDistance>> valvesReachable, List<Valve> valvesIgnored) {
+        if (countdown.minutesRemaining == 0) {
+            return countdown.pressureReleased;
+        }
+
+        int pressureReleasedMax = Integer.MIN_VALUE;
+        int pressureReleased = countdown.valvesOpened.stream().map(v -> v.flow).reduce(0, Integer::sum);
+        for (ValveDistance next : valvesReachable.get(countdown.valveAt)) {
+            if (valvesIgnored.contains(next.valve) || countdown.valvesOpened.contains(next.valve)) {
                 continue;
             }
 
-            int pressureReleased = currentMinute.openedValves.stream().map(v -> v.flow).reduce(0, Integer::sum);
-            List<ReachableValve> r = reachable(currentMinute.valve, currentMinute.openedValves, valvesByName);
+            int minutesRemaining = countdown.minutesRemaining - next.minutes - 1;
+            if (minutesRemaining >= 0) {
+                Countdown countdownNext = new Countdown(
+                    minutesRemaining,
+                    next.valve,
+                    countdown.pressureReleased + next.minutes * pressureReleased + pressureReleased);
+                countdownNext.valvesOpened.addAll(countdown.valvesOpened);
+                countdownNext.valvesOpened.add(next.valve);
 
-            boolean anyReachable = false;
-            for (ReachableValve next : r) {
-                if (currentMinute.num + next.minutes + 1 <= totalMinutes) {
-                    anyReachable = true;
-                    Minute m = new Minute(
-                        currentMinute.num + next.minutes + 1,
-                        next.valve,
-                        currentMinute.pressureReleased + next.minutes * pressureReleased + pressureReleased);
-                    m.openedValves.addAll(currentMinute.openedValves);
-                    m.openedValves.add(next.valve);
-                    queue.add(m);
-                }
-            }
-
-            if (!anyReachable) {
-                Minute m = new Minute(
-                    currentMinute.num + 1,
-                    currentMinute.valve,
-                    currentMinute.pressureReleased + pressureReleased);
-                m.openedValves.addAll(currentMinute.openedValves);
-                queue.add(m);
+                pressureReleasedMax = Math.max(openValves(countdownNext, valvesReachable, valvesIgnored), pressureReleasedMax);
             }
         }
 
-        System.out.println("Part 1: " + maxPressureReleased);
+        if (pressureReleasedMax == Integer.MIN_VALUE) {
+            // fast-forward till the end
+            pressureReleasedMax = countdown.pressureReleased + countdown.minutesRemaining * pressureReleased;
+        }
+
+        return pressureReleasedMax;
     }
 
-    private static List<ReachableValve> reachable(Valve fromValve, List<Valve> openedValves, Map<String, Valve> valvesByName) {
-        List<ReachableValve> result = new ArrayList<>();
+    private static List<ValveDistance> findReachableValves(Valve fromValve, List<Valve> valvesOpened, Map<String, Valve> valvesByName) {
+        List<ValveDistance> distances = new ArrayList<>();
 
         List<String> seen = new ArrayList<>();
         seen.add(fromValve.name);
 
-        LinkedList<ReachableValve> queue = new LinkedList<>();
-        queue.add(new ReachableValve(fromValve, 0));
+        LinkedList<ValveDistance> queue = new LinkedList<>();
+        queue.add(new ValveDistance(fromValve, 0));
 
         while (!queue.isEmpty()) {
-            ReachableValve currentValve = queue.removeFirst();
-            if (currentValve.valve.flow > 0 
-                    && !openedValves.contains(currentValve.valve)
-                    && !currentValve.valve.equals(fromValve)) {
-                result.add(currentValve);
+            ValveDistance currentDistance = queue.removeFirst();
+            if (currentDistance.valve.flow > 0 
+                    && !valvesOpened.contains(currentDistance.valve)
+                    && !currentDistance.valve.equals(fromValve)) {
+                distances.add(currentDistance);
             }
 
-            for (String tunnel : currentValve.valve.tunnels) {
+            for (String tunnel : currentDistance.valve.tunnels) {
                 if (!seen.contains(tunnel)) {
-                    queue.add(new ReachableValve(valvesByName.get(tunnel), currentValve.minutes + 1));
+                    queue.add(new ValveDistance(valvesByName.get(tunnel), currentDistance.minutes + 1));
                     seen.add(tunnel);
                 }
             }
         }
 
-        return result;
+        return distances;
     }
 
-    private static List<Valve> getValves() throws Exception {
-        List<Valve> valves = new ArrayList<>();
+    private static Map<String, Valve> getValves() throws Exception {
+        Map<String, Valve> valves = new HashMap<>();
         try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
             Pattern pattern = Pattern.compile("([A-Z]{2})|([0-9]+)");
 
@@ -115,23 +155,23 @@ public class Day16 {
                     valve.tunnels.add(matcher.group(0));
                 }
 
-                valves.add(valve);
+                valves.put(valve.name, valve);
             }
         }
 
         return valves;
     }
 
-    private static class Minute {
+    private static class Countdown {
 
-        final int num;
-        final Valve valve;
-        final List<Valve> openedValves = new ArrayList<>();
+        final int minutesRemaining;
+        final Valve valveAt;
+        final List<Valve> valvesOpened = new ArrayList<>();
         final int pressureReleased;
 
-        Minute(int num, Valve valve, int pressureReleased) {
-            this.num = num;
-            this.valve = valve;
+        Countdown(int minutesRemaining, Valve valveAt, int pressureReleased) {
+            this.minutesRemaining = minutesRemaining;
+            this.valveAt = valveAt;
             this.pressureReleased = pressureReleased;
         }
     }
@@ -159,12 +199,12 @@ public class Day16 {
         }
     }
 
-    private static class ReachableValve {
+    private static class ValveDistance {
 
-        final int minutes;
         final Valve valve;
+        final int minutes;
 
-        ReachableValve(Valve valve, int minutes) {
+        ValveDistance(Valve valve, int minutes) {
             this.valve = valve;
             this.minutes = minutes;
         }
