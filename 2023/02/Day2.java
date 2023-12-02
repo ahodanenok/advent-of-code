@@ -12,6 +12,7 @@ public class Day2 {
     public static void main(String[] args) throws Exception {
         List<Game> games = getInput();
         part1(games);
+        part2(games);
     }
 
     private static void part1(List<Game> games) {
@@ -29,6 +30,24 @@ public class Day2 {
         }
 
         System.out.println("Part 1: " + sum);
+    }
+
+    private static void part2(List<Game> games) {
+        int sum = 0;
+        for (Game game : games) {
+            int redMax = Integer.MIN_VALUE;
+            int blueMax = Integer.MIN_VALUE;
+            int greenMax = Integer.MIN_VALUE;
+            for (Cubes cubes : game.cubesRevealed) {
+                redMax = Math.max(cubes.red, redMax);
+                blueMax = Math.max(cubes.blue, blueMax);
+                greenMax = Math.max(cubes.green, greenMax);
+            }
+
+            sum += (redMax * blueMax * greenMax);
+        }
+
+        System.out.println("Part 2: " + sum);
     }
 
     private static List<Game> getInput() throws Exception {
