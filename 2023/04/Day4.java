@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 /**
  * Advent of Code - Day 4
@@ -12,6 +13,7 @@ public class Day4 {
     public static void main(String[] args) throws Exception {
         List<Card> cards = getInput();
         part1(cards);
+        part2(cards);
     }
 
     public static void part1(List<Card> cards) {
@@ -30,6 +32,36 @@ public class Day4 {
         }
 
         System.out.println("Part 1: " + pointsTotal);
+    }
+
+    private static void part2(List<Card> cards) {
+        int[] cardsCount = new int[cards.size()];
+        Arrays.fill(cardsCount, 1);
+        for (int i = 0; i < cards.size(); i++) {
+            Card card = cards.get(i);
+
+            int matchedCount = 0;
+            for (Integer n : card.selectedNumbers) {
+                if (card.winningNumbers.contains(n)) {
+                    matchedCount++;
+                }
+            }
+
+            if (matchedCount == 0) {
+                continue;
+            }
+
+            for (int j = 1; j <= matchedCount; j++) {
+                cardsCount[i + j] += cardsCount[i];
+            }
+        }
+
+        int cardsTotal = 0;
+        for (int count : cardsCount) {
+            cardsTotal += count;
+        }
+
+        System.out.println("Part 2: " + cardsTotal);
     }
 
     private static List<Card> getInput() throws Exception {
