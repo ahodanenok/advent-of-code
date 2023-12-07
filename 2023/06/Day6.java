@@ -12,6 +12,7 @@ public class Day6 {
     public static void main(String[] args) throws Exception {
         List<Race> races = getInput();
         part1(races);
+        part2(races);
     }
 
     private static void part1(List<Race> races) {
@@ -28,6 +29,26 @@ public class Day6 {
         }
 
         System.out.println("Part 1: " + waysCountTotal);
+    }
+
+    private static void part2(List<Race> races) {
+        String[] values = {"", ""};
+        for (int i = 0; i < races.size(); i++) {
+            values[0] += races.get(i).timeAllowed;
+            values[1] += races.get(i).bestDistance;
+        }
+
+        long timeAllowed = Long.parseLong(values[0]);
+        long bestDistance = Long.parseLong(values[1]);
+
+        int waysCount = 0;
+        for (int t = 1; t < timeAllowed; t++) {
+            if (t * (timeAllowed - t) > bestDistance) {
+                waysCount++;
+            }
+        }
+
+        System.out.println("Part 2: " + waysCount);
     }
 
     private static List<Race> getInput() throws Exception {
