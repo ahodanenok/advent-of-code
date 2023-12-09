@@ -12,24 +12,13 @@ public class Day9 {
     public static void main(String[] args) throws Exception {
         List<List<Integer>> sequences = getInput();
         part1(sequences);
+        part2(sequences);
     }
 
     private static void part1(List<List<Integer>> sequences) {
         long sum = 0;
         for (List<Integer> seq : sequences) {
-            List<List<Integer>> history = new ArrayList<>();
-            history.add(seq);
-
-            List<Integer> currSeq = seq;
-            while (!currSeq.stream().allMatch(n -> n == 0)) {
-                List<Integer> nextSeq = new ArrayList<>();
-                for (int i = 0; i < currSeq.size() - 1; i++) {
-                    nextSeq.add(currSeq.get(i + 1) - currSeq.get(i));
-                }
-
-                history.add(nextSeq);
-                currSeq = nextSeq;
-            }
+            List<List<Integer>> history = getHistory(seq);
 
             int n = 0;
             for (int i = history.size() - 1; i > 0; i--) {
@@ -40,6 +29,40 @@ public class Day9 {
         }
 
         System.out.println("Part 1: " + sum);
+    }
+
+    private static void part2(List<List<Integer>> sequences) {
+        long sum = 0;
+        for (List<Integer> seq : sequences) {
+            List<List<Integer>> history = getHistory(seq);
+
+            int n = 0;
+            for (int i = history.size() - 1; i > 0; i--) {
+                n = history.get(i - 1).get(0) - n;
+            }
+
+            sum += n;
+        }
+
+        System.out.println("Part 2: " + sum);
+    }
+
+    private static List<List<Integer>> getHistory(List<Integer> seq) {
+        List<List<Integer>> history = new ArrayList<>();
+        history.add(seq);
+
+        List<Integer> currSeq = seq;
+        while (!currSeq.stream().allMatch(n -> n == 0)) {
+            List<Integer> nextSeq = new ArrayList<>();
+            for (int i = 0; i < currSeq.size() - 1; i++) {
+                nextSeq.add(currSeq.get(i + 1) - currSeq.get(i));
+            }
+
+            history.add(nextSeq);
+            currSeq = nextSeq;
+        }
+
+        return history;
     }
 
     private static List<List<Integer>> getInput() throws Exception {
