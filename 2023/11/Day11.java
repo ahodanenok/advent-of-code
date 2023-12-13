@@ -13,11 +13,12 @@ public class Day11 {
 
     public static void main(String[] args) throws Exception {
         List<Location> galaxies = getInput();
-        part1(galaxies);
+        System.out.println("Part 1: " + sumDistances(galaxies, 2));
+        System.out.println("Part 2: " + sumDistances(galaxies, 1_000_000));
     }
 
-    private static void part1(List<Location> galaxies) {
-        int sum = 0;
+    private static long sumDistances(List<Location> galaxies, int expansion) {
+        long sum = 0;
         for (int i = 0; i < galaxies.size(); i++) {
             for (int j = i + 1; j < galaxies.size(); j++) {
                 Location source = galaxies.get(i);
@@ -30,8 +31,8 @@ public class Day11 {
                         rowGalaxies.add(galaxy.row);
                     }
                 }
-                int rowDist = Math.abs(dest.row - source.row)
-                    + Math.max(Math.abs(dest.row - source.row) - rowGalaxies.size() - 1, 0);
+                long rowDist = Math.abs(dest.row - source.row)
+                    + Math.max(Math.abs(dest.row - source.row) - rowGalaxies.size() - 1, 0) * (expansion - 1);
 
                 Set<Integer> colGalaxies = new HashSet<>();
                 for (Location galaxy : galaxies) {
@@ -40,14 +41,14 @@ public class Day11 {
                         colGalaxies.add(galaxy.col);
                     }
                 }
-                int colDist = Math.abs(dest.col - source.col)
-                    + Math.max(Math.abs(dest.col - source.col) - colGalaxies.size() - 1, 0);
+                long colDist = Math.abs(dest.col - source.col)
+                    + Math.max(Math.abs(dest.col - source.col) - colGalaxies.size() - 1, 0) * (expansion - 1);
 
                 sum += (rowDist + colDist);
             }
         }
 
-        System.out.println("Part 1: " + sum);
+        return sum;
     }
 
     private static List<Location> getInput() throws Exception {
