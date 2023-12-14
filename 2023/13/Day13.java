@@ -14,23 +14,72 @@ public class Day13 {
     public static void main(String[] args) throws Exception {
         List<Pattern> patterns = getInput();
         part1(patterns);
+        part2(patterns);
     }
 
     private static void part1(List<Pattern> patterns) {
         int sum = 0;
-        for (Pattern p : patterns) {
-            Reflection r = getReflection(p);
-            if (r.type == ReflectionType.VERTICAL) {
-                sum += r.axis;
-            } else if (r.type == ReflectionType.HORIZONTAL) {
-                sum += r.axis * 100;
+        for (Pattern pattern : patterns) {
+            List<Reflection> reflections = getReflections(pattern);
+            if (reflections.size() != 1) {
+                throw new IllegalStateException("Expected only one reflection!");
+            }
+
+            Reflection reflection = reflections.get(0);
+            if (reflection.type == ReflectionType.VERTICAL) {
+                sum += reflection.axis;
+            } else if (reflection.type == ReflectionType.HORIZONTAL) {
+                sum += reflection.axis * 100;
             }
         }
 
         System.out.println("Part 1: " + sum);
     }
 
-    private static Reflection getReflection(Pattern pattern) {
+    private static void part2(List<Pattern> patterns) {
+        int sum = 0;
+        for (Pattern pattern : patterns) {
+            List<Reflection> reflections = getReflections(pattern);
+            if (reflections.size() != 1) {
+                throw new IllegalStateException("Expected only one reflection!");
+            }
+
+            Reflection reflection = reflections.get(0);
+
+            smudge:
+            for (int row = 0; row < pattern.height; row++) {
+                for (int col = 0; col < pattern.width; col++) {
+                    Location location = new Location(row, col);
+                    LocationType type = pattern.locations.get(location);
+                    if (type == LocationType.ROCK) {
+                        pattern.locations.put(location, LocationType.ASH);
+                    } else if (type == LocationType.ASH) {
+                        pattern.locations.put(location, LocationType.ROCK);
+                    }
+
+                    List<Reflection> smudgeReflections = getReflections(pattern);
+                    pattern.locations.put(location, type);
+                    for (Reflection sr : smudgeReflections) {
+                        if (sr.type != reflection.type || sr.axis != reflection.axis) {
+                            reflection = sr;
+                            break smudge;
+                        }
+                    }
+                }
+            }
+
+            if (reflection.type == ReflectionType.VERTICAL) {
+                sum += reflection.axis;
+            } else if (reflection.type == ReflectionType.HORIZONTAL) {
+                sum += reflection.axis * 100;
+            }
+        }
+
+        System.out.println("Part 2: " + sum);
+    }
+
+    private static List<Reflection> getReflections(Pattern pattern) {
+        List<Reflection> reflections = new ArrayList<>();
         for (int d = pattern.width / 2; d > 0; d--) {
             nextCol:
             for (int col = d - 1; col < pattern.width; col++) {
@@ -48,7 +97,7 @@ public class Day13 {
                 }
 
                 if (col - d + 1 == 0 || col + d == pattern.width - 1) {
-                    return new Reflection(ReflectionType.VERTICAL, col + 1);
+                    reflections.add(new Reflection(ReflectionType.VERTICAL, col + 1));
                 }
             }
         }
@@ -70,12 +119,12 @@ public class Day13 {
                 }
 
                 if (row - d + 1 == 0 || row + d == pattern.height - 1) {
-                    return new Reflection(ReflectionType.HORIZONTAL, row + 1);
+                    reflections.add(new Reflection(ReflectionType.HORIZONTAL, row + 1));
                 }
             }
         }
 
-        throw new IllegalStateException("No reflection!");
+        return reflections;
     }
 
     private static List<Pattern> getInput() throws Exception {
