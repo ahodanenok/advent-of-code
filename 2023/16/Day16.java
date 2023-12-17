@@ -17,14 +17,39 @@ public class Day16 {
     public static void main(String[] args) throws Exception {
         Grid grid = getInput();
         part1(grid);
+        part2(grid);
     }
 
     private static void part1(Grid grid) {
-        Location startingLocation = new Location(0, 0);
-        Beam startingBeam = new Beam(startingLocation, Direction.RIGHT);
+        System.out.println("Part 1: " + energizeTiles(
+            grid, new Beam(new Location(0, 0), Direction.RIGHT)));
+    }
 
+    private static void part2(Grid grid) {
+        int energizedCountMax = Integer.MIN_VALUE;
+        for (int row = 0; row < grid.height; row++) {
+            energizedCountMax = Math.max(
+                energizeTiles(grid, new Beam(new Location(row, 0), Direction.RIGHT)),
+                energizedCountMax);
+            energizedCountMax = Math.max(
+                energizeTiles(grid, new Beam(new Location(row, grid.width - 1), Direction.LEFT)),
+                energizedCountMax);
+        }
+        for (int col = 0; col < grid.width; col++) {
+            energizedCountMax = Math.max(
+                energizeTiles(grid, new Beam(new Location(0, col), Direction.DOWN)),
+                energizedCountMax);
+            energizedCountMax = Math.max(
+                energizeTiles(grid, new Beam(new Location(grid.height - 1, col), Direction.UP)),
+                energizedCountMax);
+        }
+
+        System.out.println("Part 2: " + energizedCountMax);
+    }
+
+    private static int energizeTiles(Grid grid, Beam startingBeam) {
         Set<Location> energizedTiles = new HashSet<>();
-        energizedTiles.add(startingLocation);
+        energizedTiles.add(startingBeam.location);
 
         Set<Beam> history = new HashSet<>();
         history.add(startingBeam);
@@ -50,7 +75,7 @@ public class Day16 {
             }
         }
 
-        System.out.println("Part 1: " + energizedTiles.size());
+        return energizedTiles.size();
     }
 
     private static Grid getInput() throws Exception {
