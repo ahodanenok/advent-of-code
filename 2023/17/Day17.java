@@ -15,6 +15,7 @@ public class Day17 {
     public static void main(String[] args) throws Exception {
         City city = getInput();
         part1(city);
+        part2(city);
     }
 
     private static void part1(City city) {
@@ -50,6 +51,41 @@ public class Day17 {
         System.out.println("Part 1: " + heatLossMin);
     }
 
+    private static void part2(City city) {
+        Map<Crucible, Integer> heatLosses = new HashMap<>();
+        LinkedList<Crucible> queue = new LinkedList<>();
+        queue.addLast(new Crucible(new Location(0, 0), Direction.RIGHT, 0, 0));
+        while (!queue.isEmpty()) {
+            Crucible crucible = queue.removeFirst();
+            if (crucible.heatLoss >= heatLosses.getOrDefault(crucible, Integer.MAX_VALUE)) {
+                continue;
+            }
+            heatLosses.put(crucible, crucible.heatLoss);
+
+            if (crucible.stepsStraight < 10 && city.contains(crucible.lookForward())) {
+                queue.addLast(crucible.moveForward(city.heatLossAt(crucible.lookForward())));
+            }
+            if (crucible.stepsStraight >= 4 && city.contains(crucible.lookLeft())) {
+                queue.addLast(crucible.moveLeft(city.heatLossAt(crucible.lookLeft())));
+            }
+            if (crucible.stepsStraight >= 4 && city.contains(crucible.lookRight())) {
+                queue.addLast(crucible.moveRight(city.heatLossAt(crucible.lookRight())));
+            }
+        }
+
+        Location destination = new Location(city.height - 1, city.width - 1);
+        int heatLossMin = Integer.MAX_VALUE;
+        for (Map.Entry<Crucible, Integer> entry : heatLosses.entrySet()) {
+            if (entry.getKey().location.equals(destination)) {
+                if (entry.getKey().stepsStraight >= 4) {
+                    heatLossMin = Math.min(entry.getValue(), heatLossMin);
+                }
+            }
+        }
+
+        System.out.println("Part 2: " + heatLossMin);
+    }
+
     private static City getInput() throws Exception {
         try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
             List<String> lines = new ArrayList<>();
@@ -65,7 +101,7 @@ public class Day17 {
                 }
             }
 
-            return new City(blocks.length, blocks[0].length, blocks);
+            return new City(blocks[0].length, blocks.length, blocks);
         }
     }
 
