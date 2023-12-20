@@ -2,9 +2,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.Set;
-import java.util.HashSet;
+import java.util.TreeSet;
+import java.util.Comparator;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -15,79 +14,81 @@ import java.util.regex.Matcher;
 public class Day18 {
 
     public static void main(String[] args) throws Exception {
-        List<Action> plan = getInput();
-        part1(plan);
+        System.out.println("Part 1: " + calculateArea(getInput(false)));
+        System.out.println("Part 2: " + calculateArea(getInput(true)));
     }
 
-    private static void part1(List<Action> plan) {
-        Location location = new Location(0, 0);
-        Set<Location> interior = new HashSet<>();
-        interior.add(location);
+    private static long calculateArea(List<Action> plan) {
+        List<Edge> edges = new ArrayList<>();
+        Location currentLocation = new Location(0, 0);
         for (Action action : plan) {
-            for (int n = 0; n < action.meters; n++) {
-                location = action.direction.move(location);
-                interior.add(location);
+            Location nextLocation = action.direction.move(currentLocation, action.meters);
+            edges.add(new Edge(currentLocation, nextLocation));
+            currentLocation = nextLocation;
+        }
+
+        TreeSet<Integer> scanRows = new TreeSet<>(Comparator.naturalOrder());
+        for (Edge edge : edges) {
+            scanRows.add(edge.from.row);
+            scanRows.add(edge.to.row);
+        }
+
+        long area = 0;
+        int prevScanRow = scanRows.iterator().next();
+        for (int scanRow : scanRows) {
+            List<Edge> verticalEdges = new ArrayList<>();
+            List<Edge> horizontalEdges = new ArrayList<>();
+            for (Edge edge : edges) {
+                if (edge.from.row >= scanRow && edge.to.row < scanRow
+                        || edge.to.row >= scanRow && edge.from.row < scanRow) {
+                    verticalEdges.add(edge);
+                } else if (edge.from.row == edge.to.row && edge.from.row == scanRow) {
+                    horizontalEdges.add(edge);
+                }
             }
+
+            if (verticalEdges.size() % 2 != 0) {
+                throw new IllegalStateException("not even");
+            }
+
+            verticalEdges.sort(Comparator.comparing(e -> Math.min(e.from.col, e.to.col)));
+
+            List<Edge> includedHorizontalEdges = new ArrayList<>();
+            if (!verticalEdges.isEmpty()) {
+                for (int i = 0; i < verticalEdges.size(); i += 2) {
+                    Edge a = verticalEdges.get(i);
+                    Edge b = verticalEdges.get(i + 1);
+                    area += (long) Math.abs(scanRow - prevScanRow) * (Math.abs(a.from.col - b.from.col) + 1);
+                    includedHorizontalEdges.add(
+                        new Edge(new Location(scanRow, a.from.col), new Location(scanRow, b.to.col)));
+                }
+            }
+
+            if (!horizontalEdges.isEmpty()) {
+                for (Edge edge : horizontalEdges) {
+                    area += Math.abs(edge.from.col - edge.to.col) + 1; 
+                }
+            }
+
+            for (Edge includedEdge : includedHorizontalEdges) {
+                for (Edge edge : horizontalEdges) {
+                    int includedFromCol = Math.min(includedEdge.from.col, includedEdge.to.col);
+                    int includedToCol = Math.max(includedEdge.from.col, includedEdge.to.col);
+                    int edgeFromCol = Math.min(edge.from.col, edge.to.col);
+                    int edgeToCol = Math.max(edge.from.col, edge.to.col);
+                    if (includedFromCol <= edgeToCol && includedToCol >= edgeFromCol) {
+                        area -= (Math.min(includedToCol, edgeToCol) - Math.max(includedFromCol, edgeFromCol) + 1);
+                    }
+                }
+            }
+
+            prevScanRow = scanRow;
         }
 
-        int rowMin = Integer.MAX_VALUE;
-        int rowMax = Integer.MIN_VALUE;
-        int colMin = Integer.MAX_VALUE;
-        int colMax = Integer.MIN_VALUE;
-        for (Location loc : interior) {
-            rowMin = Math.min(loc.row, rowMin);
-            rowMax = Math.max(loc.row, rowMax);
-            colMin = Math.min(loc.col, colMin);
-            colMax = Math.max(loc.col, colMax);
-        }
-
-        Set<Location> outside = new HashSet<>();
-        for (int row = rowMin; row <= rowMax; row++) {
-            exploreOutside(new Location(row, colMin), interior, outside, rowMin, rowMax, colMin, colMax);
-            exploreOutside(new Location(row, colMax), interior, outside, rowMin, rowMax, colMin, colMax);
-        }
-        for (int col = colMin; col <= colMax; col++) {
-            exploreOutside(new Location(rowMin, col), interior, outside, rowMin, rowMax, colMin, colMax);
-            exploreOutside(new Location(rowMax, col), interior, outside, rowMin, rowMax, colMin, colMax);
-        }
-
-        int width = Math.abs(colMax - colMin) + 1;
-        int height = Math.abs(rowMax - rowMin) + 1;
-
-        System.out.println("Part 1: " + (width * height - outside.size()));
+        return area;
     }
 
-    private static void exploreOutside(Location from, Set<Location> interior, Set<Location> outside,
-            int rowMin, int rowMax, int colMin, int colMax) {
-
-        if (interior.contains(from) || outside.contains(from)) {
-            return;
-        }
-
-        LinkedList<Location> queue = new LinkedList<>();
-        queue.addLast(from);
-        while (!queue.isEmpty()) {
-            Location location = queue.removeFirst();
-            outside.add(location);
-            for (Direction direction : Direction.values()) {
-                Location next = direction.move(location);
-                if (next.row < rowMin || next.row > rowMax) {
-                    continue;
-                }
-                if (next.col < colMin || next.col > colMax) {
-                    continue;
-                }
-                if (interior.contains(next) || outside.contains(next)) {
-                    continue;
-                }
-
-                queue.addLast(next);
-                outside.add(next);
-            }
-        }
-    }
-
-    private static List<Action> getInput() throws Exception {
+    private static List<Action> getInput(boolean useColor) throws Exception {
         try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
             List<Action> actions = new ArrayList<>();
 
@@ -100,24 +101,37 @@ public class Day18 {
                 }
 
                 Direction direction;
-                if ("U".equals(m.group(1))) {
-                    direction = Direction.UP;
-                } else if ("D".equals(m.group(1))) {
-                    direction = Direction.DOWN;
-                } else if ("L".equals(m.group(1))) {
-                    direction = Direction.LEFT;
-                } else if ("R".equals(m.group(1))) {
-                    direction = Direction.RIGHT;
+                int meters;
+                if (useColor) {
+                    String color = m.group(3);
+                    meters = Integer.parseInt(color.substring(0, 5), 16);
+                    if (color.charAt(5) == '0') {
+                        direction = Direction.RIGHT;
+                    } else if (color.charAt(5) == '1') {
+                        direction = Direction.DOWN;
+                    } else if (color.charAt(5) == '2') {
+                        direction = Direction.LEFT;
+                    } else if (color.charAt(5) == '3') {
+                        direction = Direction.UP;
+                    } else {
+                        throw new IllegalStateException("Unknown direction: " + color.charAt(5));
+                    }
                 } else {
-                    throw new IllegalStateException("Unknown direction: " + m.group(1));
+                    meters = Integer.parseInt(m.group(2));
+                    if ("U".equals(m.group(1))) {
+                        direction = Direction.UP;
+                    } else if ("D".equals(m.group(1))) {
+                        direction = Direction.DOWN;
+                    } else if ("L".equals(m.group(1))) {
+                        direction = Direction.LEFT;
+                    } else if ("R".equals(m.group(1))) {
+                        direction = Direction.RIGHT;
+                    } else {
+                        throw new IllegalStateException("Unknown direction: " + m.group(1));
+                    }
                 }
 
-                actions.add(new Action(direction, Integer.parseInt(m.group(2)), m.group(3)));
-                /*for (int i = 0; i <= m.groupCount(); i++) {
-                    System.out.print("'" + m.group(i) + "' ");
-                    
-                }
-                System.out.println();*/
+                actions.add(new Action(direction, meters));
             }
 
             return actions;
@@ -128,12 +142,10 @@ public class Day18 {
 
         final Direction direction;
         final int meters;
-        final String color;
 
-        Action(Direction direction, int meters, String color) {
+        Action(Direction direction, int meters) {
             this.direction = direction;
             this.meters = meters;
-            this.color = color;
         }
     }
 
@@ -152,8 +164,19 @@ public class Day18 {
             this.colOffset = colOffset;
         }
 
-        Location move(Location location) {
-            return new Location(location.row + rowOffset, location.col + colOffset);
+        Location move(Location location, int meters) {
+            return new Location(location.row + rowOffset * meters, location.col + colOffset * meters);
+        }
+    }
+
+    private static class Edge {
+
+        final Location from;
+        final Location to;
+
+        Edge(Location from, Location to) {
+            this.from = from;
+            this.to = to;
         }
     }
 
