@@ -2,6 +2,7 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.LinkedList;
 
 /**
  * Advent of Code - Day 19
@@ -12,6 +13,7 @@ public class Day19 {
     public static void main(String[] args) throws Exception {
         Input input = getInput();
         part1(input);
+        part2(input);
     }
 
     private static void part1(Input input) {
@@ -43,6 +45,130 @@ public class Day19 {
         System.out.println("Part 1: " + sum);
     }
 
+    private static void part2(Input input) {
+        List<Frame> acceptedFrames = new ArrayList<>();
+        LinkedList<Frame> queue = new LinkedList<>();
+        queue.addLast(new Frame("in", 1, 4000, 1, 4000, 1, 4000, 1, 4000));
+        while (!queue.isEmpty()) {
+            Frame currentFrame = queue.removeFirst();
+            if (currentFrame.workflowName.equals("A")) {
+                acceptedFrames.add(currentFrame);
+                continue;
+            }
+
+            if (currentFrame.workflowName.equals("R")) {
+                continue;
+            }
+
+            Workflow workflow = input.getWorkflow(currentFrame.workflowName);
+            int xMin = currentFrame.xMin;
+            int xMax = currentFrame.xMax;
+            int mMin = currentFrame.mMin;
+            int mMax = currentFrame.mMax;
+            int aMin = currentFrame.aMin;
+            int aMax = currentFrame.aMax;
+            int sMin = currentFrame.sMin;
+            int sMax = currentFrame.sMax;
+            for (WorkflowStep step : workflow.steps) {
+                if (xMin > xMax || mMin > mMax || aMin > aMax || sMin > sMax) {
+                    throw new IllegalStateException();
+                }
+
+                if (step.extractor == Extractor.X) {
+                    int xMinNext = xMin;
+                    int xMaxNext = xMax;
+                    if (step.condition == Condition.LT) {
+                        xMaxNext = Math.min(step.expectedValue - 1, xMaxNext);
+                    } else if (step.condition == Condition.GT) {
+                        xMinNext = Math.max(step.expectedValue + 1, xMinNext);
+                    }
+
+                    if (xMinNext <= xMaxNext) {
+                        queue.add(new Frame(step.nextWorkflowName, xMinNext, xMaxNext, mMin, mMax, aMin, aMax, sMin, sMax));
+                    }
+                } else if (step.extractor == Extractor.M) {
+                    int mMinNext = mMin;
+                    int mMaxNext = mMax;
+                    if (step.condition == Condition.LT) {
+                        mMaxNext = Math.min(step.expectedValue - 1, mMaxNext);
+                    } else if (step.condition == Condition.GT) {
+                        mMinNext = Math.max(step.expectedValue + 1, mMinNext);
+                    }
+
+                    if (mMinNext <= mMaxNext) {
+                        queue.add(new Frame(step.nextWorkflowName, xMin, xMax, mMinNext, mMaxNext, aMin, aMax, sMin, sMax));
+                    }
+                } else if (step.extractor == Extractor.A) {
+                    int aMinNext = aMin;
+                    int aMaxNext = aMax;
+                    if (step.condition == Condition.LT) {
+                        aMaxNext = Math.min(step.expectedValue - 1, aMaxNext);
+                    } else if (step.condition == Condition.GT) {
+                        aMinNext = Math.max(step.expectedValue + 1, aMinNext);
+                    }
+
+                    if (aMinNext <= aMaxNext) {
+                        queue.add(new Frame(step.nextWorkflowName, xMin, xMax, mMin, mMax, aMinNext, aMaxNext, sMin, sMax));
+                    }
+                } else if (step.extractor == Extractor.S) {
+                    int sMinNext = sMin;
+                    int sMaxNext = sMax;
+                    if (step.condition == Condition.LT) {
+                        sMaxNext = Math.min(step.expectedValue - 1, sMaxNext);
+                    } else if (step.condition == Condition.GT) {
+                        sMinNext = Math.max(step.expectedValue + 1, sMinNext);
+                    }
+
+                    if (sMinNext <= sMaxNext) {
+                        queue.add(new Frame(step.nextWorkflowName, xMin, xMax, mMin, mMax, aMin, aMax, sMinNext, sMaxNext));
+                    }
+                } else if (step.condition == Condition.ALWAYS) {
+                    queue.add(new Frame(step.nextWorkflowName, xMin, xMax, mMin, mMax, aMin, aMax, sMin, sMax));
+                    break;
+                } else {
+                    throw new IllegalStateException();
+                }
+
+                if (step.extractor == Extractor.X) {
+                    if (step.condition == Condition.LT) {
+                        xMin = Math.max(step.expectedValue, xMin);
+                    } else if (step.condition == Condition.GT) {
+                        xMax = Math.min(step.expectedValue, xMax);
+                    }
+                } else if (step.extractor == Extractor.M) {
+                    if (step.condition == Condition.LT) {
+                        mMin = Math.max(step.expectedValue, mMin);
+                    } else if (step.condition == Condition.GT) {
+                        mMax = Math.min(step.expectedValue, mMax);
+                    }
+                } else if (step.extractor == Extractor.A) {
+                    if (step.condition == Condition.LT) {
+                        aMin = Math.max(step.expectedValue, aMin);
+                    } else if (step.condition == Condition.GT) {
+                        aMax = Math.min(step.expectedValue, aMax);
+                    }
+                } else if (step.extractor == Extractor.S) {
+                    if (step.condition == Condition.LT) {
+                        sMin = Math.max(step.expectedValue, sMin);
+                    } else if (step.condition == Condition.GT) {
+                        sMax = Math.min(step.expectedValue, sMax);
+                    }
+                } else {
+                    throw new IllegalStateException();
+                }
+            }
+        }
+
+        long count = 0;
+        for (Frame frame : acceptedFrames) {
+            count += (long) (frame.xMax - frame.xMin + 1)
+                * (frame.mMax - frame.mMin + 1)
+                * (frame.aMax - frame.aMin + 1)
+                * (frame.sMax - frame.sMin + 1);
+        }
+
+        System.out.println("Part 2: " + count);
+    }
 
     private static Input getInput() throws Exception {
         try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
@@ -204,6 +330,35 @@ public class Day19 {
             this.m = m;
             this.a = a;
             this.s = s;
+        }
+    }
+
+    private static class Frame {
+
+        final String workflowName;
+
+        final int xMin;
+        final int xMax;
+
+        final int mMin;
+        final int mMax;
+
+        final int aMin;
+        final int aMax;
+
+        final int sMin;
+        final int sMax;
+
+        Frame(String workflowName, int xMin, int xMax, int mMin, int mMax, int aMin, int aMax, int sMin, int sMax) {
+            this.workflowName = workflowName;
+            this.xMin = xMin;
+            this.xMax = xMax;
+            this.mMin = mMin;
+            this.mMax = mMax;
+            this.aMin = aMin;
+            this.aMax = aMax;
+            this.sMin = sMin;
+            this.sMax = sMax;
         }
     }
 }
