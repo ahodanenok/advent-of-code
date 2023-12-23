@@ -14,10 +14,12 @@ public class Day20 {
 
     public static void main(String[] args) throws Exception {
         part1();
+        part2();
     }
 
     private static void part1() throws Exception {
         Map<String, Module> modules = getInput();
+
         int lowCount = 0;
         int highCount = 0;
         for (int n = 0; n < 1000; n++) {
@@ -38,6 +40,95 @@ public class Day20 {
         }
 
         System.out.println("Part 1: " + (lowCount * highCount));
+    }
+
+    private static void part2() throws Exception {
+        Map<String, Module> modules = getInput();
+
+        // The circuit consists of multiple counters connected to a conjunction module,
+        // which in turn is connected to the rx module
+        // Each counter moves at its own increment and for the conjunction module to send a low pulse to the rx module
+        // the number of button presses must be divisable by each counter's increment
+        // So the answer will be the lowest common multiplier of increments
+        Module rx = modules.get("rx");
+        if (rx.inputs.size() != 1) {
+            throw new IllegalStateException("Different circuit: multiple inputs to rx");
+        }
+
+        Module rxInput = modules.get(rx.inputs.get(0));
+        if (!(rxInput instanceof ConjunctionModule)) {
+            throw new IllegalStateException("Different circuit: input to rx is not a conjunction module");
+        }
+
+        int counter = 0;
+        Map<String, Integer> increments = new HashMap<>();
+
+        btnLoop:
+        while (true) {
+            counter++;
+
+            LinkedList<Signal> queue = new LinkedList<>();
+            queue.addLast(new Signal("button", "broadcaster", Pulse.LO));
+            while (!queue.isEmpty()) {
+                Signal currentSignal = queue.removeFirst();
+                // collect increment for each input to the conjunction module
+                if (rxInput.inputs.contains(currentSignal.from)
+                        && currentSignal.to.equals(rx.inputs.get(0))
+                        && currentSignal.pulse == Pulse.HI
+                        && !increments.containsKey(currentSignal.from)) {
+                    increments.put(currentSignal.from, counter);
+                }
+
+                // all increments have been determined
+                if (increments.size() == rxInput.inputs.size()) {
+                    break btnLoop;
+                }
+
+                for (Signal outputSignal : modules.get(currentSignal.to).receiveSignal(currentSignal)) {
+                    queue.addLast(outputSignal);
+                }
+            }
+        }
+
+        List<Integer> commonFactors = new ArrayList<>();
+        for (Integer p : increments.values()) {
+            List<Integer> factors = factorize(p);
+            for (Integer f : factors) {
+                long neededCount = factors.stream().filter(n -> n.equals(f)).count();
+                long currentCount = commonFactors.stream().filter(n -> n.equals(f)).count();
+                while (currentCount < neededCount) {
+                    commonFactors.add(f);
+                    currentCount++;
+                }
+            }
+        }
+
+        System.out.println("Part 2: " + commonFactors.stream()
+            .mapToLong(n -> n.longValue()).reduce(1, (n1, n2) -> n1 * n2));
+    }
+
+    private static List<Integer> factorize(int n) {
+        List<Integer> factors = new ArrayList<>();
+        LinkedList<Integer> queue = new LinkedList<>();
+        queue.add(n);
+        while (!queue.isEmpty()) {
+            int f = queue.removeLast();
+            boolean divisable = false;
+            for (int i = 2; i < f / 2; i++) {
+                if (f % i == 0) {
+                    queue.addLast(i);
+                    queue.addLast(f / i);
+                    divisable = true;
+                    break;
+                }
+            }
+
+            if (!divisable) {
+                factors.add(f);
+            }
+        }
+
+        return factors;
     }
 
     private static Map<String, Module> getInput() throws Exception {
