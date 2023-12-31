@@ -3,6 +3,8 @@ import java.io.FileReader;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Advent of Code - Day 12
@@ -11,99 +13,100 @@ import java.util.Arrays;
 public class Day12 {
 
     public static void main(String[] args) throws Exception {
-        List<Record> records = getInput();
-        part1(records);
+        System.out.println("Part 1: " + countPossibleArrangements(getInput(false)));
+        System.out.println("Part 2: " + countPossibleArrangements(getInput(true)));
     }
 
-    private static void part1(List<Record> records) {
-        int sum = 0;
+    private static long countPossibleArrangements(List<Record> records) {
+        long count = 0;
         for (Record record : records) {
-            sum += countPossibleArrangements(record);
-        }
-
-        System.out.println("Part 1: " + sum);
-    }
-
-    private static int countPossibleArrangements(Record record) {
-        if (!isValid(record)) {
-            return 0;
-        }
-
-        if (isComplete(record)) {
-            return 1;
-        }
-
-        int count = 0;
-        for (int i = 0; i < record.state.length; i++) {
-            if (record.state[i] == '?') {
-                record.state[i] = '.';
-                count += countPossibleArrangements(record);
-
-                record.state[i] = '#';
-                count += countPossibleArrangements(record);
-
-                record.state[i] = '?';
-                break;
-            }
+            count += countPossibleArrangements(record, 0, 0, new HashMap<>());
         }
 
         return count;
     }
 
-    private static boolean isValid(Record record) {
-        int pos = 0;
-        for (int i = 0; i < record.counts.length; i++) {
-            while (pos < record.state.length && record.state[pos] == '.') {
-                pos++;
+    private static long countPossibleArrangements(Record record, int groupIdx, int stateIdx, Map<String, Long> cache) {
+        if (cache.containsKey(groupIdx + "_" + stateIdx)) {
+            return cache.get(groupIdx + "_" + stateIdx);
+        }
+
+        if (groupIdx == record.counts.length) {
+            for (int i = stateIdx; i < record.state.length; i++) {
+                if (record.state[i] == '#') {
+                    return 0;
+                }
             }
 
-            int count = record.counts[i];
-            while (pos < record.state.length && count > 0 && record.state[pos] == '#') {
-                pos++;
-                count--;
-            }
+            return 1;
+        }
 
-            if (pos < record.state.length && count > 0 && record.state[pos] == '?') {
-                return true;
-            }
+        if (stateIdx >= record.state.length) {
+            return 0;
+        }
 
-            if (count > 0) {
-                return false;
-            }
-
-            if (pos < record.state.length && record.state[pos] == '#') {
-                return false;
+        int firstHashIdx = record.state.length;
+        for (int i = stateIdx; i < record.state.length; i++) {
+            if (record.state[i] == '#') {
+                firstHashIdx = i;
+                break;
             }
         }
 
-        while (pos < record.state.length) {
-            if (record.state[pos] == '#') {
-                return false;
+        int nextStateIdx = stateIdx;
+        long count = 0;
+        while (nextStateIdx < record.state.length) {
+            while (nextStateIdx < record.state.length && record.state[nextStateIdx] == '.') {
+                nextStateIdx++;
             }
 
-            pos++;
-        }
+            if (nextStateIdx > firstHashIdx) {
+                break;
+            }
 
-        return true;
+            int groupSize = record.counts[groupIdx];
+            int i = nextStateIdx;
+            while (groupSize > 0 && i < record.state.length && record.state[i] != '.') {
+                groupSize--;
+                i++;
+            }
+
+            if (groupSize < 0) {
+                throw new IllegalStateException();
+            }
+
+            if (groupSize > 0) {
+                nextStateIdx++;
+                continue;
+            }
+
+            if (i < record.state.length && record.state[i] == '#') {
+                nextStateIdx++;
+                continue;
+            }
+
+            nextStateIdx++;
+            count += countPossibleArrangements(record, groupIdx + 1, i + 1, cache);
+        }
+        cache.put(groupIdx + "_" + stateIdx, count);
+
+        return count;
     }
 
-    private static boolean isComplete(Record record) {
-        for (int i = 0; i < record.state.length; i++) {
-            if (record.state[i] == '?') {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    private static List<Record> getInput() throws Exception {
+    private static List<Record> getInput(boolean unfold) throws Exception {
         try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
             List<Record> records = new ArrayList<>();
 
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.trim().split("\\s+");
+                if (unfold) {
+                    parts[0] = parts[0].trim();
+                    parts[0] = parts[0] + "?" + parts[0] + "?" + parts[0] + "?" + parts[0] + "?" + parts[0];
+                    parts[1] = parts[1].trim();
+                    parts[1] = parts[1] + "," + parts[1] + "," + parts[1] + "," + parts[1] + "," + parts[1];
+                }
+
                 String[] countsPart = parts[1].split(",");
                 int[] counts = new int[countsPart.length];
                 for (int i = 0; i < countsPart.length; i++) {
