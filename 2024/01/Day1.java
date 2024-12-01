@@ -1,7 +1,9 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Advent of Code - Day 1
@@ -12,6 +14,7 @@ public class Day1 {
     public static void main(String... args) throws Exception {
         List<Pair> pairs = getInput();
         part1(pairs);
+        part2(pairs);
     }
 
     private static void part1(List<Pair> pairs) {
@@ -29,6 +32,18 @@ public class Day1 {
         }
 
         System.out.println("Part 1: " + totalDistance);
+    }
+
+    private static void part2(List<Pair> pairs) {
+        Map<Integer, Integer> rightLocationCounts = new HashMap<>();
+        pairs.forEach(p -> rightLocationCounts.merge(p.right, 1, Integer::sum));
+
+        long similarityScore = 0;
+        for (Pair pair : pairs) {
+            similarityScore += pair.left * rightLocationCounts.getOrDefault(pair.left, 0);
+        }
+
+        System.out.println("Part 2: " + similarityScore);
     }
 
     private static List<Pair> getInput() throws Exception {
