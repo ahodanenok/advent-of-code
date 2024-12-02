@@ -12,33 +12,61 @@ public class Day2 {
     public static void main(String... args) throws Exception {
         List<Report> reports = getInput();
         part1(reports);
+        part2(reports);
     }
 
     private static void part1(List<Report> reports) {
         int safeCount = 0;
         for (Report report : reports) {
-            boolean safe = true;
-
-            int prevDelta = 0;
-            for (int i = 1; i < report.levels.size(); i++) {
-                int delta = report.levels.get(i) - report.levels.get(i - 1);
-                if (delta == 0
-                        || Math.abs(delta) > 3
-                        || (prevDelta < 0 && delta > 0)
-                        || (prevDelta > 0 && delta < 0)) {
-                    safe = false;
-                    break;
-                }
-
-                prevDelta = delta;
-            }
-
-            if (safe) {
+            if (isSafe(report.levels, -1)) {
                 safeCount++;
             }
         }
 
         System.out.println("Part 1: " + safeCount);
+    }
+
+    private static void part2(List<Report> reports) {
+        int safeCount = 0;
+        for (Report report : reports) {
+            for (int i = 0; i < report.levels.size(); i++) {
+                if (isSafe(report.levels, i)) {
+                    safeCount++;
+                    break;
+                }
+            }
+        }
+
+        System.out.println("Part 2: " + safeCount);
+    }
+
+    private static boolean isSafe(List<Integer> levels, int excludeIdx) {
+        int prevDelta = 0;
+        int idx = (excludeIdx == 0) ? 2 : 1;
+        while (idx < levels.size()) {
+            if (idx == excludeIdx) {
+                idx++;
+                continue;
+            }
+
+            int prevIdx = idx - 1;
+            if (prevIdx == excludeIdx) {
+                prevIdx--;
+            }
+
+            int delta = levels.get(idx) - levels.get(prevIdx);
+            if (delta == 0
+                    || Math.abs(delta) > 3
+                    || (prevDelta < 0 && delta > 0)
+                    || (prevDelta > 0 && delta < 0)) {
+                return false;
+            }
+
+            prevDelta = delta;
+            idx++;
+        }
+
+        return true;
     }
 
     private static List<Report> getInput() throws Exception {
