@@ -16,6 +16,7 @@ public class Day5 {
     public static void main(String... args) throws Exception {
         Input input = getInput();
         part1(input);
+        part2(input);
     }
 
     private static void part1(Input input) {
@@ -29,6 +30,18 @@ public class Day5 {
         System.out.println("Part 1: " + result);
     }
 
+    private static void part2(Input input) {
+        int result = 0;
+        for (Update update : input.updates) {
+            if (!isRightOrder(update.pages, input.rules)) {
+                List<Integer> correctedPages = correctOrder(update.pages, input.rules);
+                result += correctedPages.get(correctedPages.size() / 2);
+            }
+        }
+
+        System.out.println("Part 2: " + result);
+    }
+
     private static boolean isRightOrder(List<Integer> pages, Set<OrderRule> rules) {
         for (int i = 0; i < pages.size(); i++) {
             for (int j = i + 1; j < pages.size(); j++) {
@@ -39,6 +52,20 @@ public class Day5 {
         }
 
         return true;
+    }
+
+    private static List<Integer> correctOrder(List<Integer> pages, Set<OrderRule> rules) {
+        return pages.stream()
+            .sorted((p0, p1) -> {
+                if (rules.contains(new OrderRule(p0, p1))) {
+                    return -1;
+                } else if (rules.contains(new OrderRule(p1, p0))) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            })
+            .collect(Collectors.toList());
     }
 
     private static Input getInput() throws Exception {
