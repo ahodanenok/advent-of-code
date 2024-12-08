@@ -3,6 +3,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 /**
  * Advent of Code - Day 6
@@ -13,26 +14,81 @@ public class Day6 {
     public static void main(String... args) throws Exception {
         LabMap map = getInput();
         part1(map);
+        part2(map);
     }
 
     private static void part1(LabMap map) {
+        System.out.println("Part 1: " + getVisitedPositions(map).size());
+    }
+
+    private static void part2(LabMap map) {
+        int stuckCount = 0;
+        Set<Position> obstructions = new HashSet<>(map.obstructions);
+        for (Position newObstructionPosition : getVisitedPositions(map)) {
+            if (newObstructionPosition.equals(map.guardPosition)) {
+                continue;
+            }
+
+            obstructions.add(newObstructionPosition);
+            if (isLoopStuck(new LabMap(map.height, map.width,
+                    map.guardPosition, map.guardDirection, obstructions))) {
+                stuckCount++;
+            }
+            obstructions.remove(newObstructionPosition);
+        }
+
+        System.out.println("Part 2: " + stuckCount);
+    }
+
+    private static boolean isLoopStuck(LabMap map) {
+        Set<VisitedObstruction> visitedObstructions = new HashSet<>();
+        boolean[] isLoop = new boolean[1];
+        trace(map, (position, direction) -> {
+            Position nextPosition = direction.move(position);
+            if (map.obstructions.contains(nextPosition)
+                    && !visitedObstructions.add(new VisitedObstruction(nextPosition, direction))) {
+                isLoop[0] = true;
+                return false;
+            }
+
+            return true;
+        });
+
+        return isLoop[0];
+    }
+
+    private static Set<Position> getVisitedPositions(LabMap map) {
+        Set<Position> visitedPositions = new HashSet<>();
+        trace(map, (position, __) -> {
+            visitedPositions.add(position);
+            return true;
+        });
+
+        return visitedPositions;
+    }
+
+    private static void trace(LabMap map, BiFunction<Position, Direction, Boolean> tracer) {
         Position guardPosition = map.guardPosition;
         Direction guardDirection = map.guardDirection;
-        Set<Position> visitedPositions = new HashSet<>();
         while (guardPosition.row >= 0 && guardPosition.row < map.height
                 && guardPosition.col >= 0 && guardPosition.col < map.width) {
-            visitedPositions.add(guardPosition);
+            if (!tracer.apply(guardPosition, guardDirection)) {
+                break;
+            }
 
             Position nextPosition = guardDirection.move(guardPosition);
             if (map.obstructions.contains(nextPosition)) {
-                guardDirection = guardDirection.turnRight();
-                guardPosition = guardDirection.move(guardPosition);
+                nextPosition = guardDirection.move(guardPosition);
+                if (map.obstructions.contains(nextPosition)) {
+                    guardDirection = guardDirection.turnRight();
+                } else {
+                    guardDirection = guardDirection.turnRight();
+                    guardPosition = nextPosition;
+                }
             } else {
                 guardPosition = nextPosition;
             }
         }
-
-        System.out.println("Part 1: " + visitedPositions.size());
     }
 
     private static LabMap getInput() throws Exception {
@@ -50,7 +106,7 @@ public class Day6 {
                 }
             }
         }
-        
+
         return new LabMap(height, width,
             guardPosition, Direction.UP, obstructions);
     }
@@ -72,6 +128,28 @@ public class Day6 {
             this.guardPosition = guardPosition;
             this.guardDirection = guardDirection;
             this.obstructions = obstructions;
+        }
+    }
+
+    private static class VisitedObstruction {
+
+        final Position position;
+        final Direction direction;
+
+        VisitedObstruction(Position position, Direction direction) {
+            this.position = position;
+            this.direction = direction;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            VisitedObstruction other = (VisitedObstruction) obj;
+            return position.equals(other.position) && direction == other.direction;
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * position.hashCode() + direction.hashCode();
         }
     }
 
