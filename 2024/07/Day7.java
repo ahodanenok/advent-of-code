@@ -15,12 +15,13 @@ public class Day7 {
     public static void main(String... args) throws Exception {
         List<Equation> equations = getInput();
         part1(equations);
+        part2(equations);
     }
 
     private static void part1(List<Equation> equations) {
         long sum = 0;
         for (Equation equation : equations) {
-            if (findOperators(equation, new ArrayList<>())) {
+            if (findOperators(equation, new ArrayList<>(), false)) {
                 sum += equation.testValue;
             }
         }
@@ -28,7 +29,19 @@ public class Day7 {
         System.out.println("Part 1: " + sum);
     }
 
-    private static boolean findOperators(Equation equation, List<BiFunction<Long, Long, Long>> operators) {
+    private static void part2(List<Equation> equations) {
+        long sum = 0;
+        for (Equation equation : equations) {
+            if (findOperators(equation, new ArrayList<>(), true)) {
+                sum += equation.testValue;
+            }
+        }
+
+        System.out.println("Part 2: " + sum);
+    }
+
+    private static boolean findOperators(Equation equation,
+            List<BiFunction<Long, Long, Long>> operators, boolean withConcat) {
         if (operators.size() == equation.numbers.size() - 1) {
             long value = equation.numbers.get(0);
             for (int i = 1; i < equation.numbers.size(); i++) {
@@ -39,16 +52,24 @@ public class Day7 {
         }
 
         operators.add(Day7::sum);
-        if (findOperators(equation, operators)) {
+        if (findOperators(equation, operators, withConcat)) {
             return true;
         }
         operators.remove(operators.size() - 1);
 
         operators.add(Day7::mul);
-        if (findOperators(equation, operators)) {
+        if (findOperators(equation, operators, withConcat)) {
             return true;
         }
         operators.remove(operators.size() - 1);
+
+        if (withConcat) {
+            operators.add(Day7::concat);
+            if (findOperators(equation, operators, withConcat)) {
+                return true;
+            }
+            operators.remove(operators.size() - 1);
+        }
 
         return false;
     }
@@ -59,6 +80,10 @@ public class Day7 {
 
     private static long mul(long a, long b) {
         return a * b;
+    }
+    
+    private static long concat(long a, long b) {
+        return Long.parseLong(a + "" +  b);
     }
 
     private static List<Equation> getInput() throws Exception {
