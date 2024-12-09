@@ -14,6 +14,7 @@ public class Day8 {
     public static void main(String... args) throws Exception {
         CityMap map = getInput();
         part1(map);
+        part2(map);
     }
 
     private static void part1(CityMap map) {
@@ -48,6 +49,53 @@ public class Day8 {
         }
 
         System.out.println("Part 1: " + antinodeLocations.size());
+    }
+
+    private static void part2(CityMap map) {
+        Set<Location> antinodeLocations = new HashSet<>();
+        for (int i = 0; i < map.antennas.size(); i++) {
+            for (int j = i + 1; j < map.antennas.size(); j++) {
+                Antenna a = map.antennas.get(i);
+                Antenna b = map.antennas.get(j);
+                if (a.frequency != b.frequency) {
+                    continue;
+                }
+
+                if (b.location.row < a.location.row
+                        || (b.location.row == a.location.row && b.location.col < a.location.col)) {
+                    Antenna tmp = a;
+                    a = b;
+                    b = tmp;
+                }
+
+                int rowOffset = b.location.row - a.location.row;
+                int colOffset = b.location.col - a.location.col;
+
+                int multiplier = 1;
+                Location antinodeLocation = a.location;
+                while (antinodeLocation.row >= 0 && antinodeLocation.row < map.height
+                        && antinodeLocation.col >= 0 && antinodeLocation.col < map.width) {
+                    antinodeLocations.add(antinodeLocation);
+                    antinodeLocation = new Location(
+                        a.location.row - multiplier * rowOffset,
+                        a.location.col - multiplier * colOffset);
+                    multiplier++;
+                }
+
+                multiplier = 1;
+                antinodeLocation = b.location;
+                while (antinodeLocation.row >= 0 && antinodeLocation.row < map.height
+                        && antinodeLocation.col >= 0 && antinodeLocation.col < map.width) {
+                    antinodeLocations.add(antinodeLocation);
+                    antinodeLocation = new Location(
+                        b.location.row + multiplier * rowOffset,
+                        b.location.col + multiplier * colOffset);
+                    multiplier++;
+                }
+            }
+        }
+
+        System.out.println("Part 2: " + antinodeLocations.size());
     }
 
     private static CityMap getInput() throws Exception {
