@@ -16,6 +16,7 @@ public class Day10 {
     public static void main(String... args) throws Exception {
         Map<Position, Integer> map = getInput();
         part1(map);
+        part2(map);
     }
 
     private static void part1(Map<Position, Integer> map) {
@@ -50,6 +51,40 @@ public class Day10 {
         }
 
         System.out.println("Part 1: " + totalScore);
+    }
+    
+    private static void part2(Map<Position, Integer> map) {
+        int totalRating = 0;
+        for (Map.Entry<Position, Integer> entry : map.entrySet()) {
+            if (entry.getValue() != 0) {
+                continue;
+            }
+
+            int rating = 0;
+            LinkedList<Position> queue = new LinkedList<>();
+            queue.add(entry.getKey());
+            while (!queue.isEmpty()) {
+                Position position = queue.poll();
+                if (map.get(position) == 9) {
+                    rating++;
+                    continue;
+                }
+
+                for (Position nextPosition : List.of(
+                        new Position(position.row - 1, position.col),
+                        new Position(position.row + 1, position.col),
+                        new Position(position.row, position.col - 1),
+                        new Position(position.row, position.col + 1))) {
+                    if (map.getOrDefault(nextPosition, Integer.MAX_VALUE) == map.get(position) + 1) {
+                        queue.addLast(nextPosition);
+                    }
+                }
+            }
+
+            totalRating += rating;
+        }
+
+        System.out.println("Part 2: " + totalRating);
     }
 
     private static Map<Position, Integer> getInput() throws Exception {
