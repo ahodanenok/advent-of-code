@@ -1,5 +1,6 @@
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,10 +18,114 @@ public class Day12 {
     public static void main(String... args) throws Exception {
         Map<Plot, Character> map = getInput();
         part1(map);
+        part2(map);
     }
 
     private static void part1(Map<Plot, Character> map) {
         long totalPrice = 0;
+        for (Set<Plot> region : getRegions(map)) {
+            long perimeter = 0;
+            for (Plot plot : region) {
+                for (Plot nextPlot : List.of(plot.top(), plot.bottom(), plot.left(), plot.right())) {
+                    if (!Objects.equals(map.get(plot), map.get(nextPlot))) {
+                        perimeter++;
+                    }
+                }
+            }
+
+            totalPrice += (region.size() * perimeter);
+        }
+
+        System.out.println("Part 1: " + totalPrice);
+    }
+
+    private static void part2(Map<Plot, Character> map) {
+        long totalPrice = 0;
+        for (Set<Plot> region : getRegions(map)) {
+            long sidesNum = 0;
+            Set<SideKey> seenPlots = new HashSet<>();
+            for (Plot plot : region) {
+                if (!Objects.equals(map.get(plot), map.get(plot.top()))
+                        && seenPlots.add(new SideKey(plot, Direction.TOP))) {
+                    Plot nextPlot = plot;
+                    while (Objects.equals(map.get(plot), map.get(nextPlot))
+                            && !Objects.equals(map.get(plot), map.get(nextPlot.top()))) {
+                        seenPlots.add(new SideKey(nextPlot, Direction.TOP));
+                        nextPlot = nextPlot.left();
+                    }
+                    nextPlot = plot;
+                    while (Objects.equals(map.get(plot), map.get(nextPlot))
+                            && !Objects.equals(map.get(plot), map.get(nextPlot.top()))) {
+                        seenPlots.add(new SideKey(nextPlot, Direction.TOP));
+                        nextPlot = nextPlot.right();
+                    }
+
+                    sidesNum++;
+                }
+
+                if (!Objects.equals(map.get(plot), map.get(plot.bottom()))
+                        && seenPlots.add(new SideKey(plot, Direction.BOTTOM))) {
+                    Plot nextPlot = plot;
+                    while (Objects.equals(map.get(plot), map.get(nextPlot))
+                            && !Objects.equals(map.get(plot), map.get(nextPlot.bottom()))) {
+                        seenPlots.add(new SideKey(nextPlot, Direction.BOTTOM));
+                        nextPlot = nextPlot.left();
+                    }
+                    nextPlot = plot;
+                    while (Objects.equals(map.get(plot), map.get(nextPlot))
+                            && !Objects.equals(map.get(plot), map.get(nextPlot.bottom()))) {
+                        seenPlots.add(new SideKey(nextPlot, Direction.BOTTOM));
+                        nextPlot = nextPlot.right();
+                    }
+
+                    sidesNum++;
+                }
+
+                if (!Objects.equals(map.get(plot), map.get(plot.left()))
+                        && seenPlots.add(new SideKey(plot, Direction.LEFT))) {
+                    Plot nextPlot = plot;
+                    while (Objects.equals(map.get(plot), map.get(nextPlot))
+                            && !Objects.equals(map.get(plot), map.get(nextPlot.left()))) {
+                        seenPlots.add(new SideKey(nextPlot, Direction.LEFT));
+                        nextPlot = nextPlot.bottom();
+                    }
+                    nextPlot = plot;
+                    while (Objects.equals(map.get(plot), map.get(nextPlot))
+                            && !Objects.equals(map.get(plot), map.get(nextPlot.left()))) {
+                        seenPlots.add(new SideKey(nextPlot, Direction.LEFT));
+                        nextPlot = nextPlot.top();
+                    }
+
+                    sidesNum++;
+                }
+
+                if (!Objects.equals(map.get(plot), map.get(plot.right()))
+                        && seenPlots.add(new SideKey(plot, Direction.RIGHT))) {
+                    Plot nextPlot = plot;
+                    while (Objects.equals(map.get(plot), map.get(nextPlot))
+                            && !Objects.equals(map.get(plot), map.get(nextPlot.right()))) {
+                        seenPlots.add(new SideKey(nextPlot, Direction.RIGHT));
+                        nextPlot = nextPlot.bottom();
+                    }
+                    nextPlot = plot;
+                    while (Objects.equals(map.get(plot), map.get(nextPlot))
+                            && !Objects.equals(map.get(plot), map.get(nextPlot.right()))) {
+                        seenPlots.add(new SideKey(nextPlot, Direction.RIGHT));
+                        nextPlot = nextPlot.top();
+                    }
+
+                    sidesNum++;
+                }
+            }
+
+            totalPrice += (region.size() * sidesNum);
+        }
+
+        System.out.println("Part 2: " + totalPrice);
+    }
+
+    private static List<Set<Plot>> getRegions(Map<Plot, Character> map) {
+        List<Set<Plot>> regions = new ArrayList<>();
         Set<Plot> seenPlots = new HashSet<>();
         for (Plot plot : map.keySet()) {
             if (seenPlots.contains(plot)) {
@@ -45,19 +150,10 @@ public class Day12 {
                 }
             }
 
-            long perimeter = 0;
-            for (Plot p : region) {
-                for (Plot adjacent : List.of(p.top(), p.bottom(), p.left(), p.right())) {
-                    if (!Objects.equals(map.get(p), map.get(adjacent))) {
-                        perimeter++;
-                    }
-                }
-            }
-
-            totalPrice += (region.size() * perimeter);
+            regions.add(region);
         }
 
-        System.out.println("Part 1: " + totalPrice);
+        return regions;
     }
 
     private static Map<Plot, Character> getInput() throws Exception {
@@ -73,6 +169,33 @@ public class Day12 {
         }
 
         return map;
+    }
+
+    private static class SideKey {
+
+        final Plot plot;
+        final Direction direction;
+
+        SideKey(Plot plot, Direction direction) {
+            this.plot = plot;
+            this.direction = direction;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            SideKey other = (SideKey) obj;
+            return plot.equals(other.plot) && direction == other.direction;
+        }
+
+        @Override
+        public int hashCode() {
+            return 31 * plot.hashCode() + direction.hashCode();
+        }
+    }
+
+    private enum Direction {
+
+        TOP, BOTTOM, RIGHT, LEFT;
     }
 
     private static class Plot {
