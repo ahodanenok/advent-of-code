@@ -1,5 +1,6 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,12 +17,13 @@ public class Day13 {
     public static void main(String... args) throws Exception {
         List<Machine> machines = getInput();
         part1(machines);
+        part2(machines);
     }
 
     private static void part1(List<Machine> machines) {
         int totalCost = 0;
         for (Machine machine : machines) {
-            int tokensCount = minTokens(machine, 0, 0, 0, 0, new java.util.HashMap<>());
+            int tokensCount = minTokensByBruteForce(machine, 0, 0, 0, 0, new java.util.HashMap<>());
             if (tokensCount != Integer.MAX_VALUE) {
                 totalCost += tokensCount;
             }
@@ -30,9 +32,37 @@ public class Day13 {
         System.out.println("Part 1: " + totalCost);
     }
 
-    private static int minTokens(
+    private static void part2(List<Machine> machines) {
+        long totalCost = 0;
+        for (Machine machine : machines) {
+            int tokensCount = 0;
+
+            long x = machine.px + 10000000000000L;
+            long y = machine.py + 10000000000000L;
+            long gcd = BigInteger.valueOf(machine.ax).gcd(BigInteger.valueOf(machine.ay)).longValueExact();
+            long lcm = machine.ax * machine.ay / gcd;
+            long n = lcm / machine.ax;
+            long m = lcm / machine.ay;
+
+            double b = (x * n - y * m) / (double) (machine.bx * n - machine.by * m);
+            if (b < 0 || b % 1 != 0) {
+                continue;
+            }
+
+            double a = (x - machine.bx * b) / (double) machine.ax;
+            if (a < 0 || a % 1 != 0) {
+                continue;
+            }
+
+            totalCost +=  a * Machine.BUTTON_A_COST + b * Machine.BUTTON_B_COST;
+        }
+
+        System.out.println("Part 2: " + totalCost);
+    }
+
+    private static int minTokensByBruteForce(
             Machine machine, int x, int y, int aPressedCount, int bPressedCount, Map<String, Integer> cache) {
-        if (aPressedCount > Machine.BUTTON_PUSH_LIMIT || bPressedCount > Machine.BUTTON_PUSH_LIMIT) {
+        if (aPressedCount > 100 || bPressedCount > 100) {
             return Integer.MAX_VALUE;
         }
 
@@ -44,7 +74,7 @@ public class Day13 {
         if (cache.containsKey(x + "_" + y + "_A")) {
             aTokensCount = cache.get(x + "_" + y + "_A");
         } else {
-            aTokensCount = minTokens(
+            aTokensCount = minTokensByBruteForce(
                 machine, x + machine.ax, y + machine.ay, aPressedCount + 1, bPressedCount, cache);
             cache.put(x + "_" + y + "_A", aTokensCount);
         }
@@ -53,7 +83,7 @@ public class Day13 {
         if (cache.containsKey(x + "_" + y + "_B")) {
             bTokensCount = cache.get(x + "_" + y + "_B");
         } else {
-            bTokensCount = minTokens(
+            bTokensCount = minTokensByBruteForce(
                 machine, x + machine.bx, y + machine.by, aPressedCount, bPressedCount + 1, cache);
             cache.put(x + "_" + y + "_B", bTokensCount);
         }
@@ -99,7 +129,6 @@ public class Day13 {
 
     private static class Machine {
 
-        static final int BUTTON_PUSH_LIMIT = 100;
         static final int BUTTON_A_COST = 3;
         static final int BUTTON_B_COST = 1;
 
