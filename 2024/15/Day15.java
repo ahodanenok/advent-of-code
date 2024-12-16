@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -12,6 +14,7 @@ public class Day15 {
     public static void main(String... args) throws Exception {
         Input input = getInput();
         part1(input);
+        part2(input);
     }
 
     private static void part1(Input input) {
@@ -19,10 +22,10 @@ public class Day15 {
         Set<Position> boxes = new HashSet<>(input.boxes);
         for (int i = 0; i < input.moves.length(); i++) {
             robot = switch (input.moves.charAt(i)) {
-                case '^' -> move(robot, boxes, input.walls, -1,  0);
-                case 'v' -> move(robot, boxes, input.walls,  1,  0);
-                case '<' -> move(robot, boxes, input.walls,  0, -1);
-                case '>' -> move(robot, boxes, input.walls,  0,  1);
+                case '^' -> move1(robot, boxes, input.walls, -1,  0);
+                case 'v' -> move1(robot, boxes, input.walls,  1,  0);
+                case '<' -> move1(robot, boxes, input.walls,  0, -1);
+                case '>' -> move1(robot, boxes, input.walls,  0,  1);
                 default -> robot;
             };
         }
@@ -35,7 +38,42 @@ public class Day15 {
         System.out.println("Part 1: " + sum);
     }
 
-    private static Position move(Position robot, Set<Position> boxes, Set<Position> walls, int dy, int dx) {
+    private static void part2(Input input) {
+        Position robot = new Position(input.robot.row, input.robot.col * 2);
+
+        Map<Position, Position> boxes = new HashMap<>();
+        for (Position box : input.boxes) {
+            Position left = new Position(box.row, box.col * 2);
+            Position right = new Position(box.row, box.col * 2 + 1);
+            boxes.put(left, right);
+            boxes.put(right, left);
+        }
+
+        Set<Position> walls = new HashSet<>();
+        for (Position wall : input.walls) {
+            walls.add(new Position(wall.row, wall.col * 2));
+            walls.add(new Position(wall.row, wall.col * 2 + 1));
+        }
+
+        for (int i = 0; i < input.moves.length(); i++) {
+            robot = switch (input.moves.charAt(i)) {
+                case '^' -> move2(robot, boxes, walls, -1,  0);
+                case 'v' -> move2(robot, boxes, walls,  1,  0);
+                case '<' -> move2(robot, boxes, walls,  0, -1);
+                case '>' -> move2(robot, boxes, walls,  0,  1);
+                default -> robot;
+            };
+        }
+
+        int sum = 0;
+        for (Map.Entry<Position, Position> box : boxes.entrySet()) {
+            sum += 100 * box.getKey().row + Math.min(box.getKey().col, box.getValue().col);
+        }
+
+        System.out.println("Part 2: " + (sum / 2));
+    }
+
+    private static Position move1(Position robot, Set<Position> boxes, Set<Position> walls, int dy, int dx) {
         Position nextPosition = new Position(robot.row + dy, robot.col + dx);
         if (walls.contains(nextPosition)) {
             return robot;
@@ -53,6 +91,67 @@ public class Day15 {
 
             boxes.remove(nextPosition);
             boxes.add(shiftPosition);
+        }
+
+        return nextPosition;
+    }
+
+    private static Position move2(Position robot, Map<Position, Position> boxes, Set<Position> walls, int dy, int dx) {
+        Position nextPosition = new Position(robot.row + dy, robot.col + dx);
+        if (walls.contains(nextPosition)) {
+            return robot;
+        }
+
+        if (boxes.containsKey(nextPosition)) {
+            Set<Position> currentShiftPositions = Set.of(nextPosition, boxes.get(nextPosition));
+            Set<Position> allShiftPositions = new HashSet<>(currentShiftPositions);
+            while (true) {
+                Set<Position> nextShiftPositions = new HashSet<>();
+                for (Position shiftPosition : currentShiftPositions) {
+                    Position position = new Position(shiftPosition.row + dy, shiftPosition.col + dx);
+                    if (currentShiftPositions.contains(position)) {
+                        continue;
+                    }
+
+                    if (walls.contains(position)) {
+                        return robot;
+                    }
+
+                    if (boxes.containsKey(position)) {
+                        nextShiftPositions.add(position);
+                        nextShiftPositions.add(boxes.get(position));
+                    }
+                }
+
+                if (nextShiftPositions.isEmpty()) {
+                    break;
+                }
+
+                allShiftPositions.addAll(nextShiftPositions);
+                currentShiftPositions = nextShiftPositions;
+            }
+
+            Map<Position, Position> movedBoxes = new HashMap<>();
+            for (Position shiftPosition : allShiftPositions) {
+                if (!boxes.containsKey(shiftPosition)) {
+                    continue;
+                }
+
+                Position linkedPosition = boxes.get(shiftPosition);
+                Position left = new Position(shiftPosition.row + dy, shiftPosition.col + dx);
+                Position right = new Position(linkedPosition.row + dy, linkedPosition.col + dx);
+                movedBoxes.put(left, right);
+                movedBoxes.put(right, left);
+                boxes.remove(boxes.remove(shiftPosition));
+            }
+
+            for (Map.Entry<Position, Position> entry : movedBoxes.entrySet()) {
+                if (boxes.containsKey(entry.getKey()) || boxes.containsKey(entry.getValue())) {
+                    throw new IllegalStateException();
+                }
+            }
+
+            boxes.putAll(movedBoxes);
         }
 
         return nextPosition;
