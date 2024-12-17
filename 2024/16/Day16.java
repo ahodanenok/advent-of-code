@@ -15,13 +15,14 @@ public class Day16 {
     public static void main(String... args) throws Exception {
         Maze maze = getInput();
         part1(maze);
+        part2(maze);
     }
 
     private static void part1(Maze maze) {
         int endScore = Integer.MAX_VALUE;
         Map<Reindeer, Integer> scores = new HashMap<>();
         LinkedList<Reindeer> queue = new LinkedList<>();
-        queue.add(new Reindeer(maze.start, Direction.EAST, 0));
+        queue.add(new Reindeer(maze.start, Direction.EAST, 0, null));
         while (!queue.isEmpty()) {
             Reindeer reindeer = queue.poll();
             if (reindeer.tile.equals(maze.end)) {
@@ -36,13 +37,86 @@ public class Day16 {
 
             scores.put(reindeer, reindeer.score);
             if (!maze.walls.contains(reindeer.facing.next(reindeer.tile))) {
-                queue.add(new Reindeer(reindeer.facing.next(reindeer.tile), reindeer.facing, reindeer.score + 1));
+                queue.add(new Reindeer(
+                    reindeer.facing.next(reindeer.tile),
+                    reindeer.facing,
+                    reindeer.score + 1,
+                    null));
             }
-            queue.add(new Reindeer(reindeer.tile, reindeer.facing.clockwise(), reindeer.score + 1000));
-            queue.add(new Reindeer(reindeer.tile, reindeer.facing.counterclockwise(), reindeer.score + 1000));
+            queue.add(new Reindeer(
+                reindeer.tile,
+                reindeer.facing.clockwise(),
+                reindeer.score + 1000,
+                null));
+            queue.add(new Reindeer(
+                reindeer.tile,
+                reindeer.facing.counterclockwise(),
+                reindeer.score + 1000,
+                null));
         }
 
         System.out.println("Part 1: " + endScore);
+    }
+
+    private static void part2(Maze maze) {
+        LinkedList<Reindeer> endScores = new LinkedList<>();
+        Map<Reindeer, Integer> scores = new HashMap<>();
+        LinkedList<Reindeer> queue = new LinkedList<>();
+        queue.add(new Reindeer(maze.start, Direction.EAST, 0, Set.of(maze.start)));
+        while (!queue.isEmpty()) {
+            Reindeer reindeer = queue.poll();
+            if (reindeer.tile.equals(maze.end)) {
+                endScores.add(reindeer);
+                continue;
+            }
+
+            int tileScore = scores.getOrDefault(reindeer, Integer.MAX_VALUE);
+            if (reindeer.score > tileScore) {
+                continue;
+            }
+
+            scores.put(reindeer, reindeer.score);
+            if (!maze.walls.contains(reindeer.facing.next(reindeer.tile))) {
+                Tile nextTile = reindeer.facing.next(reindeer.tile);
+                Set<Tile> newVisitedTiles;
+                if (!reindeer.visitedTiles.contains(nextTile)) {
+                    newVisitedTiles = new HashSet<>(reindeer.visitedTiles);
+                    newVisitedTiles.add(nextTile);
+                } else {
+                    newVisitedTiles = reindeer.visitedTiles;
+                }
+
+                queue.add(new Reindeer(
+                    nextTile,
+                    reindeer.facing,
+                    reindeer.score + 1,
+                    newVisitedTiles));
+            }
+            queue.add(new Reindeer(
+                reindeer.tile,
+                reindeer.facing.clockwise(),
+                reindeer.score + 1000,
+                reindeer.visitedTiles));
+            queue.add(new Reindeer(
+                reindeer.tile,
+                reindeer.facing.counterclockwise(),
+                reindeer.score + 1000,
+                reindeer.visitedTiles));
+        }
+
+        int minScore = endScores.stream()
+            .mapToInt(r -> r.score)
+            .min()
+            .orElse(Integer.MAX_VALUE);
+
+        Set<Tile> bestSpots = new HashSet<>();
+        for (Reindeer reindeer : endScores) {
+            if (reindeer.score == minScore) {
+                bestSpots.addAll(reindeer.visitedTiles);
+            }
+        }
+
+        System.out.println("Part 2: " + bestSpots.size());
     }
 
     private static Maze getInput() throws Exception {
@@ -88,11 +162,13 @@ public class Day16 {
         final Tile tile;
         final Direction facing;
         final int score;
+        final Set<Tile> visitedTiles;
 
-        Reindeer(Tile tile, Direction facing, int score) {
+        Reindeer(Tile tile, Direction facing, int score, Set<Tile> visitedTiles) {
             this.tile = tile;
             this.facing = facing;
             this.score = score;
+            this.visitedTiles = visitedTiles;
         }
 
         @Override
