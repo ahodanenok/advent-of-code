@@ -19,12 +19,27 @@ public class Day18 {
 	public static void main(String... args) throws Exception {
 		List<Position> bytes = getInput();
 		part1(bytes);
+		part2(bytes);
 	}
 
 	private static void part1(List<Position> bytes) {
+		System.out.println("Part 1: " + simulate(bytes.subList(0, 1024)));
+	}
+
+	private static void part2(List<Position> bytes) {
+		for (int i = 1025; i < bytes.size(); i++) {
+			if (simulate(bytes.subList(0, i)) == -1) {
+				Position b = bytes.get(i - 1);
+				System.out.println(String.format("Part 2: %s,%s", b.col, b.row));
+				break;
+			}
+		}
+	}
+
+	private static int simulate(List<Position> bytes) {
 		Position start = new Position(0, 0);
 		Position end = new Position(GRID_SIZE - 1, GRID_SIZE - 1);
-		Set<Position> corrupted = new HashSet<>(bytes.subList(0, 1024));
+		Set<Position> corrupted = new HashSet<>(bytes);
 
 		Map<Position, Integer> distances = new HashMap<>();
 		distances.put(start, 0);
@@ -59,7 +74,7 @@ public class Day18 {
 			}
 		}
 
-		System.out.println("Part 1: " + distances.get(end));
+		return distances.getOrDefault(end, -1);
 	}
 
 	private static List<Position> getInput() throws Exception {
