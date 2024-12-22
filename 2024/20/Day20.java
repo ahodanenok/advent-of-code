@@ -16,6 +16,7 @@ public class Day20 {
 	public static void main(String... args) throws Exception {
         Racetrack track = getInput();
         part1(track);
+        part2(track);
     }
 
     private static void part1(Racetrack track) {
@@ -46,6 +47,33 @@ public class Day20 {
         System.out.println("Part 1: " + cheats.size());
     }
 
+    private static void part2(Racetrack track) {
+        Map<Position, Integer> distances = race(track);
+        int fairDistance = distances.get(track.end);
+
+        Set<Cheat> cheats = new HashSet<>();
+        for (Position a : distances.keySet()) {
+            for (Position b : distances.keySet()) {
+                if (a.equals(b)) {
+                    continue;
+                }
+
+                int distanceBetween = Math.abs(a.row - b.row) + Math.abs(a.col - b.col);
+                if (distanceBetween > 20) {
+                    continue;
+                }
+
+                int distanceA = distances.get(a);
+                int distanceB = distances.get(b);
+                if (distanceA < distanceB && (distanceB - distanceA - distanceBetween) >= 100) {
+                    cheats.add(new Cheat(a, b));
+                }
+            }
+        }
+
+        System.out.println("Part 2: " + cheats.size());
+    }
+
     private static Map<Position, Integer> race(Racetrack track) {
         Map<Position, Integer> distances = new HashMap<>();
         distances.put(track.start, 0);
@@ -53,7 +81,7 @@ public class Day20 {
         LinkedList<Position> queue = new LinkedList<>();
         queue.add(track.start);
         while (!queue.isEmpty()) {
-            Position position = queue.poll();            
+            Position position = queue.poll();
             if (position.equals(track.end)) {
                 continue;
             }
@@ -73,7 +101,7 @@ public class Day20 {
                 queue.add(next);
             }
         }
-        
+
         return distances;
     }
 
@@ -83,10 +111,9 @@ public class Day20 {
             Position start = null;
             Position end = null;
             int row = 0;
-            int col = 0;
             String line;
             while ((line = reader.readLine()) != null) {
-                for (col = 0; col < line.length(); col++) {
+                for (int col = 0; col < line.length(); col++) {
                     switch (line.charAt(col)) {
                         case '.' -> {}
                         case '#' -> walls.add(new Position(row, col));
@@ -99,21 +126,17 @@ public class Day20 {
                 row++;
             }
 
-            return new Racetrack(row, col, walls, start, end);
+            return new Racetrack(walls, start, end);
         }
     }
 
     private static class Racetrack {
 
-        final int height;
-        final int width;
         final Set<Position> walls;
         final Position start;
         final Position end;
 
-        Racetrack(int height, int width, Set<Position> walls, Position start, Position end) {
-            this.height = height;
-            this.width = width;
+        Racetrack(Set<Position> walls, Position start, Position end) {
             this.walls = walls;
             this.start = start;
             this.end = end;
