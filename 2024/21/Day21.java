@@ -16,64 +16,107 @@ public class Day21 {
 
 	public static void main(String... args) throws Exception {
         List<String> codes = getInput();
-        part1(codes);
+        System.out.println("Part 1: " + length(codes, 2));
+        System.out.println("Part 2: " + length(codes, 25));
     }
 
-    private static void part1(List<String> codes) {
+    private static long length(List<String> codes, int level) {
         List<String> numpad = List.of("789", "456", "123", " 0A");
         Map<Move, List<String>> numseq = sequence(numpad);
 
         List<String> dirpad = List.of(" ^A", "<v>");
         Map<Move, List<String>> dirseq = sequence(dirpad);
 
-        int sum = 0;
-        for (String code : codes) {
-            String seq = "";
+        Map<String, Integer> lengths = new HashMap<>();
+        for (Map.Entry<Move, List<String>> entry : numseq.entrySet()) {
+            for (String sequence : entry.getValue()) {
+                lengths.put(sequence, length(sequence, dirseq));
+            }
+        }
+        for (Map.Entry<Move, List<String>> entry : dirseq.entrySet()) {
+            for (String sequence : entry.getValue()) {
+                lengths.put(sequence, length(sequence, dirseq));
+            }
+        }
 
+        Map<Move, String> numseqMin = new HashMap<>();
+        for (Map.Entry<Move, List<String>> entry : numseq.entrySet()) {
+            numseqMin.put(
+                entry.getKey(),
+                entry.getValue().stream()
+                    .min((s1, s2) -> Integer.compare(lengths.get(s1), lengths.get(s2)))
+                    .get());
+        }
+
+        Map<Move, String> dirseqMin = new HashMap<>();
+        for (Map.Entry<Move, List<String>> entry : dirseq.entrySet()) {
+            dirseqMin.put(
+                entry.getKey(),
+                entry.getValue().stream()
+                    .min((s1, s2) -> Integer.compare(lengths.get(s1), lengths.get(s2)))
+                    .get());
+        }
+        Map<String, Long> cache = new HashMap<>();
+        long sum = 0;
+        for (String code : codes) {
+            long seqLength = 0;
             char prevKey = 'A';
             for (char key : code.toCharArray()) {
-                seq += enterSequences(numseq.get(new Move(prevKey, key)), dirseq, 2)
-                    .stream().min((s1, s2) -> Integer.compare(s1.length(), s2.length()))
-                    .orElse("");
+                seqLength += length(numseqMin.get(new Move(prevKey, key)), dirseqMin, level, cache);
                 prevKey = key;
             }
 
-            sum += Integer.parseInt(code.substring(0, code.length() - 1)) * seq.length();
+            sum += Integer.parseInt(code.substring(0, code.length() - 1)) * seqLength;
         }
 
-        System.out.println("Part 1: " + sum);
+        return sum;
     }
 
-    private static List<String> enterSequences(
-            List<String> sequences, Map<Move, List<String>> keyseq, int level) {
+    private static long length(String seq, Map<Move, String> keyseq, int level, Map<String, Long> cache) {
         if (level == 0) {
-            return sequences.stream()
-                .map(seq -> seq + 'A')
-                .collect(Collectors.toList());
+            return seq.length() + 1;
         }
 
-        List<String> result = new LinkedList<>();
-        for (String seq : sequences) {
-            List<String> seqResult = List.of("");
+        String cacheKey = seq + "_" + level;
+        if (cache.containsKey(cacheKey)) {
+            return cache.get(cacheKey);
+        }
 
-            char prevKey = 'A';
-            for (char key : (seq + 'A').toCharArray()) {
-                List<String> nextSeqResult = new LinkedList<>();
-                for (String currSeq : enterSequences(
-                        keyseq.get(new Move(prevKey, key)), keyseq, level - 1)) {
-                    for (String prevSeq : seqResult) {
-                        nextSeqResult.add(prevSeq + currSeq);
-                    }
+        long length = 0;
+        char prevKey = 'A';
+        for (char key : (seq + 'A').toCharArray()) {
+            length += length(keyseq.get(new Move(prevKey, key)), keyseq, level - 1, cache);
+            prevKey = key;
+        }
+        cache.put(cacheKey, length);
+
+        return length;
+    }
+
+    private static int length(String seq, Map<Move, List<String>> keyseq) {
+        int length = 0;
+
+        char prevA = 'A';
+        for (char a : (seq + 'A').toCharArray()) {
+            int minLengthB = Integer.MAX_VALUE;
+            for (String sa : keyseq.get(new Move(prevA, a))) {
+                int lengthB = 0;
+                char prevB = 'A';
+                for (char b : (sa + 'A').toCharArray()) {
+                    lengthB += keyseq.get(new Move(prevB, b)).get(0).length();
+                    prevB = b;
                 }
-
-                seqResult = nextSeqResult;
-                prevKey = key;
+                
+                if (lengthB < minLengthB) {
+                    minLengthB = lengthB;
+                }
             }
 
-            result.addAll(seqResult);
+            length += minLengthB;
+            prevA = a;
         }
 
-        return result;
+        return length;
     }
 
     private static Map<Move, List<String>> sequence(List<String> keypad) {
