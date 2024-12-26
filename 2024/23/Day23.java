@@ -2,8 +2,11 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Advent of Code - Day 23
@@ -14,6 +17,7 @@ public class Day23 {
 	public static void main(String... args) throws Exception {
         List<Link> links = getInput();
         part1(links);
+        part2(links);
     }
 
     private static void part1(List<Link> links) {
@@ -45,6 +49,51 @@ public class Day23 {
         }
 
         System.out.println("Part 1: " + count);
+    }
+
+    private static void part2(List<Link> links) {
+        Map<String, List<String>> computerConnections = new HashMap<>();
+        for (Link link : links) {
+            computerConnections.computeIfAbsent(link.left, __ -> new ArrayList<>()).add(link.right);
+            computerConnections.computeIfAbsent(link.right, __ -> new ArrayList<>()).add(link.left);
+        }
+
+        Set<String> maxCluster = Set.of();
+        List<String> computers = new ArrayList<>(computerConnections.keySet());
+        for (String computer : computers) {
+            Set<String> maxLocalCluster = Set.of();
+            List<String> connections = computerConnections.get(computer);
+            for (int i = 0; i < connections.size(); i++) {
+                String computerA = connections.get(i);
+                List<String> connectionsA = computerConnections.get(computerA);
+
+                Set<String> cluster = new HashSet<>();
+                cluster.add(computer);
+                cluster.add(computerA);
+
+                for (int j = i + 1; j < connections.size(); j++) {
+                    String computerB = connections.get(j);
+                    List<String> connectionsB = computerConnections.get(computerB);
+                    if (cluster.stream().allMatch(connectionsB::contains)) {
+                        cluster.add(computerB);
+                    }
+                }
+
+                if (cluster.size() > maxLocalCluster.size()) {
+                    maxLocalCluster = cluster;
+                }
+            }
+
+            if (maxLocalCluster.size() > maxCluster.size()) {
+                maxCluster = maxLocalCluster;
+            }
+        }
+
+        String password = maxCluster.stream()
+            .sorted((a, b) -> a.compareTo(b))
+            .collect(Collectors.joining(","));
+
+        System.out.println("Part 2: " + password);
     }
 
     private static List<Link> getInput() throws Exception {
