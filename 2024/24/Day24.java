@@ -1,12 +1,17 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Advent of Code - Day 24
@@ -15,11 +20,12 @@ import java.util.regex.Pattern;
 public class Day24 {
 
 	public static void main(String... args) throws Exception {
-        Circuit circuit = getInput();
-        part1(circuit);
+        part1();
+        part2();
     }
 
-    private static void part1(Circuit circuit) {
+    private static void part1() throws Exception {
+        Circuit circuit = getInput();
         for (Map.Entry<String, Boolean> entry : new HashMap<>(circuit.wires).entrySet()) {
             circuit.connections.get(entry.getKey()).forEach(gate -> gate.accept(entry.getValue()));
         }
@@ -40,6 +46,66 @@ public class Day24 {
         }
 
         System.out.println("Part 1: " + n);
+    }
+
+    private static void part2() throws Exception {
+        Set<String> wires = new java.util.HashSet<>();
+        Set<String> gates = new java.util.HashSet<>();
+        StringBuilder connections = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new FileReader("input.txt"))) {
+            String line;
+            while (!(line = reader.readLine()).isEmpty());
+
+            int gateIdx = 0;
+            Pattern gatePattern = Pattern.compile("^([a-z0-9]+) (XOR|OR|AND) ([a-z0-9]+) -> ([a-z0-9]+)$");
+            while ((line = reader.readLine()) != null) {
+                Matcher matcher = gatePattern.matcher(line);
+                if (!matcher.find()) {
+                    throw new IllegalStateException(line);
+                }
+
+                String outWire = matcher.group(4);
+                String gate = matcher.group(2) + "_" + (gateIdx++);
+                String wireA = matcher.group(1);
+                String wireB = matcher.group(3);
+
+                connections.append(wireA + "->" + gate + ";");
+                connections.append(wireB + "->" + gate + ";");
+                connections.append(gate + "->" + outWire + ";");
+                wires.add(wireA);
+                wires.add(wireB);
+                wires.add(outWire);
+                gates.add(gate);
+            }
+        }
+
+        String graphTemplate = """
+            digraph Circuit {
+                fontname="Helvetica,Arial,sans-serif"
+                node [fontname="Helvetica,Arial,sans-serif"]
+                edge [fontname="Helvetica,Arial,sans-serif"]
+                rankdir=LR;
+                node [shape=box]; %s;
+                node [shape=circle,fixedsize=true,width=0.9]; %s;
+                %s
+
+                overlap=false
+                fontsize=12;
+            }
+        """;
+
+        Files.write(
+            Paths.get("circuit.dot"),
+            String.format(
+                graphTemplate,
+                gates.stream().collect(Collectors.joining(";")),
+                wires.stream().collect(Collectors.joining(";")),
+                connections).getBytes());
+
+        // dot.exe -Tsvg circuit.dot -o circuit.svg
+        // examine carefully...
+
+        System.out.println("Part 2: fcd,fhp,hmk,rvf,tpc,z16,z20,z33");
     }
 
     private static Circuit getInput() throws Exception {
