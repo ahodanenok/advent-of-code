@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Advent of Code - Day 17
@@ -15,26 +16,62 @@ public class Day17 {
     public static void main(String... args) throws Exception {
         Computer computer = getInput();
         part1(computer);
+        part2(computer);
     }
 
     private static void part1(Computer computer) {
         StringJoiner output = new StringJoiner(",");
-        simulate(computer, output);
-
+        simulate(computer, output::add);
         System.out.println("Part 1: " + output);
     }
 
-    private static void simulate(Computer computer, StringJoiner output) {
-        int registerA = computer.registerA;
-        int registerB = computer.registerB;
-        int registerC = computer.registerC;
+    private static void part2(Computer computer) {
+        /*
+            2,4 --> bst 4 --> registerB = registerA % 8
+            1,1 --> bxl 1 --> registerB = registerB ^ 1
+            7,5 --> cdv 5 --> registerC = registerA / pow(2, registerB)
+            1,5 --> bxl 5 --> registerB = registerB ^ 5
+            4,0 --> bxc 0 --> registerB = registerB ^ registerC
+            0,3 --> adv 3 --> registerA = registerA / pow(2, 3)
+            5,5 --> out 5 --> print registerB
+            3,0 --> jnz 0 --> goto start if registerA != 0
+        */
+        long a = findA(computer, computer.program.size() - 1, 0);
+        System.out.println("Part 2: " + a);
+    }
+
+    private static long findA(Computer computer, int pos, long a) {
+        if (pos < 0) {
+            return a;
+        }
+
+        for (long d = 0; d < 8; d++) {
+            long na = a | (d << (pos * 3));
+
+            List<String> output = new ArrayList<>();
+            simulate(new Computer(na | ((1L << (pos * 3)) - 1), 0, 0, computer.program), output::add);
+            if (output.size() > pos  && Integer.valueOf(output.get(pos)) == computer.program.get(pos)) {
+                long ra = findA(computer, pos - 1, na);
+                if (ra != -1) {
+                    return ra;
+                }
+            }
+        }
+
+        return -1;
+    }
+
+    private static void simulate(Computer computer, java.util.function.Consumer<String> output) {
+        long registerA = computer.registerA;
+        long registerB = computer.registerB;
+        long registerC = computer.registerC;
         int pc = 0;
         while (pc < computer.program.size()) {
             int arg = computer.program.get(pc + 1);
             switch (computer.program.get(pc)) {
                 case 0 /* adv */ -> {
                     registerA = registerA
-                        / (int) Math.pow(2, comboOperand(arg, registerA, registerB, registerC));
+                        / (long) Math.pow(2, comboOperand(arg, registerA, registerB, registerC));
                     pc += 2;
                 }
                 case 1 /* bxl */ -> {
@@ -57,17 +94,17 @@ public class Day17 {
                     pc += 2;
                 }
                 case 5 /* out */ -> {
-                    output.add("" + comboOperand(arg, registerA, registerB, registerC) % 8);
+                    output.accept("" + comboOperand(arg, registerA, registerB, registerC) % 8);
                     pc += 2;
                 }
                 case 6 /* bdv */ -> {
                     registerB = registerA
-                        / (int) Math.pow(2, comboOperand(arg, registerA, registerB, registerC));
+                        / (long) Math.pow(2, comboOperand(arg, registerA, registerB, registerC));
                     pc += 2;
                 }
                 case 7 /* cdv */ -> {
                     registerC = registerA
-                        / (int) Math.pow(2, comboOperand(arg, registerA, registerB, registerC));
+                        / (long) Math.pow(2, comboOperand(arg, registerA, registerB, registerC));
                     pc += 2;
                 }
                 default -> throw new IllegalStateException();                
@@ -75,7 +112,7 @@ public class Day17 {
         }
     }
 
-    private static int comboOperand(int value, int registerA, int registerB, int registerC) {
+    private static long comboOperand(int value, long registerA, long registerB, long registerC) {
         return switch (value) {
             case 0 -> 0;
             case 1 -> 1;
@@ -97,15 +134,15 @@ public class Day17 {
 
         matcher = numberPattern.matcher(lines.get(0));
         matcher.find();
-        int registerA = Integer.parseInt(matcher.group(0));
+        long registerA = Long.parseLong(matcher.group(0));
 
         matcher = numberPattern.matcher(lines.get(1));
         matcher.find();
-        int registerB = Integer.parseInt(matcher.group(0));
+        long registerB = Long.parseLong(matcher.group(0));
 
         matcher = numberPattern.matcher(lines.get(2));
         matcher.find();
-        int registerC = Integer.parseInt(matcher.group(0));
+        long registerC = Long.parseLong(matcher.group(0));
 
         List<Integer> program = new ArrayList<>();
         matcher = numberPattern.matcher(lines.get(4));
@@ -118,12 +155,12 @@ public class Day17 {
 
     private static class Computer {
 
-        final int registerA;
-        final int registerB;
-        final int registerC;
+        final long registerA;
+        final long registerB;
+        final long registerC;
         final List<Integer> program;
 
-        Computer(int registerA, int registerB, int registerC, List<Integer> program) {
+        Computer(long registerA, long registerB, long registerC, List<Integer> program) {
             this.registerA = registerA;
             this.registerB = registerB;
             this.registerC = registerC;
