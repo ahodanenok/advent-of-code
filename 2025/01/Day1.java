@@ -12,6 +12,7 @@ public class Day1 {
     public static void main(String... args) throws Exception {
         List<Rotation> rotations = getInput();
         part1(rotations);
+        part2(rotations);
     }
 
     private static List<Rotation> getInput() throws Exception {
@@ -47,6 +48,31 @@ public class Day1 {
         System.out.println("Part 1: " + zeroTimes);
     }
 
+    private static void part2(List<Rotation> rotations) {
+        int pos = 50;
+        int next;
+        int zeroTimes = 0;
+        for (Rotation r : rotations) {
+            if (r.clockwise) {
+                next = pos + r.count;
+            } else {
+                next = pos - r.count;
+            }
+
+            zeroTimes += Math.abs(next / 100);
+            if (pos != 0 && next <= 0) {
+                zeroTimes++;
+            }
+
+            pos = next % 100;
+            if (pos < 0) {
+                pos += 100;
+            }
+        }
+
+        System.out.println("Part 2: " + zeroTimes);
+    }
+
     private static class Rotation {
 
         final boolean clockwise;
@@ -55,6 +81,11 @@ public class Day1 {
         Rotation(boolean clockwise, int count) {
             this.clockwise = clockwise;
             this.count = count;
+        }
+
+        @Override
+        public String toString() {
+            return (clockwise ? "R" : "L") + count;
         }
     }
 }
