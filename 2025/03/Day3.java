@@ -12,6 +12,7 @@ public class Day3 {
     public static void main(String... args) throws Exception {
         List<Bank> banks = getInput();
         part1(banks);
+        part2(banks);
     }
 
     private static List<Bank> getInput() throws Exception {
@@ -40,6 +41,22 @@ public class Day3 {
         }
 
         System.out.println("Part 1: " + sum);
+    }
+
+    private static void part2(List<Bank> banks) {
+        long sum = 0;
+        for (Bank bank : banks) {
+            long joltage = 0;
+            int idx = -1;
+            for (int i = 11; i >= 0; i--) {
+                idx = bank.maxBatteryIndex(idx + 1, bank.size() - i);
+                joltage = joltage * 10 + bank.joltage(idx);
+            }
+
+            sum += joltage;
+        }
+
+        System.out.println("Part 2: " + sum);
     }
 
     private static class Bank {
