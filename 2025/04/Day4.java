@@ -12,6 +12,7 @@ public class Day4 {
     public static void main(String... args) throws Exception {
         Set<Position> rolls = getInput();
         part1(rolls);
+        part2(rolls);
     }
 
     private static Set<Position> getInput() throws Exception {
@@ -62,13 +63,60 @@ public class Day4 {
             if (rolls.contains(new Position(roll.row - 1, roll.col - 1))) {
                 rollsNearby++;
             }
-            
+
             if (rollsNearby < 4) {
                 accessibleCount++;
             }
         }
 
         System.out.println("Part 1: " + accessibleCount);
+    }
+
+    private static void part2(Set<Position> rolls) {
+        int accessibleCount = 0;
+        while (true) {
+            Set<Position> accessibleRolls = new HashSet<>();
+            for (Position roll : rolls) {
+                int rollsNearby = 0;
+                if (rolls.contains(new Position(roll.row - 1, roll.col))) {
+                    rollsNearby++;
+                }
+                if (rolls.contains(new Position(roll.row - 1, roll.col + 1))) {
+                    rollsNearby++;
+                }
+                if (rolls.contains(new Position(roll.row, roll.col + 1))) {
+                    rollsNearby++;
+                }
+                if (rolls.contains(new Position(roll.row + 1, roll.col + 1))) {
+                    rollsNearby++;
+                }
+                if (rolls.contains(new Position(roll.row + 1, roll.col))) {
+                    rollsNearby++;
+                }
+                if (rolls.contains(new Position(roll.row + 1, roll.col - 1))) {
+                    rollsNearby++;
+                }
+                if (rolls.contains(new Position(roll.row, roll.col - 1))) {
+                    rollsNearby++;
+                }
+                if (rolls.contains(new Position(roll.row - 1, roll.col - 1))) {
+                    rollsNearby++;
+                }
+
+                if (rollsNearby < 4) {
+                    accessibleRolls.add(roll);
+                }
+            }
+
+            if (accessibleRolls.isEmpty()) {
+                break;
+            }
+
+            accessibleCount += accessibleRolls.size();
+            rolls.removeAll(accessibleRolls);
+        }
+
+        System.out.println("Part 2: " + accessibleCount);
     }
 
     private static class Position {
