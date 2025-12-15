@@ -12,6 +12,7 @@ public class Day5 {
     public static void main(String... args) throws Exception {
         Database db = getInput();
         part1(db);
+        part2(db);
     }
 
     private static Database getInput() throws Exception {
@@ -50,6 +51,37 @@ public class Day5 {
         System.out.println("Part 1: " + freshCount);
     }
 
+    private static void part2(Database db) {
+        List<FreshRange> mergedRanges = new ArrayList<>();
+        List<FreshRange> ranges = new ArrayList<>(db.ranges);
+        for (int i = 0; i < ranges.size(); i++) {
+            FreshRange a = ranges.get(i);
+            
+            int j = ranges.size() - 1;
+            while (j > i) {
+                FreshRange b = ranges.get(j);
+                if (a.start <= b.end && b.start <= a.end) {
+                    a = new FreshRange(
+                        Math.min(a.start, b.start),
+                        Math.max(a.end, b.end));
+                    ranges.remove(j);
+                    j = ranges.size() - 1;
+                } else {
+                    j--;
+                }
+            }
+
+            mergedRanges.add(a);
+        }
+
+        long freshCount = 0;
+        for (FreshRange range : mergedRanges) {
+            freshCount += range.end - range.start + 1;
+        }
+
+        System.out.println("Part 2: " + freshCount);
+    }
+
     private static class Database {
 
         final List<FreshRange> ranges;
@@ -69,6 +101,11 @@ public class Day5 {
         FreshRange(long start, long end) {
             this.start = start;
             this.end = end;
+        }
+
+        @Override
+        public String toString() {
+            return "[" + start + ", " + end + "]";
         }
     }
 }
