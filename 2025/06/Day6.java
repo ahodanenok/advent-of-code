@@ -12,6 +12,7 @@ public class Day6 {
     public static void main(String... args) throws Exception {
         List<Problem> problems = getInput();
         part1(problems);
+        part2(problems);
     }
 
     private static List<Problem> getInput() throws Exception {
@@ -20,30 +21,26 @@ public class Day6 {
                 new BufferedReader(new FileReader("input.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                lines.add(line);
+                lines.add(line + " ~");
             }
         }
 
-        List<List<Long>> numberLines = new ArrayList<>();
-        for (int i = 0; i < lines.size() - 1; i++) {
-            String[] parts = lines.get(i).split("[ ]+");
-            List<Long> numbers = new ArrayList<>();
-            for (String part : parts) {
-                numbers.add(Long.parseLong(part));
-            }
-
-            numberLines.add(numbers);
-        }
-
-        String[] operations = lines.get(lines.size() - 1).split("[ ]+");
         List<Problem> problems = new ArrayList<>();
-        for (int i = 0; i < operations.length; i++) {
-            List<Long> numbers = new ArrayList<>();
-            for (List<Long> numberLine : numberLines) {
-                numbers.add(numberLine.get(i));
+        int problemStart = 0;
+        int idx = 1;
+        String operationsLine = lines.get(lines.size() - 1);
+        while (idx < operationsLine.length()) {
+            if (operationsLine.charAt(idx) != ' ') {
+                List<String> numbers = new ArrayList<>();
+                for (int i = 0; i < lines.size() - 1; i++) {
+                    numbers.add(lines.get(i).substring(problemStart, idx - 1));
+                }
+
+                problems.add(new Problem(numbers, operationsLine.charAt(problemStart) + ""));
+                problemStart = idx;
             }
 
-            problems.add(new Problem(numbers, operations[i]));
+            idx++;
         }
 
         return problems;
@@ -52,33 +49,63 @@ public class Day6 {
     private static void part1(List<Problem> problems) {
         long sum = 0;
         for (Problem problem : problems) {
-            long answer;
-            if (problem.operation.equals("*")) {
-                answer = problem.numbers.get(0);
-                for (int i = 1; i < problem.numbers.size(); i++) {
-                    answer *= problem.numbers.get(i);
-                }
-            } else if (problem.operation.equals("+")) {
-                answer = problem.numbers.get(0);
-                for (int i = 1; i < problem.numbers.size(); i++) {
-                    answer += problem.numbers.get(i);
-                }
-            } else {
-                throw new IllegalStateException(problem.operation);
+            List<Long> numbers = new ArrayList<>();
+            for (String str : problem.numbers) {
+                numbers.add(Long.parseLong(str.trim()));
             }
 
-            sum += answer;
+            sum += calculate(numbers, problem.operation);
         }
 
         System.out.println("Part 1: " + sum);
     }
 
+    private static void part2(List<Problem> problems) {
+        long sum = 0;
+        for (Problem problem : problems) {
+            List<Long> numbers = new ArrayList<>();
+            for (int i = 0, length = problem.numbers.get(0).length(); i < length; i++) {
+                String number = "";
+                for (String str : problem.numbers) {
+                    if (str.charAt(i) != ' ') {
+                        number += str.charAt(i);
+                    }
+                }
+
+                numbers.add(Long.parseLong(number));
+            }
+
+            sum += calculate(numbers, problem.operation);
+        }
+
+        System.out.println("Part 2: " + sum);
+    }
+
+    private static long calculate(List<Long> numbers, String operation) {
+        long answer;
+        if (operation.equals("*")) {
+            answer = numbers.get(0);
+            for (int i = 1; i < numbers.size(); i++) {
+                answer *= numbers.get(i);
+            }
+        } else if (operation.equals("+")) {
+            answer = numbers.get(0);
+            for (int i = 1; i < numbers.size(); i++) {
+                answer += numbers.get(i);
+            }
+        } else {
+            throw new IllegalStateException(operation);
+        }
+
+        return answer;
+    }
+
     private static class Problem {
 
-        final List<Long> numbers;
+        final List<String> numbers;
         final String operation;
 
-        Problem(List<Long> numbers, String operation) {
+        Problem(List<String> numbers, String operation) {
             this.numbers = numbers;
             this.operation = operation;
         }
